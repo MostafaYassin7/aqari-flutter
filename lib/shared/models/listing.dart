@@ -9,6 +9,7 @@ class Listing {
   final String city;
   final String district;
   final String category;
+  final String propertyType;
   final double price;
   final int area;
   final int bedrooms;
@@ -20,6 +21,7 @@ class Listing {
   final double lng;
   final String listingType;
   final String status;
+  final String ownerName;
 
   const Listing({
     required this.id,
@@ -27,6 +29,7 @@ class Listing {
     required this.city,
     required this.district,
     required this.category,
+    this.propertyType = '',
     required this.price,
     required this.area,
     required this.bedrooms,
@@ -38,14 +41,15 @@ class Listing {
     this.lng = 0.0,
     this.listingType = '',
     this.status = '',
+    this.ownerName = '',
   });
 
   factory Listing.fromJson(Map<String, dynamic> json) {
     // Algolia uses objectID, PostgreSQL uses id
     final id = (json['id'] ?? json['objectID'] ?? '').toString();
 
-    // Category: nested object {id, name} or raw string
-    final catRaw = json['category'];
+    // Category: nested object {id, name}, categoryName, or raw string
+    final catRaw = json['category'] ?? json['categoryName'];
     final category = catRaw is Map
         ? (catRaw['name'] ?? '').toString()
         : (catRaw ?? '').toString();
@@ -79,6 +83,7 @@ class Listing {
       city: (json['city'] ?? '').toString(),
       district: (json['district'] ?? '').toString(),
       category: category,
+      propertyType: (json['propertyType'] ?? '').toString(),
       price: ParseHelpers.toDouble(json['totalPrice']),
       area: ParseHelpers.toDouble(json['area']).toInt(),
       bedrooms: ParseHelpers.toInt(json['bedrooms']),
@@ -90,6 +95,7 @@ class Listing {
       lng: lng,
       listingType: (json['listingType'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
+      ownerName: (json['ownerName'] ?? '').toString(),
     );
   }
 }
@@ -104,8 +110,8 @@ String formatPrice(double price) {
     return '$str مليون ريال';
   }
   final formatted = price.toInt().toString().replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (m) => '${m[1]},',
-      );
+    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+    (m) => '${m[1]},',
+  );
   return '$formatted ريال';
 }

@@ -10,7 +10,9 @@ class ListingsRepository {
   /// - Backend paginated: { data: [...], total: N } or { items: [...], total: N }
   /// - Direct list: [...]
   List<T> _parseItems<T>(
-      dynamic raw, T Function(Map<String, dynamic>) fromJson) {
+    dynamic raw,
+    T Function(Map<String, dynamic>) fromJson,
+  ) {
     List<dynamic> items;
 
     if (raw is List) {
@@ -33,14 +35,21 @@ class ListingsRepository {
     int page = 1,
     int limit = 20,
     String? listingType,
+    String? query,
+    String? city,
+    String? propertyType,
   }) async {
     try {
       final response = await apiClient.get(
         ApiEndpoints.search,
         queryParameters: {
           'page': page,
-          'hitsPerPage': limit,
+          'limit': limit,
           if (listingType != null) 'listingType': listingType,
+          if (query != null && query.isNotEmpty) 'query': query,
+          if (city != null && city.isNotEmpty) 'city': city,
+          if (propertyType != null && propertyType.isNotEmpty)
+            'propertyType': propertyType,
         },
       );
       return _parseItems<Listing>(response.data, Listing.fromJson);
@@ -64,14 +73,21 @@ class ListingsRepository {
   Future<List<DailyRental>> getDailyRentals({
     int page = 1,
     int limit = 20,
+    String? query,
+    String? city,
+    String? propertyType,
   }) async {
     try {
       final response = await apiClient.get(
         ApiEndpoints.search,
         queryParameters: {
           'page': page,
-          'hitsPerPage': limit,
+          'limit': limit,
           'listingType': 'rent_short',
+          if (query != null && query.isNotEmpty) 'query': query,
+          if (city != null && city.isNotEmpty) 'city': city,
+          if (propertyType != null && propertyType.isNotEmpty)
+            'propertyType': propertyType,
         },
       );
       return _parseItems<DailyRental>(response.data, DailyRental.fromJson);

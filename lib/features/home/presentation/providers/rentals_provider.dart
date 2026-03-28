@@ -1,24 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/models/rental.dart';
 import '../../data/listings_repository.dart';
-
-// ── Rental category model ─────────────────────────────────────────────────────
-
-class RentalCategory {
-  final String name;
-  final IconData icon;
-  const RentalCategory({required this.name, required this.icon});
-}
-
-const List<RentalCategory> rentalCategories = [
-  RentalCategory(name: 'الكل', icon: Icons.apps_rounded),
-  RentalCategory(name: 'شقة', icon: Icons.apartment_rounded),
-  RentalCategory(name: 'شاليه', icon: Icons.beach_access_rounded),
-  RentalCategory(name: 'استراحة', icon: Icons.holiday_village_rounded),
-  RentalCategory(name: 'فيلا', icon: Icons.house_rounded),
-];
 
 // ── Date range ────────────────────────────────────────────────────────────────
 
@@ -40,24 +23,35 @@ class RentalDateRange {
     DateTime? checkOut,
     bool clearCheckIn = false,
     bool clearCheckOut = false,
-  }) =>
-      RentalDateRange(
-        checkIn: clearCheckIn ? null : (checkIn ?? this.checkIn),
-        checkOut: clearCheckOut ? null : (checkOut ?? this.checkOut),
-      );
+  }) => RentalDateRange(
+    checkIn: clearCheckIn ? null : (checkIn ?? this.checkIn),
+    checkOut: clearCheckOut ? null : (checkOut ?? this.checkOut),
+  );
 }
 
-// ── Providers ─────────────────────────────────────────────────────────────────
+// ── Filter state providers ────────────────────────────────────────────────────
 
-class SelectedRentalCategoryNotifier extends Notifier<int> {
+class SelectedRentalCityNotifier extends Notifier<String?> {
   @override
-  int build() => 0;
-  void select(int index) => state = index;
+  String? build() => null;
+  void select(String? city) => state = city;
 }
 
-final selectedRentalCategoryProvider =
-    NotifierProvider<SelectedRentalCategoryNotifier, int>(
-        SelectedRentalCategoryNotifier.new);
+final selectedRentalCityProvider =
+    NotifierProvider<SelectedRentalCityNotifier, String?>(
+      SelectedRentalCityNotifier.new,
+    );
+
+class SelectedRentalPropertyTypeNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+  void select(String? type) => state = type;
+}
+
+final selectedRentalPropertyTypeProvider =
+    NotifierProvider<SelectedRentalPropertyTypeNotifier, String?>(
+      SelectedRentalPropertyTypeNotifier.new,
+    );
 
 class RentalDateRangeNotifier extends Notifier<RentalDateRange> {
   @override
@@ -71,7 +65,8 @@ class RentalDateRangeNotifier extends Notifier<RentalDateRange> {
 
 final rentalDateRangeProvider =
     NotifierProvider<RentalDateRangeNotifier, RentalDateRange>(
-        RentalDateRangeNotifier.new);
+      RentalDateRangeNotifier.new,
+    );
 
 class RentalGuestCountNotifier extends Notifier<int> {
   @override
@@ -84,38 +79,79 @@ class RentalGuestCountNotifier extends Notifier<int> {
 
 final rentalGuestCountProvider =
     NotifierProvider<RentalGuestCountNotifier, int>(
-        RentalGuestCountNotifier.new);
+      RentalGuestCountNotifier.new,
+    );
 
-// ── Rentals async loader ──────────────────────────────────────────────────────
+// ── Rentals async loader with server-side filters ─────────────────────────────
 
 class RentalsNotifier extends AsyncNotifier<List<DailyRental>> {
   final _repo = ListingsRepository();
+  int _page = 1;
+  bool hasMore = true;
 
   @override
-  Future<List<DailyRental>> build() => _repo.getDailyRentals();
+  Future<List<DailyRental>> build() {
+    _page = 1;
+    hasMore = true;
+    final city = ref.watch(selectedRentalCityProvider);
+    final propertyType = ref.watch(selectedRentalPropertyTypeProvider);
+    return _repo.getDailyRentals(
+      page: _page,
+      limit: 20,
+      city: city,
+      propertyType: propertyType,
+    );
+  }
+
+  Future<void> loadMore() async {
+    if (!hasMore) return;
+    final current = state.value;
+    if (current == null) return;
+    _page++;
+    final city = ref.read(selectedRentalCityProvider);
+    final propertyType = ref.read(selectedRentalPropertyTypeProvider);
+    final newItems = await _repo.getDailyRentals(
+      page: _page,
+      limit: 20,
+      city: city,
+      propertyType: propertyType,
+    );
+    if (newItems.length < 20) hasMore = false;
+    state = AsyncData([...current, ...newItems]);
+  }
 
   Future<void> refresh() async {
+    _page = 1;
+    hasMore = true;
+    final city = ref.read(selectedRentalCityProvider);
+    final propertyType = ref.read(selectedRentalPropertyTypeProvider);
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _repo.getDailyRentals());
+    state = await AsyncValue.guard(
+      () => _repo.getDailyRentals(
+        page: _page,
+        limit: 20,
+        city: city,
+        propertyType: propertyType,
+      ),
+    );
   }
 }
 
 final rentalsNotifierProvider =
     AsyncNotifierProvider<RentalsNotifier, List<DailyRental>>(
-        RentalsNotifier.new);
+      RentalsNotifier.new,
+    );
 
-// ── Filtered rentals (synchronous, derived from async state) ──────────────────
+// ── Filtered rentals (pass-through, filtering is server-side) ─────────────────
 
 final filteredRentalsProvider = Provider<List<DailyRental>>((ref) {
-  final idx = ref.watch(selectedRentalCategoryProvider);
-  final rentals = ref.watch(rentalsNotifierProvider).when(
-    data: (data) => data,
-    loading: () => <DailyRental>[],
-    error: (_, __) => <DailyRental>[],
-  );
-  if (idx == 0) return rentals;
-  final catName = rentalCategories[idx].name;
-  return rentals.where((r) => r.category == catName).toList();
+  return ref
+      .watch(rentalsNotifierProvider)
+      .when(
+        data: (data) => data,
+        loading: () => <DailyRental>[],
+        error: (_, __) => <DailyRental>[],
+      );
 });
 
 // ── Favorited rentals ─────────────────────────────────────────────────────────
@@ -134,4 +170,5 @@ class FavoritedRentalsNotifier extends Notifier<Set<String>> {
 
 final favoritedRentalsProvider =
     NotifierProvider<FavoritedRentalsNotifier, Set<String>>(
-        FavoritedRentalsNotifier.new);
+      FavoritedRentalsNotifier.new,
+    );

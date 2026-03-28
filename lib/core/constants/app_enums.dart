@@ -182,3 +182,29 @@ class SubscriptionStatus {
   static const expired   = 'expired';
   static const cancelled = 'cancelled';
 }
+ final List<String> countries = [
+    'Egypt',
+    'Saudi Arabia',
+    'United Arab Emirates',
+    'Qatar',
+    'Kuwait',
+    'Bahrain',
+    'Oman',
+    'Yemen'
+  ];
+    final List<String> propertyTypes = [
+    'apartment',
+    'villa',
+    'floor',
+    'land',
+    'building',
+    'shop',
+    'house',
+    'rest_house',
+    'farm',
+    'commercial_office',
+    'chalet',
+    'warehouse',
+    'camp',
+    'other'
+  ];
