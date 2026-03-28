@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/network/auth_storage.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../providers/onboarding_provider.dart';
 
-class SplashScreen extends ConsumerStatefulWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen>
+class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fadeAnim;
@@ -52,25 +51,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _navigate() async {
-    // Run timer and provider loads in parallel
-    final results = await Future.wait([
+    final results = await Future.wait<Object?>([
       Future.delayed(
-          const Duration(milliseconds: AppConstants.splashDurationMs)),
-      ref.read(hasSeenOnboardingProvider.future),
-      ref.read(isLoggedInProvider.future),
+        const Duration(milliseconds: AppConstants.splashDurationMs),
+      ),
+      AuthStorage.getToken(),
     ]);
 
     if (!mounted) return;
 
-    final hasSeenOnboarding = results[1] as bool;
-    final isLoggedIn = results[2] as bool;
+    final token = (results[1] as String?)?.trim();
+    
 
-    if (isLoggedIn) {
+    if (token != null && token.isNotEmpty) {
       context.go(AppRoutes.home);
     } else {
-      context.go(
-        hasSeenOnboarding ? AppRoutes.login : AppRoutes.onboarding,
-      );
+      context.go(AppRoutes.login);
     }
   }
 
@@ -120,11 +116,7 @@ class _SplashContent extends StatelessWidget {
               borderRadius: BorderRadius.circular(28),
             ),
             child: Center(
-              child: Icon(
-                Icons.home_rounded,
-                color: AppColors.white,
-                size: 52,
-              ),
+              child: Icon(Icons.home_rounded, color: AppColors.white, size: 52),
             ),
           ),
 

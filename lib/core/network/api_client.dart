@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:dio/dio.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
@@ -21,6 +22,7 @@ Dio _createDio() {
     // 1. Attach JWT token to every request
     onRequest: (options, handler) async {
       final token = await AuthStorage.getToken();
+      log('=== INTERCEPTOR token: $token');
       if (token != null && token.isNotEmpty) {
         options.headers['Authorization'] = 'Bearer $token';
       }
