@@ -3,59 +3,75 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/models/project.dart';
 import '../../data/listings_repository.dart';
 
-// ── City chips ────────────────────────────────────────────────────────────────
+// ── City filter (English value, same as other tabs) ───────────────────────────
 
-const List<String> projectCities = [
-  'الكل',
-  'الرياض',
-  'جدة',
-  'مكة',
-  'نيوم',
-  'الدمام',
-  'العُلا',
-];
-
-class SelectedProjectCityNotifier extends Notifier<int> {
+class SelectedProjectCityNotifier extends Notifier<String?> {
   @override
-  int build() => 0;
-
-  void select(int index) => state = index;
+  String? build() => null;
+  void select(String? city) => state = city;
 }
 
 final selectedProjectCityProvider =
-    NotifierProvider<SelectedProjectCityNotifier, int>(
-        SelectedProjectCityNotifier.new);
+    NotifierProvider<SelectedProjectCityNotifier, String?>(
+      SelectedProjectCityNotifier.new,
+    );
 
-// ── Projects async loader ─────────────────────────────────────────────────────
+// ── Projects async loader with server-side filters ────────────────────────────
 
 class ProjectsNotifier extends AsyncNotifier<List<Project>> {
   final _repo = ListingsRepository();
+  int _page = 1;
+  bool hasMore = true;
 
   @override
-  Future<List<Project>> build() => _repo.getProjects();
+  Future<List<Project>> build() {
+    _page = 1;
+    hasMore = true;
+    final city = ref.watch(selectedProjectCityProvider);
+    return _repo.getProjects(page: _page, limit: 20, city: city);
+  }
+
+  Future<void> loadMore() async {
+    if (!hasMore) return;
+    final current = state.value;
+    if (current == null) return;
+    _page++;
+    final city = ref.read(selectedProjectCityProvider);
+    final newItems = await _repo.getProjects(
+      page: _page,
+      limit: 20,
+      city: city,
+    );
+    if (newItems.length < 20) hasMore = false;
+    state = AsyncData([...current, ...newItems]);
+  }
 
   Future<void> refresh() async {
+    _page = 1;
+    hasMore = true;
+    final city = ref.read(selectedProjectCityProvider);
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _repo.getProjects());
+    state = await AsyncValue.guard(
+      () => _repo.getProjects(page: _page, limit: 20, city: city),
+    );
   }
 }
 
 final projectsNotifierProvider =
     AsyncNotifierProvider<ProjectsNotifier, List<Project>>(
-        ProjectsNotifier.new);
+      ProjectsNotifier.new,
+    );
 
-// ── Filtered projects (synchronous, derived from async state) ─────────────────
+// ── Convenience providers ─────────────────────────────────────────────────────
 
 final filteredProjectsProvider = Provider<List<Project>>((ref) {
-  final idx = ref.watch(selectedProjectCityProvider);
-  final projects = ref.watch(projectsNotifierProvider).when(
-    data: (data) => data,
-    loading: () => <Project>[],
-    error: (_, __) => <Project>[],
-  );
-  if (idx == 0) return projects;
-  final city = projectCities[idx];
-  return projects.where((p) => p.city == city).toList();
+  return ref
+      .watch(projectsNotifierProvider)
+      .when(
+        data: (data) => data,
+        loading: () => <Project>[],
+        error: (_, __) => <Project>[],
+      );
 });
 
 // ── Favorited projects ────────────────────────────────────────────────────────
@@ -70,9 +86,12 @@ class FavoritedProjectsNotifier extends Notifier<Set<String>> {
     } else {
       state = Set.from(state)..add(id);
     }
+    // Fire-and-forget API call
+    ListingsRepository().toggleFavorite(targetId: id);
   }
 }
 
 final favoritedProjectsProvider =
     NotifierProvider<FavoritedProjectsNotifier, Set<String>>(
-        FavoritedProjectsNotifier.new);
+      FavoritedProjectsNotifier.new,
+    );

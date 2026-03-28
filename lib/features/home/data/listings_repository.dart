@@ -58,13 +58,65 @@ class ListingsRepository {
     }
   }
 
-  Future<List<Project>> getProjects({int page = 1, int limit = 20}) async {
+  Future<List<Project>> getProjects({
+    int page = 1,
+    int limit = 20,
+    String? city,
+  }) async {
     try {
       final response = await apiClient.get(
         ApiEndpoints.projects,
-        queryParameters: {'page': page, 'limit': limit},
+        queryParameters: {
+          'page': page,
+          'limit': limit,
+          if (city != null && city.isNotEmpty) 'city': city,
+        },
       );
       return _parseItems<Project>(response.data, Project.fromJson);
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> toggleFavorite({
+    required String targetId,
+    String targetType = 'listing',
+  }) async {
+    await apiClient.post(
+      ApiEndpoints.favorites,
+      data: {'targetType': targetType, 'targetId': targetId},
+    );
+  }
+
+  Future<List<Listing>> getFavorites({int page = 1, int limit = 20}) async {
+    try {
+      final response = await apiClient.get(
+        ApiEndpoints.favorites,
+        queryParameters: {'page': page, 'limit': limit},
+      );
+      // Response: { data: [ { favoriteId, favoritedAt, listing: {...} } ] }
+      final raw = response.data;
+      List<dynamic> items;
+      if (raw is List) {
+        items = raw;
+      } else if (raw is Map) {
+        final m = Map<String, dynamic>.from(raw);
+        items = (m['data'] ?? m['items'] ?? []) as List;
+      } else {
+        return [];
+      }
+      return items
+          .whereType<Map>()
+          .map((j) {
+            final map = Map<String, dynamic>.from(j);
+            final listing = map['listing'];
+            if (listing is Map) {
+              return Listing.fromJson(Map<String, dynamic>.from(listing));
+            }
+            return null;
+          })
+          .whereType<Listing>()
+          .toList();
     } catch (_) {
       return [];
     }

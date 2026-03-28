@@ -165,6 +165,8 @@ class FavoritedRentalsNotifier extends Notifier<Set<String>> {
     } else {
       state = Set.from(state)..add(id);
     }
+    // Fire-and-forget API call
+    ListingsRepository().toggleFavorite(targetId: id);
   }
 }
 

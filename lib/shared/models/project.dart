@@ -47,11 +47,10 @@ class Project {
     String developerName = '';
     final dev = json['developer'];
     if (dev is Map) {
-      developerName =
-          (dev['name'] ?? dev['companyName'] ?? '').toString();
+      developerName = (dev['name'] ?? dev['companyName'] ?? '').toString();
     } else {
-      developerName =
-          (json['developerName'] ?? json['developer_name'] ?? '').toString();
+      developerName = (json['developerName'] ?? json['developer_name'] ?? '')
+          .toString();
     }
 
     // Availability from status field
@@ -62,12 +61,14 @@ class Project {
 
     return Project(
       id: (json['id'] ?? '').toString(),
-      name: (json['name'] ?? '').toString(),
+      name: (json['title'] ?? json['name'] ?? '').toString(),
       developerName: developerName,
       city: (json['city'] ?? '').toString(),
       projectType: (json['projectType'] ?? json['type'] ?? '').toString(),
       imageUrls: imageUrls,
-      startingPrice: ParseHelpers.toDouble(json['startingPrice']),
+      startingPrice: ParseHelpers.toDouble(
+        json['priceFrom'] ?? json['startingPrice'],
+      ),
       description: (json['description'] ?? '').toString(),
       availability: availability,
     );
