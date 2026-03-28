@@ -33,15 +33,15 @@ class CountryChipsRow extends ConsumerWidget {
                   (ref.read(cityProvider.notifier) as dynamic).select(null),
             );
           }
-          final country = countries[i - 1];
-          final arabicName = countryArabicNames[country] ?? country;
-          final isActive = selectedCity == country;
+          final city = countries[i - 1];
+          final arabicName = cityArabicNames[city] ?? city;
+          final isActive = selectedCity == city;
 
           return _CityChip(
             label: arabicName,
             isActive: isActive,
             onTap: () => (ref.read(cityProvider.notifier) as dynamic).select(
-              isActive ? null : country,
+              isActive ? null : city,
             ),
           );
         },

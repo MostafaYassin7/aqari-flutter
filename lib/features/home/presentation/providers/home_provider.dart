@@ -5,18 +5,14 @@ import '../../../../shared/models/listing.dart';
 import '../../data/listings_repository.dart';
 
 // ── Arabic display maps ───────────────────────────────────────────────────────
-
-const Map<String, String> countryArabicNames = {
-  'Egypt': 'مصر',
-  'Saudi Arabia': 'السعودية',
-  'United Arab Emirates': 'الإمارات',
-  'Qatar': 'قطر',
-  'Kuwait': 'الكويت',
-  'Bahrain': 'البحرين',
-  'Oman': 'عُمان',
-  'Yemen': 'اليمن',
+const Map<String, String> cityArabicNames = {
+  'Riyadh': 'الرياض',
+  'Jeddah': 'جدة',
+  'Makkah': 'مكة',
+  'NEOM': 'نيوم',
+  'Dammam': 'الدمام',
+  'AlUla': 'العلا',
 };
-
 const Map<String, String> propertyTypeArabicNames = {
   'apartment': 'شقة',
   'villa': 'فيلا',
