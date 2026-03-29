@@ -22,6 +22,29 @@ class Listing {
   final String listingType;
   final String status;
   final String ownerName;
+  final String adNumber;
+  final String facade;
+  final int floor;
+  final int propertyAge;
+  final double streetWidth;
+  final bool hasWater;
+  final bool hasElectricity;
+  final bool hasSewage;
+  final bool hasPrivateRoof;
+  final bool isInVilla;
+  final bool hasTwoEntrances;
+  final bool hasSpecialEntrance;
+  final bool isFurnished;
+  final bool hasKitchen;
+  final bool hasExtraUnit;
+  final bool hasCarEntrance;
+  final bool hasElevator;
+  final bool commission;
+  final double commissionPercent;
+  final double pricePerMeter;
+  final int viewCount;
+  final int messageCount;
+  final int favoriteCount;
 
   const Listing({
     required this.id,
@@ -42,6 +65,29 @@ class Listing {
     this.listingType = '',
     this.status = '',
     this.ownerName = '',
+    this.adNumber = '',
+    this.facade = '',
+    this.floor = 0,
+    this.propertyAge = 0,
+    this.streetWidth = 0.0,
+    this.hasWater = false,
+    this.hasElectricity = false,
+    this.hasSewage = false,
+    this.hasPrivateRoof = false,
+    this.isInVilla = false,
+    this.hasTwoEntrances = false,
+    this.hasSpecialEntrance = false,
+    this.isFurnished = false,
+    this.hasKitchen = false,
+    this.hasExtraUnit = false,
+    this.hasCarEntrance = false,
+    this.hasElevator = false,
+    this.commission = false,
+    this.commissionPercent = 0.0,
+    this.pricePerMeter = 0.0,
+    this.viewCount = 0,
+    this.messageCount = 0,
+    this.favoriteCount = 0,
   });
 
   factory Listing.fromJson(Map<String, dynamic> json) {
@@ -96,6 +142,37 @@ class Listing {
       listingType: (json['listingType'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
       ownerName: (json['ownerName'] ?? '').toString(),
+      adNumber: (json['adNumber'] ?? '').toString(),
+      facade: (json['facade'] ?? '').toString(),
+      floor: ParseHelpers.toInt(json['floor']),
+      propertyAge: ParseHelpers.toInt(json['propertyAge']),
+      streetWidth: ParseHelpers.toDouble(json['streetWidth']),
+      hasWater: json['hasWater'] == true,
+      hasElectricity: json['hasElectricity'] == true,
+      hasSewage: json['hasSewage'] == true,
+      hasPrivateRoof: json['hasPrivateRoof'] == true,
+      isInVilla: json['isInVilla'] == true,
+      hasTwoEntrances: json['hasTwoEntrances'] == true,
+      hasSpecialEntrance: json['hasSpecialEntrance'] == true,
+      isFurnished: json['isFurnished'] == true,
+      hasKitchen: json['hasKitchen'] == true,
+      hasExtraUnit: json['hasExtraUnit'] == true,
+      hasCarEntrance: json['hasCarEntrance'] == true,
+      hasElevator: json['hasElevator'] == true,
+      commission: json['commission'] == true,
+      commissionPercent: ParseHelpers.toDouble(json['commissionPercent']),
+      pricePerMeter: ParseHelpers.toDouble(json['pricePerMeter']),
+      viewCount: ParseHelpers.toInt(
+        json['viewCount'] ??
+            (json['stats'] is Map ? json['stats']['viewCount'] : null),
+      ),
+      messageCount: ParseHelpers.toInt(
+        json['messageCount'] ??
+            (json['stats'] is Map ? json['stats']['messageCount'] : null),
+      ),
+      favoriteCount: ParseHelpers.toInt(
+        json['stats'] is Map ? json['stats']['favoriteCount'] : null,
+      ),
     );
   }
 }

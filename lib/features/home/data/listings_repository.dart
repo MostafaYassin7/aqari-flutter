@@ -38,6 +38,13 @@ class ListingsRepository {
     String? query,
     String? city,
     String? propertyType,
+    double? priceFrom,
+    double? priceTo,
+    double? areaFrom,
+    double? areaTo,
+    int? bedrooms,
+    bool? isFurnished,
+    bool? hasElevator,
   }) async {
     try {
       final response = await apiClient.get(
@@ -50,6 +57,13 @@ class ListingsRepository {
           if (city != null && city.isNotEmpty) 'city': city,
           if (propertyType != null && propertyType.isNotEmpty)
             'propertyType': propertyType,
+          if (priceFrom != null) 'priceFrom': priceFrom,
+          if (priceTo != null) 'priceTo': priceTo,
+          if (areaFrom != null) 'areaFrom': areaFrom,
+          if (areaTo != null) 'areaTo': areaTo,
+          if (bedrooms != null) 'bedrooms': bedrooms,
+          if (isFurnished != null) 'isFurnished': isFurnished,
+          if (hasElevator != null) 'hasElevator': hasElevator,
         },
       );
       return _parseItems<Listing>(response.data, Listing.fromJson);
@@ -62,6 +76,7 @@ class ListingsRepository {
     int page = 1,
     int limit = 20,
     String? city,
+    String? status,
   }) async {
     try {
       final response = await apiClient.get(
@@ -70,6 +85,7 @@ class ListingsRepository {
           'page': page,
           'limit': limit,
           if (city != null && city.isNotEmpty) 'city': city,
+          if (status != null && status.isNotEmpty) 'status': status,
         },
       );
       return _parseItems<Project>(response.data, Project.fromJson);
@@ -86,6 +102,32 @@ class ListingsRepository {
       ApiEndpoints.favorites,
       data: {'targetType': targetType, 'targetId': targetId},
     );
+  }
+
+  /// Fetch a single listing by ID.
+  Future<Listing> getListingById(String id) async {
+    final response = await apiClient.get('${ApiEndpoints.listings}/$id');
+    final raw = response.data;
+    if (raw is Map) {
+      return Listing.fromJson(Map<String, dynamic>.from(raw));
+    }
+    throw Exception('Invalid listing response');
+  }
+
+  /// Fetch engagement status (isFavorited) for a listing.
+  Future<bool> getEngagementStatus(String listingId) async {
+    try {
+      final response = await apiClient.get(
+        '${ApiEndpoints.engagementStatus}/$listingId',
+      );
+      final raw = response.data;
+      if (raw is Map) {
+        return raw['isFavorited'] == true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<List<Listing>> getFavorites({int page = 1, int limit = 20}) async {

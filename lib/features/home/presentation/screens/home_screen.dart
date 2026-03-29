@@ -59,7 +59,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         child: Column(
           children: [
             // ── Search bar (subtitle adapts per tab) ──────
-            HomeSearchBar(subtitle: _subtitles[_currentTab]),
+            HomeSearchBar(
+              subtitle: _subtitles[_currentTab],
+              currentTab: _currentTab,
+            ),
 
             // ── Tab bar ───────────────────────────────────
             TabBar(

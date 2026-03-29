@@ -4,70 +4,120 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../features/home/data/mock_listings.dart';
-import '../../../../features/home/presentation/providers/home_provider.dart';
 import '../../../../shared/models/listing.dart';
 import '../../data/mock_property_extras.dart';
+import '../providers/property_details_provider.dart';
 import '../widgets/photo_gallery_viewer.dart';
 
-class PropertyDetailsScreen extends ConsumerWidget {
+class PropertyDetailsScreen extends ConsumerStatefulWidget {
   final String listingId;
 
   const PropertyDetailsScreen({required this.listingId, super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final listing = mockListings.firstWhere(
-      (l) => l.id == listingId,
-      orElse: () => mockListings.first,
-    );
-    final owner = getOwnerForListing(listing.id);
-    final features = getFeaturesForListing(listing);
-    final isFav = ref.watch(favoritedIdsProvider).contains(listing.id);
+  ConsumerState<PropertyDetailsScreen> createState() =>
+      _PropertyDetailsScreenState();
+}
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          // ── Scrollable content ───────────────────────────
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _PhotoSection(listing: listing),
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _TitleSection(listing: listing),
-                      const _Divider(),
-                      _StatsRow(listing: listing),
-                      const _Divider(),
-                      _OwnerCard(owner: owner),
-                      const _Divider(),
-                      _DescriptionSection(listing: listing),
-                      const _Divider(),
-                      _FeaturesGrid(features: features),
-                      const _Divider(),
-                      _LocationSection(listing: listing),
-                      const _Divider(),
-                      _PriceSection(listing: listing),
-                      // Padding for bottom bar
-                      const SizedBox(height: 100),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(propertyDetailsProvider.notifier).load(widget.listingId);
+    });
+  }
 
-          // ── Overlay action bar ───────────────────────────
-          _TopOverlayBar(listing: listing, isFav: isFav, ref: ref),
-        ],
+  @override
+  Widget build(BuildContext context) {
+    final asyncDetails = ref.watch(propertyDetailsProvider);
+
+    return asyncDetails.when(
+      loading: () => const Scaffold(
+        backgroundColor: AppColors.backgroundLight,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
       ),
-      bottomNavigationBar: _BottomBar(listing: listing),
+      error: (err, _) => Scaffold(
+        backgroundColor: AppColors.backgroundLight,
+        appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: AppColors.error,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'حدث خطأ أثناء تحميل البيانات',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondaryLight,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => ref
+                    .read(propertyDetailsProvider.notifier)
+                    .load(widget.listingId),
+                child: const Text('إعادة المحاولة'),
+              ),
+            ],
+          ),
+        ),
+      ),
+      data: (details) {
+        final listing = details.listing;
+        final isFav = details.isFavorited;
+        final owner = getOwnerForListing(listing.id);
+        final features = getFeaturesFromListing(listing);
+
+        return Scaffold(
+          backgroundColor: AppColors.backgroundLight,
+          extendBodyBehindAppBar: true,
+          body: Stack(
+            children: [
+              SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _PhotoSection(listing: listing),
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _TitleSection(listing: listing),
+                          const _Divider(),
+                          _StatsRow(listing: listing),
+                          const _Divider(),
+                          _OwnerCard(owner: owner),
+                          const _Divider(),
+                          _DescriptionSection(listing: listing),
+                          if (features.isNotEmpty) ...[
+                            const _Divider(),
+                            _FeaturesGrid(features: features),
+                          ],
+                          const _Divider(),
+                          _LocationSection(listing: listing),
+                          const _Divider(),
+                          _PriceSection(listing: listing),
+                          const SizedBox(height: 100),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _TopOverlayBar(isFav: isFav, ref: ref),
+            ],
+          ),
+          bottomNavigationBar: _BottomBar(listing: listing),
+        );
+      },
     );
   }
 }
@@ -126,14 +176,19 @@ class _PhotoSectionState extends State<_PhotoSection> {
                   color: AppColors.surfaceLight,
                   child: const Center(
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.primary),
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
                   color: AppColors.surfaceLight,
                   child: const Center(
-                    child: Icon(Icons.home_rounded,
-                        size: 64, color: AppColors.primary),
+                    child: Icon(
+                      Icons.home_rounded,
+                      size: 64,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ),
@@ -165,7 +220,9 @@ class _PhotoSectionState extends State<_PhotoSection> {
             child: Center(
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 5),
+                  horizontal: 12,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.overlay,
                   borderRadius: BorderRadius.circular(16),
@@ -173,8 +230,11 @@ class _PhotoSectionState extends State<_PhotoSection> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.photo_library_rounded,
-                        size: 13, color: AppColors.white),
+                    const Icon(
+                      Icons.photo_library_rounded,
+                      size: 13,
+                      color: AppColors.white,
+                    ),
                     const SizedBox(width: 5),
                     Text(
                       '${_current + 1} / ${urls.length}',
@@ -197,15 +257,10 @@ class _PhotoSectionState extends State<_PhotoSection> {
 // ── Top overlay bar ───────────────────────────────────────────────────────────
 
 class _TopOverlayBar extends StatelessWidget {
-  final Listing listing;
   final bool isFav;
   final WidgetRef ref;
 
-  const _TopOverlayBar({
-    required this.listing,
-    required this.isFav,
-    required this.ref,
-  });
+  const _TopOverlayBar({required this.isFav, required this.ref});
 
   @override
   Widget build(BuildContext context) {
@@ -226,11 +281,13 @@ class _TopOverlayBar extends StatelessWidget {
             _OverlayIconButton(
               icon: Icons.share_rounded,
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('مشاركة العقار — قريباً'),
-                  duration: Duration(seconds: 1),
-                  behavior: SnackBarBehavior.floating,
-                ));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('مشاركة العقار — قريباً'),
+                    duration: Duration(seconds: 1),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
               },
             ),
             const SizedBox(width: 8),
@@ -241,9 +298,8 @@ class _TopOverlayBar extends StatelessWidget {
                   ? Icons.favorite_rounded
                   : Icons.favorite_border_rounded,
               iconColor: isFav ? AppColors.error : null,
-              onTap: () => ref
-                  .read(favoritedIdsProvider.notifier)
-                  .toggle(listing.id),
+              onTap: () =>
+                  ref.read(propertyDetailsProvider.notifier).toggleFavorite(),
             ),
             const SizedBox(width: 8),
 
@@ -251,11 +307,13 @@ class _TopOverlayBar extends StatelessWidget {
             _OverlayIconButton(
               icon: Icons.more_horiz_rounded,
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('الإبلاغ عن العقار — قريباً'),
-                  duration: Duration(seconds: 1),
-                  behavior: SnackBarBehavior.floating,
-                ));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('الإبلاغ عن العقار — قريباً'),
+                    duration: Duration(seconds: 1),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
               },
             ),
           ],
@@ -294,9 +352,11 @@ class _OverlayIconButton extends StatelessWidget {
             ),
           ],
         ),
-        child: Icon(icon,
-            size: 18,
-            color: iconColor ?? AppColors.textPrimaryLight),
+        child: Icon(
+          icon,
+          size: 18,
+          color: iconColor ?? AppColors.textPrimaryLight,
+        ),
       ),
     );
   }
@@ -343,12 +403,28 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final stats = <Map<String, dynamic>>[
       if (listing.bedrooms > 0)
-        {'value': '${listing.bedrooms}', 'label': 'غرف نوم', 'icon': Icons.bed_rounded},
+        {
+          'value': '${listing.bedrooms}',
+          'label': 'غرف نوم',
+          'icon': Icons.bed_rounded,
+        },
       if (listing.bathrooms > 0)
-        {'value': '${listing.bathrooms}', 'label': 'حمامات', 'icon': Icons.shower_rounded},
+        {
+          'value': '${listing.bathrooms}',
+          'label': 'حمامات',
+          'icon': Icons.shower_rounded,
+        },
       if (listing.livingRooms > 0)
-        {'value': '${listing.livingRooms}', 'label': 'مجالس', 'icon': Icons.weekend_rounded},
-      {'value': '${listing.area}', 'label': 'م²', 'icon': Icons.straighten_rounded},
+        {
+          'value': '${listing.livingRooms}',
+          'label': 'مجالس',
+          'icon': Icons.weekend_rounded,
+        },
+      {
+        'value': '${listing.area}',
+        'label': 'م²',
+        'icon': Icons.straighten_rounded,
+      },
     ];
 
     return Padding(
@@ -358,8 +434,7 @@ class _StatsRow extends StatelessWidget {
           return Expanded(
             child: Column(
               children: [
-                Icon(s['icon'] as IconData,
-                    size: 22, color: AppColors.primary),
+                Icon(s['icon'] as IconData, size: 22, color: AppColors.primary),
                 const SizedBox(height: 6),
                 Text(
                   s['value'] as String,
@@ -407,8 +482,11 @@ class _OwnerCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 color: AppColors.primaryLight,
-                child: const Icon(Icons.person_rounded,
-                    size: 32, color: AppColors.primary),
+                child: const Icon(
+                  Icons.person_rounded,
+                  size: 32,
+                  color: AppColors.primary,
+                ),
               ),
             ),
           ),
@@ -431,7 +509,9 @@ class _OwnerCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primaryLight,
                         borderRadius: BorderRadius.circular(8),
@@ -449,8 +529,11 @@ class _OwnerCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.star_rounded,
-                        size: 14, color: AppColors.primary),
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(width: 3),
                     Text(
                       owner.rating.toStringAsFixed(1),
@@ -560,7 +643,7 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
 // ── Features grid ─────────────────────────────────────────────────────────────
 
 class _FeaturesGrid extends StatelessWidget {
-  final List<PropertyFeature> features;
+  final List<ListingFeature> features;
   const _FeaturesGrid({required this.features});
 
   @override
@@ -581,8 +664,7 @@ class _FeaturesGrid extends StatelessWidget {
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
@@ -598,7 +680,7 @@ class _FeaturesGrid extends StatelessWidget {
 }
 
 class _FeatureTile extends StatelessWidget {
-  final PropertyFeature feature;
+  final ListingFeature feature;
   const _FeatureTile({required this.feature});
 
   @override
@@ -612,8 +694,11 @@ class _FeatureTile extends StatelessWidget {
             color: AppColors.surfaceLight,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(feature.icon,
-              size: 20, color: AppColors.textPrimaryLight),
+          child: Icon(
+            feature.icon,
+            size: 20,
+            color: AppColors.textPrimaryLight,
+          ),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -670,7 +755,9 @@ class _LocationSection extends StatelessWidget {
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.white,
                             borderRadius: BorderRadius.circular(8),
@@ -690,8 +777,11 @@ class _LocationSection extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Icon(Icons.location_on_rounded,
-                            size: 36, color: AppColors.primary),
+                        const Icon(
+                          Icons.location_on_rounded,
+                          size: 36,
+                          color: AppColors.primary,
+                        ),
                       ],
                     ),
                   ),
@@ -702,21 +792,23 @@ class _LocationSection extends StatelessWidget {
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text('فتح الخريطة — قريباً'),
-                duration: Duration(seconds: 1),
-                behavior: SnackBarBehavior.floating,
-              ));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('فتح الخريطة — قريباً'),
+                  duration: Duration(seconds: 1),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
             },
             icon: const Icon(Icons.map_rounded, size: 18),
             label: const Text('فتح الخريطة'),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.textPrimaryLight,
               side: const BorderSide(color: AppColors.dividerLight),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           ),
         ],
@@ -744,13 +836,15 @@ class _MapGridPainter extends CustomPainter {
       ..color = AppColors.white.withValues(alpha: 0.7)
       ..strokeWidth = 8;
     canvas.drawLine(
-        Offset(0, size.height * 0.45),
-        Offset(size.width, size.height * 0.45),
-        roadPaint);
+      Offset(0, size.height * 0.45),
+      Offset(size.width, size.height * 0.45),
+      roadPaint,
+    );
     canvas.drawLine(
-        Offset(size.width * 0.55, 0),
-        Offset(size.width * 0.55, size.height),
-        roadPaint);
+      Offset(size.width * 0.55, 0),
+      Offset(size.width * 0.55, size.height),
+      roadPaint,
+    );
   }
 
   @override
@@ -804,9 +898,9 @@ class _PriceSection extends StatelessWidget {
   }
 
   String _fmtNum(int n) => n.toString().replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (m) => '${m[1]},',
-      );
+    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+    (m) => '${m[1]},',
+  );
 }
 
 // ── Bottom bar ────────────────────────────────────────────────────────────────
@@ -927,25 +1021,21 @@ class _BarButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: outlined ? AppColors.white : (color ?? AppColors.primary),
           borderRadius: BorderRadius.circular(10),
-          border: outlined
-              ? Border.all(color: AppColors.dividerLight)
-              : null,
+          border: outlined ? Border.all(color: AppColors.dividerLight) : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon,
-                size: 16,
-                color: outlined
-                    ? AppColors.textPrimaryLight
-                    : AppColors.white),
+            Icon(
+              icon,
+              size: 16,
+              color: outlined ? AppColors.textPrimaryLight : AppColors.white,
+            ),
             const SizedBox(width: 5),
             Text(
               label,
               style: AppTextStyles.labelMedium.copyWith(
-                color: outlined
-                    ? AppColors.textPrimaryLight
-                    : AppColors.white,
+                color: outlined ? AppColors.textPrimaryLight : AppColors.white,
                 fontWeight: FontWeight.w700,
               ),
             ),
