@@ -17,5 +17,5 @@ class ProjectDetailsNotifier extends Notifier<AsyncValue<Project>> {
 
 final projectDetailsProvider =
     NotifierProvider<ProjectDetailsNotifier, AsyncValue<Project>>(
-  ProjectDetailsNotifier.new,
-);
+      ProjectDetailsNotifier.new,
+    );

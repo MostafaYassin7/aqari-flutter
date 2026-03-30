@@ -36,7 +36,9 @@ class ProjectUnit {
       id: (json['id'] ?? '').toString(),
       unitType: (json['unitType'] ?? '').toString(),
       area: ParseHelpers.toDouble(json['area']),
-      price: json['price'] != null ? ParseHelpers.toDouble(json['price']) : null,
+      price: json['price'] != null
+          ? ParseHelpers.toDouble(json['price'])
+          : null,
       priceFrom: json['priceFrom'] != null
           ? ParseHelpers.toDouble(json['priceFrom'])
           : null,
@@ -58,9 +60,9 @@ class ProjectUnit {
   }
 
   String _fmtNum(int n) => n.toString().replaceAllMapped(
-        RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-        (m) => '${m[1]},',
-      );
+    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+    (m) => '${m[1]},',
+  );
 }
 
 class Project {

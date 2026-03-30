@@ -30,8 +30,7 @@ class ProjectCard extends ConsumerWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
                   child: CachedNetworkImage(
                     imageUrl: project.imageUrls.first,
                     width: double.infinity,
@@ -63,8 +62,7 @@ class ProjectCard extends ConsumerWidget {
                 PositionedDirectional(
                   top: 12,
                   start: 12,
-                  child: _AvailabilityBadge(
-                      availability: project.availability),
+                  child: _AvailabilityBadge(availability: project.availability),
                 ),
               ],
             ),
@@ -95,8 +93,11 @@ class ProjectCard extends ConsumerWidget {
             // ── City ─────────────────────────────────────
             Row(
               children: [
-                const Icon(Icons.location_on_rounded,
-                    size: 14, color: AppColors.textSecondaryLight),
+                const Icon(
+                  Icons.location_on_rounded,
+                  size: 14,
+                  color: AppColors.textSecondaryLight,
+                ),
                 const SizedBox(width: 3),
                 Text(
                   project.city,

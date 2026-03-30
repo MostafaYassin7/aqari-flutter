@@ -46,8 +46,11 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline_rounded,
-                  size: 48, color: AppColors.error),
+              const Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: AppColors.error,
+              ),
               const SizedBox(height: 12),
               Text(
                 'حدث خطأ أثناء تحميل البيانات',
@@ -165,14 +168,19 @@ class _PhotoSectionState extends State<_PhotoSection> {
                   color: AppColors.surfaceLight,
                   child: const Center(
                     child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.primary),
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
                   color: AppColors.surfaceLight,
                   child: const Center(
-                    child: Icon(Icons.apartment_rounded,
-                        size: 64, color: AppColors.primary),
+                    child: Icon(
+                      Icons.apartment_rounded,
+                      size: 64,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ),
@@ -205,7 +213,9 @@ class _PhotoSectionState extends State<_PhotoSection> {
               child: Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 5),
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.overlay,
                     borderRadius: BorderRadius.circular(16),
@@ -213,8 +223,11 @@ class _PhotoSectionState extends State<_PhotoSection> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.photo_library_rounded,
-                          size: 13, color: AppColors.white),
+                      const Icon(
+                        Icons.photo_library_rounded,
+                        size: 13,
+                        color: AppColors.white,
+                      ),
                       const SizedBox(width: 5),
                       Text(
                         '${_current + 1} / ${urls.length}',
@@ -252,11 +265,13 @@ class _TopOverlayBar extends StatelessWidget {
             _OverlayIconButton(
               icon: Icons.share_rounded,
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('مشاركة المشروع — قريباً'),
-                  duration: Duration(seconds: 1),
-                  behavior: SnackBarBehavior.floating,
-                ));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('مشاركة المشروع — قريباً'),
+                    duration: Duration(seconds: 1),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
               },
             ),
           ],
@@ -331,8 +346,11 @@ class _TitleSection extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.business_rounded,
-                  size: 16, color: AppColors.primary),
+              const Icon(
+                Icons.business_rounded,
+                size: 16,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: 6),
               Text(
                 project.developerName,
@@ -411,8 +429,7 @@ class _StatsRow extends StatelessWidget {
           return Expanded(
             child: Column(
               children: [
-                Icon(s['icon'] as IconData,
-                    size: 22, color: AppColors.primary),
+                Icon(s['icon'] as IconData, size: 22, color: AppColors.primary),
                 const SizedBox(height: 6),
                 Text(
                   s['value'] as String,
@@ -572,8 +589,7 @@ class _UnitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final typeLabel =
-        _unitTypeLabels[unit.unitType] ?? unit.unitType;
+    final typeLabel = _unitTypeLabels[unit.unitType] ?? unit.unitType;
     final availLabel =
         _availabilityLabels[unit.availability] ?? unit.availability;
     final isAvailable = unit.availability == 'available';
@@ -602,7 +618,9 @@ class _UnitCard extends StatelessWidget {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: isAvailable
                       ? AppColors.success.withValues(alpha: 0.12)
@@ -612,9 +630,7 @@ class _UnitCard extends StatelessWidget {
                 child: Text(
                   availLabel,
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: isAvailable
-                        ? AppColors.success
-                        : AppColors.error,
+                    color: isAvailable ? AppColors.success : AppColors.error,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -710,7 +726,9 @@ class _LocationSection extends StatelessWidget {
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.white,
                             borderRadius: BorderRadius.circular(8),
@@ -733,8 +751,11 @@ class _LocationSection extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        const Icon(Icons.location_on_rounded,
-                            size: 36, color: AppColors.primary),
+                        const Icon(
+                          Icons.location_on_rounded,
+                          size: 36,
+                          color: AppColors.primary,
+                        ),
                       ],
                     ),
                   ),
@@ -746,8 +767,11 @@ class _LocationSection extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.location_on_outlined,
-                    size: 16, color: AppColors.textSecondaryLight),
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 16,
+                  color: AppColors.textSecondaryLight,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -782,10 +806,16 @@ class _MapGridPainter extends CustomPainter {
     final roadPaint = Paint()
       ..color = AppColors.white.withValues(alpha: 0.7)
       ..strokeWidth = 8;
-    canvas.drawLine(Offset(0, size.height * 0.45),
-        Offset(size.width, size.height * 0.45), roadPaint);
-    canvas.drawLine(Offset(size.width * 0.55, 0),
-        Offset(size.width * 0.55, size.height), roadPaint);
+    canvas.drawLine(
+      Offset(0, size.height * 0.45),
+      Offset(size.width, size.height * 0.45),
+      roadPaint,
+    );
+    canvas.drawLine(
+      Offset(size.width * 0.55, 0),
+      Offset(size.width * 0.55, size.height),
+      roadPaint,
+    );
   }
 
   @override
@@ -945,25 +975,21 @@ class _BarButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: outlined ? AppColors.white : (color ?? AppColors.primary),
           borderRadius: BorderRadius.circular(10),
-          border: outlined
-              ? Border.all(color: AppColors.dividerLight)
-              : null,
+          border: outlined ? Border.all(color: AppColors.dividerLight) : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon,
-                size: 16,
-                color: outlined
-                    ? AppColors.textPrimaryLight
-                    : AppColors.white),
+            Icon(
+              icon,
+              size: 16,
+              color: outlined ? AppColors.textPrimaryLight : AppColors.white,
+            ),
             const SizedBox(width: 5),
             Text(
               label,
               style: AppTextStyles.labelMedium.copyWith(
-                color: outlined
-                    ? AppColors.textPrimaryLight
-                    : AppColors.white,
+                color: outlined ? AppColors.textPrimaryLight : AppColors.white,
                 fontWeight: FontWeight.w700,
               ),
             ),
