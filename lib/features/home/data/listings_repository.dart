@@ -1,8 +1,11 @@
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../../../shared/models/listing.dart';
+import '../../../shared/models/listing_category.dart';
 import '../../../shared/models/project.dart';
 import '../../../shared/models/rental.dart';
+import '../../my_listings/presentation/providers/my_listings_provider.dart'
+    show MyListing;
 
 class ListingsRepository {
   /// Extracts the item list from various response shapes:
@@ -206,5 +209,33 @@ class ListingsRepository {
       queryParameters: {'q': q},
     );
     return _parseItems<Listing>(response.data, Listing.fromJson);
+  }
+
+  Future<List<ListingCategory>> getListingCategories() async {
+    final response = await apiClient.get(ApiEndpoints.listingCategories);
+    return _parseItems<ListingCategory>(
+      response.data,
+      ListingCategory.fromJson,
+    );
+  }
+
+  Future<List<MyListing>> getMyListings({
+    int page = 1,
+    int limit = 20,
+    String? categoryId,
+    String? city,
+    String? status,
+  }) async {
+    final response = await apiClient.get(
+      ApiEndpoints.myListings,
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (categoryId != null) 'categoryId': categoryId,
+        if (city != null && city.isNotEmpty) 'city': city,
+        if (status != null && status.isNotEmpty) 'status': status,
+      },
+    );
+    return _parseItems<MyListing>(response.data, MyListing.fromJson);
   }
 }
