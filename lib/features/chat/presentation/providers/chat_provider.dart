@@ -208,6 +208,24 @@ class ChatsNotifier extends Notifier<ChatsState> {
         _currentUserId,
       );
 
+      // Skip messages from ourselves — already inserted optimistically
+      if (msg.senderId == _currentUserId) {
+        // Replace the local placeholder with server version
+        final chats = [...state.chats];
+        final idx = chats.indexWhere((c) => c.id == chatId);
+        if (idx >= 0) {
+          final chat = chats[idx];
+          final messages = chat.messages.map((m) {
+            // Match local message by text + close timestamp
+            if (m.id.startsWith('local_') && m.text == msg.text) return msg;
+            return m;
+          }).toList();
+          chats[idx] = chat.copyWith(messages: messages);
+          state = state.copyWith(chats: chats);
+        }
+        return;
+      }
+
       final chats = [...state.chats];
       final idx = chats.indexWhere((c) => c.id == chatId);
       if (idx >= 0) {
@@ -216,7 +234,7 @@ class ChatsNotifier extends Notifier<ChatsState> {
           messages: [...chat.messages, msg],
           lastMessage: msg.text,
           lastMessageAt: msg.timestamp,
-          unreadCount: msg.isSent ? chat.unreadCount : chat.unreadCount + 1,
+          unreadCount: chat.unreadCount + 1,
         );
         // Move to top
         final updated = chats.removeAt(idx);
