@@ -114,6 +114,16 @@ class ListingsRepository {
     throw Exception('Invalid listing response');
   }
 
+  /// Fetch a single project by ID.
+  Future<Project> getProjectById(String id) async {
+    final response = await apiClient.get('${ApiEndpoints.projects}/$id');
+    final raw = response.data;
+    if (raw is Map) {
+      return Project.fromJson(Map<String, dynamic>.from(raw));
+    }
+    throw Exception('Invalid project response');
+  }
+
   /// Fetch engagement status (isFavorited) for a listing.
   Future<bool> getEngagementStatus(String listingId) async {
     try {

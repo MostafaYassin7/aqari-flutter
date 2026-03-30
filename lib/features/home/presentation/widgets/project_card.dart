@@ -7,7 +7,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/listing.dart' show formatPrice;
 import '../../../../shared/models/project.dart';
-import '../providers/projects_provider.dart';
+
+// ignore: depend_on_referenced_packages
+import 'package:go_router/go_router.dart';
 
 /// Airbnb-Experience-style project listing card.
 class ProjectCard extends ConsumerWidget {
@@ -17,19 +19,8 @@ class ProjectCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final favIds = ref.watch(favoritedProjectsProvider);
-    final isFav = favIds.contains(project.id);
-
     return GestureDetector(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تفاصيل المشروع — قريباً'),
-            duration: Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      },
+      onTap: () => context.push('/project/${project.id}'),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
         child: Column(
@@ -74,34 +65,6 @@ class ProjectCard extends ConsumerWidget {
                   start: 12,
                   child: _AvailabilityBadge(
                       availability: project.availability),
-                ),
-
-                // Favorite button — top end
-                PositionedDirectional(
-                  top: 12,
-                  end: 12,
-                  child: GestureDetector(
-                    onTap: () => ref
-                        .read(favoritedProjectsProvider.notifier)
-                        .toggle(project.id),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: const BoxDecoration(
-                        color: AppColors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        isFav
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        size: 20,
-                        color: isFav
-                            ? AppColors.error
-                            : AppColors.textSecondaryLight,
-                      ),
-                    ),
-                  ),
                 ),
               ],
             ),

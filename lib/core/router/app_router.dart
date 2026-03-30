@@ -9,6 +9,7 @@ import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/property_details/presentation/screens/property_details_screen.dart';
+import '../../features/project_details/presentation/screens/project_details_screen.dart';
 import '../../features/rental_details/presentation/screens/rental_details_screen.dart';
 import '../../features/account/presentation/screens/account_screen.dart';
 import '../../features/my_listings/presentation/screens/my_listings_screen.dart';
@@ -79,6 +80,12 @@ final appRouter = GoRouter(
       path: '/property/:id',
       builder: (context, state) => PropertyDetailsScreen(
         listingId: state.pathParameters['id']!,
+      ),
+    ),
+    GoRoute(
+      path: '/project/:id',
+      builder: (context, state) => ProjectDetailsScreen(
+        projectId: state.pathParameters['id']!,
       ),
     ),
     GoRoute(
