@@ -111,15 +111,35 @@ class Listing {
       lng = ParseHelpers.toDouble(json['longitude']);
     }
 
-    // Images: prefer photos array, fall back to coverPhoto
-    final photos = json['photos'];
+    // Images: prefer __media__ array, then photos, then coverPhoto
     List<String> imageUrls = [];
-    if (photos is List && photos.isNotEmpty) {
-      imageUrls = photos.map((e) => e.toString()).toList();
+    final media = json['__media__'];
+    if (media is List && media.isNotEmpty) {
+      final sorted =
+          List<Map<String, dynamic>>.from(
+            media.whereType<Map>().map((e) => Map<String, dynamic>.from(e)),
+          )..sort((a, b) {
+            // Cover photo first, then by order
+            if (a['isCover'] == true && b['isCover'] != true) return -1;
+            if (b['isCover'] == true && a['isCover'] != true) return 1;
+            return (a['order'] as int? ?? 0).compareTo(b['order'] as int? ?? 0);
+          });
+      imageUrls = sorted
+          .map((e) => (e['url'] ?? '').toString())
+          .where((url) => url.isNotEmpty)
+          .toList();
     }
-    final cover = json['coverPhoto'];
-    if (imageUrls.isEmpty && cover != null && cover.toString().isNotEmpty) {
-      imageUrls = [cover.toString()];
+    if (imageUrls.isEmpty) {
+      final photos = json['photos'];
+      if (photos is List && photos.isNotEmpty) {
+        imageUrls = photos.map((e) => e.toString()).toList();
+      }
+    }
+    if (imageUrls.isEmpty) {
+      final cover = json['coverPhoto'];
+      if (cover != null && cover.toString().isNotEmpty) {
+        imageUrls = [cover.toString()];
+      }
     }
     if (imageUrls.isEmpty) imageUrls = [''];
 
