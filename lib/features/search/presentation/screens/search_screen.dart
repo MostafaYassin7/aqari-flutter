@@ -7,6 +7,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_enums.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/models/listing.dart';
 import '../../../home/presentation/providers/home_provider.dart';
 import '../../../home/presentation/widgets/listing_card.dart';
 import '../../../home/presentation/widgets/project_card.dart';
@@ -123,11 +124,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      body: mode == 0
-          ? (tab == 1
-                ? _buildProjectsSearchBody()
-                : _buildFilterSearchBody(tab))
-          : _AdPhoneSearchBody(controller: _adQueryController),
+      body: tab == 1
+          ? _buildProjectsSearchBody()
+          : (mode == 0
+                ? _buildFilterSearchBody(tab)
+                : _AdPhoneSearchBody(controller: _adQueryController)),
     );
   }
 
@@ -148,8 +149,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          const SliverToBoxAdapter(child: _TabSwitcher()),
-
           // ── City + Status chip row ─────────────────────────
           SliverToBoxAdapter(
             child: Padding(
@@ -745,25 +744,60 @@ class _Tab extends StatelessWidget {
 
 // ── Ad / Phone Search body ────────────────────────────────────────────────────
 
-class _AdPhoneSearchBody extends ConsumerWidget {
+class _AdPhoneSearchBody extends ConsumerStatefulWidget {
   final TextEditingController controller;
   const _AdPhoneSearchBody({required this.controller});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AdPhoneSearchBody> createState() => _AdPhoneSearchBodyState();
+}
+
+class _AdPhoneSearchBodyState extends ConsumerState<_AdPhoneSearchBody> {
+  Timer? _debounce;
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _onChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      ref.read(referenceQueryProvider.notifier).set(value.trim());
+    });
+  }
+
+  void _onSearch() {
+    _debounce?.cancel();
+    ref
+        .read(referenceQueryProvider.notifier)
+        .set(widget.controller.text.trim());
+    FocusScope.of(context).unfocus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncResults = ref.watch(referenceSearchProvider);
+    final results = asyncResults.value ?? <Listing>[];
+    final query = ref.watch(referenceQueryProvider);
+
     return CustomScrollView(
+      physics: const BouncingScrollPhysics(),
       slivers: [
         const SliverToBoxAdapter(child: _TabSwitcher()),
-        SliverFillRemaining(
-          hasScrollBody: false,
+        SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(AppConstants.spaceM),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 TextField(
-                  controller: controller,
-                  keyboardType: TextInputType.number,
+                  controller: widget.controller,
+                  keyboardType: TextInputType.text,
+                  textInputAction: TextInputAction.search,
+                  onChanged: _onChanged,
+                  onSubmitted: (_) => _onSearch(),
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: AppColors.textPrimaryLight,
                   ),
@@ -775,6 +809,24 @@ class _AdPhoneSearchBody extends ConsumerWidget {
                     prefixIcon: const Icon(
                       Icons.search_rounded,
                       color: AppColors.textSecondaryLight,
+                    ),
+                    suffixIcon: ValueListenableBuilder(
+                      valueListenable: widget.controller,
+                      builder: (_, value, __) {
+                        if (value.text.isEmpty) return const SizedBox.shrink();
+                        return IconButton(
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            size: 18,
+                            color: AppColors.textSecondaryLight,
+                          ),
+                          onPressed: () {
+                            widget.controller.clear();
+                            _debounce?.cancel();
+                            ref.read(referenceQueryProvider.notifier).set('');
+                          },
+                        );
+                      },
                     ),
                     filled: true,
                     fillColor: AppColors.surfaceLight,
@@ -790,7 +842,7 @@ class _AdPhoneSearchBody extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => FocusScope.of(context).unfocus(),
+                  onPressed: _onSearch,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     minimumSize: const Size(
@@ -810,31 +862,64 @@ class _AdPhoneSearchBody extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const Spacer(),
-                Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.manage_search_rounded,
-                        size: 72,
-                        color: AppColors.dividerLight,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'ابحث برقم الإعلان أو رقم الهاتف\nللعثور على عقار محدد',
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondaryLight,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
               ],
             ),
           ),
         ),
+        if (!asyncResults.isLoading && results.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Text(
+                '${results.length} نتيجة',
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.textSecondaryLight,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        if (asyncResults.isLoading)
+          const SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
+          )
+        else if (query.isNotEmpty && results.isEmpty)
+          const SliverFillRemaining(hasScrollBody: false, child: _EmptyState())
+        else if (query.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.manage_search_rounded,
+                    size: 72,
+                    color: AppColors.dividerLight,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'ابحث برقم الإعلان أو رقم الهاتف\nللعثور على عقار محدد',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondaryLight,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (_, i) => ListingCard(listing: results[i]),
+              childCount: results.length,
+            ),
+          ),
+        const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
     );
   }

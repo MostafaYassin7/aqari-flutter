@@ -308,6 +308,36 @@ final projectSearchResultsProvider =
       ProjectSearchResultsNotifier.new,
     );
 
+// ── Reference query text (ad number / phone) ─────────────────────────────────
+
+class ReferenceQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+  void set(String v) => state = v;
+}
+
+final referenceQueryProvider = NotifierProvider<ReferenceQueryNotifier, String>(
+  ReferenceQueryNotifier.new,
+);
+
+// ── Async search by reference results ─────────────────────────────────────────
+
+class ReferenceSearchNotifier extends AsyncNotifier<List<Listing>> {
+  final _repo = ListingsRepository();
+
+  @override
+  Future<List<Listing>> build() async {
+    final q = ref.watch(referenceQueryProvider);
+    if (q.trim().isEmpty) return [];
+    return _repo.searchByReference(q.trim());
+  }
+}
+
+final referenceSearchProvider =
+    AsyncNotifierProvider<ReferenceSearchNotifier, List<Listing>>(
+      ReferenceSearchNotifier.new,
+    );
+
 // ── Helper: whether any advanced filter is active ─────────────────────────────
 
 final hasActiveFiltersProvider = Provider<bool>((ref) {

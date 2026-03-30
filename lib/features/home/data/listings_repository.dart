@@ -199,4 +199,12 @@ class ListingsRepository {
       return [];
     }
   }
+
+  Future<List<Listing>> searchByReference(String q) async {
+    final response = await apiClient.get(
+      ApiEndpoints.searchByReference,
+      queryParameters: {'q': q},
+    );
+    return _parseItems<Listing>(response.data, Listing.fromJson);
+  }
 }
