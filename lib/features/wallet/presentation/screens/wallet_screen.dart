@@ -7,16 +7,44 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../providers/wallet_provider.dart';
 
-class WalletScreen extends ConsumerWidget {
+class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WalletScreen> createState() => _WalletScreenState();
+}
+
+class _WalletScreenState extends ConsumerState<WalletScreen> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(walletProvider.notifier).loadMore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final wallet = ref.watch(walletProvider);
 
     return Scaffold(
       backgroundColor: AppColors.surfaceLight,
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           // ── App bar ────────────────────────────────────────────
           SliverAppBar(
@@ -85,44 +113,72 @@ class WalletScreen extends ConsumerWidget {
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
           // ── Transactions ───────────────────────────────────────
-          wallet.filtered.isEmpty
-              ? const SliverFillRemaining(child: _EmptyFilter())
-              : SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppConstants.spaceM,
-                    0,
-                    AppConstants.spaceM,
-                    AppConstants.spaceXL,
-                  ),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (_, i) {
-                        final txList = wallet.filtered;
-                        // Show month header when month changes
-                        final tx = txList[i];
-                        final prev = i > 0 ? txList[i - 1] : null;
-                        final showHeader = prev == null ||
-                            _monthKey(tx.dateTime) !=
-                                _monthKey(prev.dateTime);
+          if (wallet.isLoading && wallet.transactions.isEmpty)
+            const SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            )
+          else if (wallet.transactions.isEmpty)
+            const SliverFillRemaining(child: _EmptyFilter())
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppConstants.spaceM,
+                0,
+                AppConstants.spaceM,
+                AppConstants.spaceXL,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (_, i) {
+                    final txList = wallet.transactions;
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (showHeader)
-                              _MonthHeader(dateTime: tx.dateTime),
-                            _TransactionRow(transaction: tx),
-                            if (i < txList.length - 1)
-                              const Divider(
-                                  height: 1,
-                                  color: AppColors.dividerLight,
-                                  indent: 60),
-                          ],
-                        );
-                      },
-                      childCount: wallet.filtered.length,
-                    ),
-                  ),
+                    // Loading indicator at the bottom
+                    if (i == txList.length) {
+                      return wallet.hasMore
+                          ? const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : const SizedBox.shrink();
+                    }
+
+                    // Show month header when month changes
+                    final tx = txList[i];
+                    final prev = i > 0 ? txList[i - 1] : null;
+                    final showHeader = prev == null ||
+                        _monthKey(tx.dateTime) !=
+                            _monthKey(prev.dateTime);
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (showHeader)
+                          _MonthHeader(dateTime: tx.dateTime),
+                        _TransactionRow(transaction: tx),
+                        if (i < txList.length - 1)
+                          const Divider(
+                              height: 1,
+                              color: AppColors.dividerLight,
+                              indent: 60),
+                      ],
+                    );
+                  },
+                  childCount: wallet.transactions.length +
+                      (wallet.isLoadingMore ? 1 : 0),
                 ),
+              ),
+            ),
         ],
       ),
     );
@@ -141,8 +197,8 @@ class WalletScreen extends ConsumerWidget {
         ),
       ),
       builder: (_) => _TopUpSheet(
-        onConfirm: (amount) {
-          ref.read(walletProvider.notifier).topUp(amount);
+        onConfirm: (amount) async {
+          await ref.read(walletProvider.notifier).topUp(amount);
         },
       ),
     );
@@ -493,16 +549,9 @@ class _TopUpSheet extends StatefulWidget {
 
 class _TopUpSheetState extends State<_TopUpSheet> {
   static const _quickAmounts = [50.0, 100.0, 200.0, 500.0];
-  static const _paymentMethods = ['بطاقة ائتمان', 'Apple Pay', 'مدى'];
-  static const _paymentIcons = [
-    Icons.credit_card_rounded,
-    Icons.apple_rounded,
-    Icons.payment_rounded,
-  ];
 
   double? _selectedQuick;
   final _customCtrl = TextEditingController();
-  int _selectedPaymentIdx = 0;
   bool _isCustomActive = false;
 
   @override
@@ -698,99 +747,6 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                         color: AppColors.primary, width: 2),
                   ),
                 ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // ── Payment method ──────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spaceM),
-              child: Text(
-                'طريقة الدفع',
-                style: AppTextStyles.titleSmall.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spaceM),
-              child: Column(
-                children: List.generate(_paymentMethods.length, (i) {
-                  final isSelected = _selectedPaymentIdx == i;
-                  return GestureDetector(
-                    onTap: () =>
-                        setState(() => _selectedPaymentIdx = i),
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.primaryLight
-                            : AppColors.backgroundLight,
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.radiusM),
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.dividerLight,
-                          width: isSelected ? 2 : 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            _paymentIcons[i],
-                            size: 22,
-                            color: isSelected
-                                ? AppColors.primary
-                                : AppColors.textSecondaryLight,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            _paymentMethods[i],
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w400,
-                              color: isSelected
-                                  ? AppColors.textPrimaryLight
-                                  : AppColors.textSecondaryLight,
-                            ),
-                          ),
-                          const Spacer(),
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.transparent,
-                              border: Border.all(
-                                color: isSelected
-                                    ? AppColors.primary
-                                    : AppColors.dividerLight,
-                                width: 2,
-                              ),
-                            ),
-                            child: isSelected
-                                ? const Icon(Icons.check_rounded,
-                                    size: 12,
-                                    color: AppColors.textPrimaryLight)
-                                : null,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
               ),
             ),
 

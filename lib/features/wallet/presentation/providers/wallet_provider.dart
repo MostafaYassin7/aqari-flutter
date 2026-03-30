@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/network/api_client.dart';
+import '../../../../core/network/api_endpoints.dart';
+
 // ── Transaction type ──────────────────────────────────────────────────────────
 
 enum TransactionType { topUp, promotion, subscription, booking, refund }
@@ -56,6 +59,22 @@ extension TransactionFilterX on TransactionFilter {
         return 'الحجوزات';
     }
   }
+
+  /// Maps to the `referenceType` query param the API expects.
+  String? get referenceType {
+    switch (this) {
+      case TransactionFilter.all:
+        return null;
+      case TransactionFilter.topUps:
+        return 'top_up';
+      case TransactionFilter.promotions:
+        return 'promotion';
+      case TransactionFilter.subscriptions:
+        return 'subscription';
+      case TransactionFilter.bookings:
+        return 'booking';
+    }
+  }
 }
 
 // ── Model ─────────────────────────────────────────────────────────────────────
@@ -76,174 +95,228 @@ class WalletTransaction {
   });
 
   bool get isCredit => amount > 0;
+
+  factory WalletTransaction.fromJson(Map<String, dynamic> json) {
+    final rawType = (json['referenceType'] ?? json['type'] ?? '').toString();
+    final type = _parseTransactionType(rawType);
+    final rawAmount = double.tryParse(json['amount']?.toString() ?? '0') ?? 0.0;
+    // Negative for debits (promotion, subscription, booking), positive for credits
+    final txType = (json['type'] ?? '').toString();
+    final amount = txType == 'debit' ? -rawAmount.abs() : rawAmount.abs();
+
+    return WalletTransaction(
+      id: (json['id'] ?? '').toString(),
+      type: type,
+      description: (json['description'] ?? _defaultDescription(type)).toString(),
+      amount: amount,
+      dateTime: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
+    );
+  }
+
+  static TransactionType _parseTransactionType(String raw) {
+    switch (raw) {
+      case 'top_up':
+        return TransactionType.topUp;
+      case 'promotion':
+        return TransactionType.promotion;
+      case 'subscription':
+        return TransactionType.subscription;
+      case 'booking':
+        return TransactionType.booking;
+      case 'refund':
+        return TransactionType.refund;
+      default:
+        return TransactionType.topUp;
+    }
+  }
+
+  static String _defaultDescription(TransactionType type) {
+    switch (type) {
+      case TransactionType.topUp:
+        return 'شحن محفظة';
+      case TransactionType.promotion:
+        return 'تمييز إعلان';
+      case TransactionType.subscription:
+        return 'اشتراك';
+      case TransactionType.booking:
+        return 'حجز';
+      case TransactionType.refund:
+        return 'استرداد';
+    }
+  }
 }
-
-// ── Mock data ─────────────────────────────────────────────────────────────────
-
-final _now = DateTime.now();
-
-final _mockTransactions = <WalletTransaction>[
-  WalletTransaction(
-    id: 'tx1',
-    type: TransactionType.topUp,
-    description: 'شحن محفظة',
-    amount: 500.0,
-    dateTime: _now.subtract(const Duration(days: 2, hours: 3)),
-  ),
-  WalletTransaction(
-    id: 'tx2',
-    type: TransactionType.subscription,
-    description: 'اشتراك شهري — باقة ذهبية',
-    amount: -299.0,
-    dateTime: _now.subtract(const Duration(days: 3, hours: 10)),
-  ),
-  WalletTransaction(
-    id: 'tx3',
-    type: TransactionType.promotion,
-    description: 'تمييز إعلان — شقة فاخرة حي النرجس',
-    amount: -120.0,
-    dateTime: _now.subtract(const Duration(days: 5, hours: 6)),
-  ),
-  WalletTransaction(
-    id: 'tx4',
-    type: TransactionType.booking,
-    description: 'إيراد حجز — شقة حي العليا (ليلتان)',
-    amount: 850.0,
-    dateTime: _now.subtract(const Duration(days: 8, hours: 14)),
-  ),
-  WalletTransaction(
-    id: 'tx5',
-    type: TransactionType.topUp,
-    description: 'شحن محفظة',
-    amount: 200.0,
-    dateTime: _now.subtract(const Duration(days: 10, hours: 9)),
-  ),
-  WalletTransaction(
-    id: 'tx6',
-    type: TransactionType.promotion,
-    description: 'رفع ترتيب إعلان — فيلا حي الياسمين',
-    amount: -75.0,
-    dateTime: _now.subtract(const Duration(days: 13, hours: 2)),
-  ),
-  WalletTransaction(
-    id: 'tx7',
-    type: TransactionType.refund,
-    description: 'استرداد — إلغاء حجز استراحة النخيل',
-    amount: 350.0,
-    dateTime: _now.subtract(const Duration(days: 16, hours: 17)),
-  ),
-  WalletTransaction(
-    id: 'tx8',
-    type: TransactionType.booking,
-    description: 'إيراد حجز — استراحة النخيل (3 ليالٍ)',
-    amount: 1200.0,
-    dateTime: _now.subtract(const Duration(days: 20, hours: 11)),
-  ),
-  WalletTransaction(
-    id: 'tx9',
-    type: TransactionType.subscription,
-    description: 'اشتراك نصف سنوي — باقة بلاتينية',
-    amount: -499.0,
-    dateTime: _now.subtract(const Duration(days: 24, hours: 8)),
-  ),
-  WalletTransaction(
-    id: 'tx10',
-    type: TransactionType.promotion,
-    description: 'إعلان مميز — أرض تجارية حي العليا',
-    amount: -50.0,
-    dateTime: _now.subtract(const Duration(days: 28, hours: 15)),
-  ),
-  WalletTransaction(
-    id: 'tx11',
-    type: TransactionType.topUp,
-    description: 'شحن محفظة',
-    amount: 1000.0,
-    dateTime: _now.subtract(const Duration(days: 33, hours: 4)),
-  ),
-  WalletTransaction(
-    id: 'tx12',
-    type: TransactionType.booking,
-    description: 'إيراد حجز — شقة مطلة على البحر (ليلة)',
-    amount: 650.0,
-    dateTime: _now.subtract(const Duration(days: 38, hours: 20)),
-  ),
-];
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
 class WalletState {
   final double balance;
+  final String currency;
+  final bool isLoading;
+  final bool isLoadingMore;
+  final String? error;
   final List<WalletTransaction> transactions;
   final TransactionFilter filter;
+  final int currentPage;
+  final bool hasMore;
 
   const WalletState({
     required this.balance,
+    this.currency = 'SAR',
+    this.isLoading = false,
+    this.isLoadingMore = false,
+    this.error,
     required this.transactions,
     required this.filter,
+    this.currentPage = 1,
+    this.hasMore = true,
   });
-
-  List<WalletTransaction> get filtered {
-    switch (filter) {
-      case TransactionFilter.all:
-        return transactions;
-      case TransactionFilter.topUps:
-        return transactions
-            .where((t) => t.type == TransactionType.topUp)
-            .toList();
-      case TransactionFilter.promotions:
-        return transactions
-            .where((t) => t.type == TransactionType.promotion)
-            .toList();
-      case TransactionFilter.subscriptions:
-        return transactions
-            .where((t) => t.type == TransactionType.subscription)
-            .toList();
-      case TransactionFilter.bookings:
-        return transactions
-            .where((t) =>
-                t.type == TransactionType.booking ||
-                t.type == TransactionType.refund)
-            .toList();
-    }
-  }
 
   WalletState copyWith({
     double? balance,
+    String? currency,
+    bool? isLoading,
+    bool? isLoadingMore,
+    String? error,
     List<WalletTransaction>? transactions,
     TransactionFilter? filter,
+    int? currentPage,
+    bool? hasMore,
   }) =>
       WalletState(
         balance: balance ?? this.balance,
+        currency: currency ?? this.currency,
+        isLoading: isLoading ?? this.isLoading,
+        isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+        error: error,
         transactions: transactions ?? this.transactions,
         filter: filter ?? this.filter,
+        currentPage: currentPage ?? this.currentPage,
+        hasMore: hasMore ?? this.hasMore,
       );
 }
 
 // ── Notifier ──────────────────────────────────────────────────────────────────
 
 class WalletNotifier extends Notifier<WalletState> {
+  static const _limit = 20;
+
   @override
-  WalletState build() => WalletState(
-        balance: 1250.0,
-        transactions: _mockTransactions,
-        filter: TransactionFilter.all,
+  WalletState build() {
+    Future.microtask(() async {
+      await fetchWallet();
+      await fetchTransactions();
+    });
+    return const WalletState(
+      balance: 0,
+      transactions: [],
+      filter: TransactionFilter.all,
+      isLoading: true,
+    );
+  }
+
+  Future<void> fetchWallet() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final response = await apiClient.get(ApiEndpoints.wallet);
+      final raw = response.data;
+      if (raw is Map) {
+        final data = Map<String, dynamic>.from(raw);
+        final balance = double.tryParse(data['balance']?.toString() ?? '0') ?? 0.0;
+        final currency = (data['currency'] ?? 'SAR').toString();
+        state = state.copyWith(
+          balance: balance,
+          currency: currency,
+          isLoading: false,
+        );
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> fetchTransactions({bool reset = true}) async {
+    if (reset) {
+      state = state.copyWith(
+        isLoading: true,
+        error: null,
+        currentPage: 1,
+        hasMore: true,
+        transactions: [],
+      );
+    }
+
+    try {
+      final refType = state.filter.referenceType;
+      final response = await apiClient.get(
+        ApiEndpoints.walletTransactions,
+        queryParameters: {
+          'page': reset ? 1 : state.currentPage,
+          'limit': _limit,
+          if (refType != null) 'referenceType': refType,
+        },
       );
 
-  void setFilter(TransactionFilter f) =>
-      state = state.copyWith(filter: f);
+      final raw = response.data;
+      List<dynamic> items = [];
+      if (raw is List) {
+        items = raw;
+      } else if (raw is Map) {
+        final m = Map<String, dynamic>.from(raw);
+        items = (m['data'] ?? m['items'] ?? m['hits'] ?? []) as List;
+      }
 
-  void topUp(double amount) {
-    final tx = WalletTransaction(
-      id: 'tx_new_${DateTime.now().millisecondsSinceEpoch}',
-      type: TransactionType.topUp,
-      description: 'شحن محفظة',
-      amount: amount,
-      dateTime: DateTime.now(),
-    );
-    state = state.copyWith(
-      balance: state.balance + amount,
-      transactions: [tx, ...state.transactions],
-    );
+      final newTx = items
+          .whereType<Map>()
+          .map((j) => WalletTransaction.fromJson(Map<String, dynamic>.from(j)))
+          .toList();
+
+      state = state.copyWith(
+        transactions: reset ? newTx : [...state.transactions, ...newTx],
+        currentPage: (reset ? 1 : state.currentPage) + 1,
+        hasMore: newTx.length >= _limit,
+        isLoading: false,
+        isLoadingMore: false,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        isLoadingMore: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  Future<void> loadMore() async {
+    if (state.isLoadingMore || !state.hasMore) return;
+    state = state.copyWith(isLoadingMore: true);
+    await fetchTransactions(reset: false);
+  }
+
+  void setFilter(TransactionFilter f) {
+    if (f == state.filter) return;
+    state = state.copyWith(filter: f);
+    fetchTransactions();
+  }
+
+  Future<bool> topUp(double amount) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await apiClient.post(
+        ApiEndpoints.walletTopUp,
+        data: {
+          'amount': amount,
+          'paymentMethod': 'card',
+        },
+      );
+      await fetchWallet();
+      await fetchTransactions();
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
   }
 }
 

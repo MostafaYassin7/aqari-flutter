@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
+import '../../../wallet/presentation/providers/wallet_provider.dart';
 import '../../../../shared/widgets/app_bottom_nav.dart';
 import '../providers/account_provider.dart';
 
@@ -96,13 +97,10 @@ class AccountScreen extends ConsumerWidget {
 
                 // ── Wallet card (logged in only) ────────────
                 if (isLoggedIn) ...[
-                  if (user?.walletBalance != null) ...[
-                    _WalletCard(
-                      balance: user!.walletBalance!,
-                      onTopUp: () => context.push(AppRoutes.wallet),
-                    ),
-                    const SizedBox(height: 8),
-                  ],
+                  _WalletCardFromProvider(
+                    onTopUp: () => context.push(AppRoutes.wallet),
+                  ),
+                  const SizedBox(height: 8),
 
                   // ── Quick actions ──────────────────────────
                   _QuickActionsGrid(),
@@ -605,12 +603,34 @@ class _ProfileMetaBadge extends StatelessWidget {
   }
 }
 
+// ── Wallet card (provider-backed) ─────────────────────────────────────────────
+
+class _WalletCardFromProvider extends ConsumerWidget {
+  final VoidCallback onTopUp;
+  const _WalletCardFromProvider({required this.onTopUp});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final wallet = ref.watch(walletProvider);
+    return _WalletCard(
+      balance: wallet.balance,
+      isLoading: wallet.isLoading,
+      onTopUp: onTopUp,
+    );
+  }
+}
+
 // ── Wallet card ───────────────────────────────────────────────────────────────
 
 class _WalletCard extends StatelessWidget {
   final double balance;
+  final bool isLoading;
   final VoidCallback onTopUp;
-  const _WalletCard({required this.balance, required this.onTopUp});
+  const _WalletCard({
+    required this.balance,
+    this.isLoading = false,
+    required this.onTopUp,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -665,7 +685,17 @@ class _WalletCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    RichText(
+                    if (isLoading)
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
+                      )
+                    else
+                      RichText(
                       text: TextSpan(
                         children: [
                           TextSpan(
