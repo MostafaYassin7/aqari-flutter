@@ -1,10 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/listing.dart';
+import '../../../chat/presentation/providers/chat_provider.dart';
 import '../../data/mock_property_extras.dart';
 import '../providers/property_details_provider.dart';
 import '../widgets/photo_gallery_viewer.dart';
@@ -905,12 +907,12 @@ class _PriceSection extends StatelessWidget {
 
 // ── Bottom bar ────────────────────────────────────────────────────────────────
 
-class _BottomBar extends StatelessWidget {
+class _BottomBar extends ConsumerWidget {
   final Listing listing;
   const _BottomBar({required this.listing});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.white,
@@ -951,13 +953,26 @@ class _BottomBar extends StatelessWidget {
                 label: 'تواصل',
                 icon: Icons.chat_bubble_outline_rounded,
                 outlined: true,
-                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('المحادثات — قريباً'),
-                    duration: Duration(seconds: 1),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                ),
+                onTap: () async {
+                  if (listing.userId.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('لا يمكن التواصل مع هذا المُعلن'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    return;
+                  }
+                  final chatId = await ref
+                      .read(chatsProvider.notifier)
+                      .findOrCreateChat(
+                        participantId: listing.userId,
+                        listingId: listing.id,
+                      );
+                  if (chatId != null && context.mounted) {
+                    context.push('/chat/$chatId');
+                  }
+                },
               ),
               const SizedBox(width: 8),
 

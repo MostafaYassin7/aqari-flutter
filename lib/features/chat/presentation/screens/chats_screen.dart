@@ -14,7 +14,8 @@ class ChatsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final chats = ref.watch(chatsProvider);
+    final chatsState = ref.watch(chatsProvider);
+    final chats = chatsState.chats;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -35,13 +36,16 @@ class ChatsScreen extends ConsumerWidget {
           child: Divider(height: 1, color: AppColors.dividerLight),
         ),
       ),
-      body: chats.isEmpty
+      body: chatsState.isLoading && chats.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : chats.isEmpty
           ? const _EmptyState()
           : ListView.separated(
               itemCount: chats.length,
               separatorBuilder: (_, __) => const Padding(
                 padding: EdgeInsetsDirectional.only(
-                    start: AppConstants.spaceM + 60),
+                  start: AppConstants.spaceM + 60,
+                ),
                 child: Divider(height: 1, color: AppColors.dividerLight),
               ),
               itemBuilder: (_, i) => _SwipeableChatRow(
@@ -86,9 +90,13 @@ class _SwipeableChatRowState extends State<_SwipeableChatRow>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 220));
-    _offsetAnim = Tween<double>(begin: 0, end: -_actionWidth).animate(
-        CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+    _offsetAnim = Tween<double>(
+      begin: 0,
+      end: -_actionWidth,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
   }
 
   @override
@@ -137,14 +145,18 @@ class _SwipeableChatRowState extends State<_SwipeableChatRow>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.delete_rounded,
-                            color: AppColors.white, size: 22),
+                        const Icon(
+                          Icons.delete_rounded,
+                          color: AppColors.white,
+                          size: 22,
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           'حذف',
                           style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w700),
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ],
                     ),
@@ -175,7 +187,9 @@ class _SwipeableChatRowState extends State<_SwipeableChatRow>
               child: Container(
                 color: AppColors.backgroundLight,
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppConstants.spaceM, vertical: 12),
+                  horizontal: AppConstants.spaceM,
+                  vertical: 12,
+                ),
                 child: _ChatRowContent(chat: widget.chat),
               ),
             ),
@@ -207,33 +221,24 @@ class _ChatRowContent extends StatelessWidget {
                   width: 52,
                   height: 52,
                   color: AppColors.primaryLight,
-                  child: const Icon(Icons.person_rounded,
-                      color: AppColors.primary, size: 26),
+                  child: const Icon(
+                    Icons.person_rounded,
+                    color: AppColors.primary,
+                    size: 26,
+                  ),
                 ),
                 errorWidget: (_, __, ___) => Container(
                   width: 52,
                   height: 52,
                   color: AppColors.primaryLight,
-                  child: const Icon(Icons.person_rounded,
-                      color: AppColors.primary, size: 26),
-                ),
-              ),
-            ),
-            if (chat.contact.isOnline)
-              Positioned(
-                bottom: 2,
-                right: 2,
-                child: Container(
-                  width: 11,
-                  height: 11,
-                  decoration: BoxDecoration(
-                    color: AppColors.success,
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                        color: AppColors.backgroundLight, width: 2),
+                  child: const Icon(
+                    Icons.person_rounded,
+                    color: AppColors.primary,
+                    size: 26,
                   ),
                 ),
               ),
+            ),
           ],
         ),
         const SizedBox(width: 12),
@@ -270,13 +275,7 @@ class _ChatRowContent extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                chat.contact.adNumber,
-                style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textHintLight),
-              ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Row(
                 children: [
                   Expanded(
@@ -350,44 +349,52 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppConstants.spaceXL),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.chat_bubble_outline_rounded,
-                  size: 80, color: AppColors.dividerLight),
-              const SizedBox(height: 16),
-              Text(
-                'لا توجد رسائل بعد',
-                style: AppTextStyles.headlineSmall.copyWith(
-                    fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'تفضّل بتصفح الإعلانات للتواصل مع المُعلنين',
-                style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondaryLight),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () => context.go(AppRoutes.home),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  minimumSize: const Size(200, AppConstants.buttonHeight),
-                  shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusM)),
-                  elevation: 0,
-                ),
-                child: Text('تصفّح الإعلانات',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w700)),
-              ),
-            ],
+    child: Padding(
+      padding: const EdgeInsets.all(AppConstants.spaceXL),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.chat_bubble_outline_rounded,
+            size: 80,
+            color: AppColors.dividerLight,
           ),
-        ),
-      );
+          const SizedBox(height: 16),
+          Text(
+            'لا توجد رسائل بعد',
+            style: AppTextStyles.headlineSmall.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'تفضّل بتصفح الإعلانات للتواصل مع المُعلنين',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondaryLight,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () => context.go(AppRoutes.home),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              minimumSize: const Size(200, AppConstants.buttonHeight),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppConstants.radiusM),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              'تصفّح الإعلانات',
+              style: AppTextStyles.bodyLarge.copyWith(
+                color: AppColors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

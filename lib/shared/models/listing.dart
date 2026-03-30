@@ -5,6 +5,7 @@ import '../../core/utils/parse_helpers.dart';
 @immutable
 class Listing {
   final String id;
+  final String userId;
   final String title;
   final String city;
   final String district;
@@ -48,6 +49,7 @@ class Listing {
 
   const Listing({
     required this.id,
+    this.userId = '',
     required this.title,
     required this.city,
     required this.district,
@@ -145,6 +147,7 @@ class Listing {
 
     return Listing(
       id: id,
+      userId: (json['userId'] ?? '').toString(),
       title: (json['title'] ?? '').toString(),
       city: (json['city'] ?? '').toString(),
       district: (json['district'] ?? '').toString(),
