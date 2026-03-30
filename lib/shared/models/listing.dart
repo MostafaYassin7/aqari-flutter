@@ -147,7 +147,13 @@ class Listing {
 
     return Listing(
       id: id,
-      userId: (json['userId'] ?? '').toString(),
+      userId:
+          (json['userId'] ??
+                  json['ownerId'] ??
+                  json['user_id'] ??
+                  json['owner_id'] ??
+                  '')
+              .toString(),
       title: (json['title'] ?? '').toString(),
       city: (json['city'] ?? '').toString(),
       district: (json['district'] ?? '').toString(),

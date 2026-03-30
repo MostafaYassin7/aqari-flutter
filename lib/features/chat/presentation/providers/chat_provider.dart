@@ -295,6 +295,18 @@ class ChatsNotifier extends Notifier<ChatsState> {
     required String participantId,
     String? listingId,
   }) async {
+    // Check locally first — avoid creating duplicates
+    final existing = state.chats
+        .where(
+          (c) =>
+              c.contact.id == participantId &&
+              (listingId == null || c.listingId == listingId),
+        )
+        .toList();
+    if (existing.isNotEmpty) {
+      return existing.first.id;
+    }
+
     try {
       final response = await apiClient.post(
         ApiEndpoints.chats,
