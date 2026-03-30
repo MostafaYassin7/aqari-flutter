@@ -696,24 +696,24 @@ class _WalletCard extends StatelessWidget {
                       )
                     else
                       RichText(
-                      text: TextSpan(
-                        children: [
-                          TextSpan(
-                            text: balance.toStringAsFixed(0),
-                            style: AppTextStyles.headlineMedium.copyWith(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w800,
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: balance.toStringAsFixed(0),
+                              style: AppTextStyles.headlineMedium.copyWith(
+                                color: AppColors.white,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                          ),
-                          TextSpan(
-                            text: '  ريال',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.white.withAlpha(160),
+                            TextSpan(
+                              text: '  ريال',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.white.withAlpha(160),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -984,7 +984,7 @@ class _LogoutButton extends StatelessWidget {
               TextButton(
                 onPressed: () {
                   AuthStorage.clearAll();
-                        context.go(AppRoutes.login);
+                  context.go(AppRoutes.login);
 
                   // Navigator.of(context).pop();
                   // onLogout();

@@ -53,8 +53,11 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
             scrolledUnderElevation: 0,
             pinned: true,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: AppColors.textPrimaryLight),
+              icon: const Icon(
+                Icons.arrow_back_ios_rounded,
+                size: 20,
+                color: AppColors.textPrimaryLight,
+              ),
               onPressed: () => Navigator.of(context).maybePop(),
             ),
             title: Text(
@@ -106,9 +109,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
             ),
           ),
 
-          SliverToBoxAdapter(
-            child: _FilterChips(current: wallet.filter),
-          ),
+          SliverToBoxAdapter(child: _FilterChips(current: wallet.filter)),
 
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
@@ -156,25 +157,26 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                     // Show month header when month changes
                     final tx = txList[i];
                     final prev = i > 0 ? txList[i - 1] : null;
-                    final showHeader = prev == null ||
-                        _monthKey(tx.dateTime) !=
-                            _monthKey(prev.dateTime);
+                    final showHeader =
+                        prev == null ||
+                        _monthKey(tx.dateTime) != _monthKey(prev.dateTime);
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (showHeader)
-                          _MonthHeader(dateTime: tx.dateTime),
+                        if (showHeader) _MonthHeader(dateTime: tx.dateTime),
                         _TransactionRow(transaction: tx),
                         if (i < txList.length - 1)
                           const Divider(
-                              height: 1,
-                              color: AppColors.dividerLight,
-                              indent: 60),
+                            height: 1,
+                            color: AppColors.dividerLight,
+                            indent: 60,
+                          ),
                       ],
                     );
                   },
-                  childCount: wallet.transactions.length +
+                  childCount:
+                      wallet.transactions.length +
                       (wallet.isLoadingMore ? 1 : 0),
                 ),
               ),
@@ -243,8 +245,7 @@ class _BalanceCard extends StatelessWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.2),
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 ),
                 child: const Icon(
                   Icons.account_balance_wallet_rounded,
@@ -289,10 +290,7 @@ class _BalanceCard extends StatelessWidget {
           const SizedBox(height: 24),
 
           // ── Divider ──────────────────────────────────────
-          Divider(
-            color: AppColors.white.withValues(alpha: 0.12),
-            height: 1,
-          ),
+          Divider(color: AppColors.white.withValues(alpha: 0.12), height: 1),
 
           const SizedBox(height: 20),
 
@@ -315,8 +313,7 @@ class _BalanceCard extends StatelessWidget {
                 foregroundColor: AppColors.textPrimaryLight,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 ),
               ),
             ),
@@ -352,25 +349,26 @@ class _FilterChips extends ConsumerWidget {
       height: 38,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding:
-            const EdgeInsets.symmetric(horizontal: AppConstants.spaceM),
+        padding: const EdgeInsets.symmetric(horizontal: AppConstants.spaceM),
         children: TransactionFilter.values.map((f) {
           final isActive = f == current;
           return Padding(
             padding: const EdgeInsetsDirectional.only(end: 8),
             child: GestureDetector(
-              onTap: () =>
-                  ref.read(walletProvider.notifier).setFilter(f),
+              onTap: () => ref.read(walletProvider.notifier).setFilter(f),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 8),
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isActive
                       ? AppColors.primary
                       : AppColors.backgroundLight,
                   borderRadius: BorderRadius.circular(
-                      AppConstants.radiusCircle),
+                    AppConstants.radiusCircle,
+                  ),
                   border: Border.all(
                     color: isActive
                         ? AppColors.primary
@@ -383,9 +381,7 @@ class _FilterChips extends ConsumerWidget {
                     color: isActive
                         ? AppColors.textPrimaryLight
                         : AppColors.textSecondaryLight,
-                    fontWeight: isActive
-                        ? FontWeight.w700
-                        : FontWeight.w400,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
                   ),
                 ),
               ),
@@ -406,8 +402,18 @@ class _MonthHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const months = [
-      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+      'يناير',
+      'فبراير',
+      'مارس',
+      'أبريل',
+      'مايو',
+      'يونيو',
+      'يوليو',
+      'أغسطس',
+      'سبتمبر',
+      'أكتوبر',
+      'نوفمبر',
+      'ديسمبر',
     ];
     final label = '${months[dateTime.month - 1]} ${dateTime.year}';
 
@@ -447,8 +453,7 @@ class _TransactionRow extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: tx.type.color.withValues(alpha: 0.12),
-              borderRadius:
-                  BorderRadius.circular(AppConstants.radiusM),
+              borderRadius: BorderRadius.circular(AppConstants.radiusM),
             ),
             child: Icon(tx.type.icon, color: tx.type.color, size: 22),
           ),
@@ -485,9 +490,7 @@ class _TransactionRow extends StatelessWidget {
             '${isCredit ? '+' : ''}${tx.amount.toStringAsFixed(0)} ر.س',
             style: AppTextStyles.bodyMedium.copyWith(
               fontWeight: FontWeight.w800,
-              color: isCredit
-                  ? AppColors.success
-                  : AppColors.error,
+              color: isCredit ? AppColors.success : AppColors.error,
             ),
           ),
         ],
@@ -522,8 +525,11 @@ class _EmptyFilter extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.receipt_long_rounded,
-              size: 56, color: AppColors.dividerLight),
+          const Icon(
+            Icons.receipt_long_rounded,
+            size: 56,
+            color: AppColors.dividerLight,
+          ),
           const SizedBox(height: 12),
           Text(
             'لا توجد معاملات',
@@ -575,9 +581,7 @@ class _TopUpSheetState extends State<_TopUpSheet> {
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          'تم شحن ${amount.toStringAsFixed(0)} ريال بنجاح ✓',
-        ),
+        content: Text('تم شحن ${amount.toStringAsFixed(0)} ريال بنجاح ✓'),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
@@ -609,8 +613,9 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                   height: 4,
                   decoration: BoxDecoration(
                     color: AppColors.dividerLight,
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusCircle),
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.radiusCircle,
+                    ),
                   ),
                 ),
               ),
@@ -619,7 +624,11 @@ class _TopUpSheetState extends State<_TopUpSheet> {
             // ── Title ──────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                  AppConstants.spaceM, 16, AppConstants.spaceM, 4),
+                AppConstants.spaceM,
+                16,
+                AppConstants.spaceM,
+                4,
+              ),
               child: Text(
                 'شحن المحفظة',
                 style: AppTextStyles.headlineSmall.copyWith(
@@ -630,7 +639,8 @@ class _TopUpSheetState extends State<_TopUpSheet> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spaceM),
+                horizontal: AppConstants.spaceM,
+              ),
               child: Text(
                 'كم تريد أن تشحن؟',
                 style: AppTextStyles.bodyMedium.copyWith(
@@ -644,11 +654,11 @@ class _TopUpSheetState extends State<_TopUpSheet> {
             // ── Quick amounts ───────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spaceM),
+                horizontal: AppConstants.spaceM,
+              ),
               child: Row(
                 children: _quickAmounts.map((amt) {
-                  final isSelected =
-                      !_isCustomActive && _selectedQuick == amt;
+                  final isSelected = !_isCustomActive && _selectedQuick == amt;
                   return Expanded(
                     child: Padding(
                       padding: const EdgeInsetsDirectional.only(end: 8),
@@ -666,7 +676,8 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                                 ? AppColors.primary
                                 : AppColors.surfaceLight,
                             borderRadius: BorderRadius.circular(
-                                AppConstants.radiusM),
+                              AppConstants.radiusM,
+                            ),
                             border: Border.all(
                               color: isSelected
                                   ? AppColors.primary
@@ -697,34 +708,40 @@ class _TopUpSheetState extends State<_TopUpSheet> {
             // ── Custom amount ───────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spaceM),
+                horizontal: AppConstants.spaceM,
+              ),
               child: TextField(
                 controller: _customCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: false),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: false,
+                ),
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 onChanged: (_) => setState(() {
                   _isCustomActive = _customCtrl.text.isNotEmpty;
                   if (_isCustomActive) _selectedQuick = null;
                 }),
                 style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimaryLight),
+                  color: AppColors.textPrimaryLight,
+                ),
                 decoration: InputDecoration(
                   hintText: 'مبلغ مخصص (ريال)',
                   hintStyle: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textHintLight),
+                    color: AppColors.textHintLight,
+                  ),
                   suffixText: 'ر.س',
                   suffixStyle: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondaryLight),
+                    color: AppColors.textSecondaryLight,
+                  ),
                   filled: true,
                   fillColor: _isCustomActive
                       ? AppColors.primaryLight
                       : AppColors.surfaceLight,
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     borderSide: BorderSide(
                       color: _isCustomActive
                           ? AppColors.primary
@@ -732,8 +749,7 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     borderSide: BorderSide(
                       color: _isCustomActive
                           ? AppColors.primary
@@ -741,10 +757,11 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     borderSide: const BorderSide(
-                        color: AppColors.primary, width: 2),
+                      color: AppColors.primary,
+                      width: 2,
+                    ),
                   ),
                 ),
               ),
@@ -770,8 +787,7 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                     disabledBackgroundColor: AppColors.dividerLight,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusM),
+                      borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     ),
                   ),
                   child: Text(

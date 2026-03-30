@@ -107,9 +107,12 @@ class WalletTransaction {
     return WalletTransaction(
       id: (json['id'] ?? '').toString(),
       type: type,
-      description: (json['description'] ?? _defaultDescription(type)).toString(),
+      description: (json['description'] ?? _defaultDescription(type))
+          .toString(),
       amount: amount,
-      dateTime: DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      dateTime:
+          DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 
@@ -181,18 +184,17 @@ class WalletState {
     TransactionFilter? filter,
     int? currentPage,
     bool? hasMore,
-  }) =>
-      WalletState(
-        balance: balance ?? this.balance,
-        currency: currency ?? this.currency,
-        isLoading: isLoading ?? this.isLoading,
-        isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-        error: error,
-        transactions: transactions ?? this.transactions,
-        filter: filter ?? this.filter,
-        currentPage: currentPage ?? this.currentPage,
-        hasMore: hasMore ?? this.hasMore,
-      );
+  }) => WalletState(
+    balance: balance ?? this.balance,
+    currency: currency ?? this.currency,
+    isLoading: isLoading ?? this.isLoading,
+    isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    error: error,
+    transactions: transactions ?? this.transactions,
+    filter: filter ?? this.filter,
+    currentPage: currentPage ?? this.currentPage,
+    hasMore: hasMore ?? this.hasMore,
+  );
 }
 
 // ── Notifier ──────────────────────────────────────────────────────────────────
@@ -221,7 +223,8 @@ class WalletNotifier extends Notifier<WalletState> {
       final raw = response.data;
       if (raw is Map) {
         final data = Map<String, dynamic>.from(raw);
-        final balance = double.tryParse(data['balance']?.toString() ?? '0') ?? 0.0;
+        final balance =
+            double.tryParse(data['balance']?.toString() ?? '0') ?? 0.0;
         final currency = (data['currency'] ?? 'SAR').toString();
         state = state.copyWith(
           balance: balance,
@@ -305,10 +308,7 @@ class WalletNotifier extends Notifier<WalletState> {
     try {
       await apiClient.post(
         ApiEndpoints.walletTopUp,
-        data: {
-          'amount': amount,
-          'paymentMethod': 'card',
-        },
+        data: {'amount': amount, 'paymentMethod': 'card'},
       );
       await fetchWallet();
       await fetchTransactions();
@@ -320,5 +320,6 @@ class WalletNotifier extends Notifier<WalletState> {
   }
 }
 
-final walletProvider =
-    NotifierProvider<WalletNotifier, WalletState>(WalletNotifier.new);
+final walletProvider = NotifierProvider<WalletNotifier, WalletState>(
+  WalletNotifier.new,
+);
