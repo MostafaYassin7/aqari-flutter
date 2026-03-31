@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/network/api_client.dart';
+import '../../../../core/network/api_endpoints.dart';
+import '../../../../core/network/socket_service.dart';
+
 // ── Notification type ─────────────────────────────────────────────────────────
 
 enum NotificationType {
@@ -51,6 +55,25 @@ extension NotificationTypeX on NotificationType {
         return const Color(0xFF717171);
     }
   }
+
+  static NotificationType fromString(String type) {
+    switch (type) {
+      case 'new_message':
+        return NotificationType.message;
+      case 'payment_confirmed':
+        return NotificationType.payment;
+      case 'booking':
+        return NotificationType.booking;
+      case 'listing_approved':
+        return NotificationType.listingApproved;
+      case 'listing_rejected':
+        return NotificationType.listingRejected;
+      case 'search_alert':
+        return NotificationType.searchAlert;
+      default:
+        return NotificationType.system;
+    }
+  }
 }
 
 // ── Model ─────────────────────────────────────────────────────────────────────
@@ -64,6 +87,8 @@ class AppNotification {
   final bool isRead;
   final String? actionRoute;
   final String? photoUrl;
+  final String? referenceType;
+  final String? referenceId;
 
   const AppNotification({
     required this.id,
@@ -74,141 +99,227 @@ class AppNotification {
     this.isRead = false,
     this.actionRoute,
     this.photoUrl,
+    this.referenceType,
+    this.referenceId,
   });
 
+  factory AppNotification.fromJson(Map<String, dynamic> json) {
+    final type = NotificationTypeX.fromString(json['type'] ?? '');
+    final refType = json['referenceType'] as String?;
+    final refId = json['referenceId'] as String?;
+
+    String? actionRoute;
+    if (refType == 'chat' && refId != null) {
+      actionRoute = '/chat/$refId';
+    } else if (refType == 'payment') {
+      actionRoute = '/account';
+    }
+
+    return AppNotification(
+      id: json['id']?.toString() ?? '',
+      type: type,
+      title: json['title'] ?? '',
+      body: json['body'] ?? '',
+      timestamp: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+      isRead: json['isRead'] == true,
+      actionRoute: actionRoute,
+      referenceType: refType,
+      referenceId: refId,
+    );
+  }
+
   AppNotification copyWith({bool? isRead}) => AppNotification(
-        id: id,
-        type: type,
-        title: title,
-        body: body,
-        timestamp: timestamp,
-        isRead: isRead ?? this.isRead,
-        actionRoute: actionRoute,
-        photoUrl: photoUrl,
-      );
+    id: id,
+    type: type,
+    title: title,
+    body: body,
+    timestamp: timestamp,
+    isRead: isRead ?? this.isRead,
+    actionRoute: actionRoute,
+    photoUrl: photoUrl,
+    referenceType: referenceType,
+    referenceId: referenceId,
+  );
 }
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────────────────
 
-final _now = DateTime.now();
+class NotificationsState {
+  final List<AppNotification> notifications;
+  final bool isLoading;
+  final String? error;
+  final int page;
+  final int total;
+  final bool hasMore;
+  final int unreadCount;
 
-final _mockNotifications = <AppNotification>[
-  AppNotification(
-    id: 'n1',
-    type: NotificationType.message,
-    title: 'رسالة جديدة من أحمد المطيري',
-    body: 'العاشرة صباحاً إن كان مناسباً',
-    timestamp: _now.subtract(const Duration(minutes: 15)),
-    isRead: false,
-    actionRoute: '/chat/chat_01',
-    photoUrl: 'https://picsum.photos/seed/chat_c1/200/200',
-  ),
-  AppNotification(
-    id: 'n2',
-    type: NotificationType.booking,
-    title: 'طلب حجز جديد',
-    body: 'فيصل العتيبي يطلب حجز شقتك في حي العليا ليلتين',
-    timestamp: _now.subtract(const Duration(hours: 1, minutes: 30)),
-    isRead: false,
-    actionRoute: '/my-listings',
-    photoUrl: 'https://picsum.photos/seed/chat_c3/200/200',
-  ),
-  AppNotification(
-    id: 'n3',
-    type: NotificationType.listingApproved,
-    title: 'تمت الموافقة على إعلانك',
-    body: 'إعلان "شقة فاخرة في حي العليا" قيد النشر الآن',
-    timestamp: _now.subtract(const Duration(hours: 3)),
-    isRead: false,
-    actionRoute: '/my-listings',
-  ),
-  AppNotification(
-    id: 'n4',
-    type: NotificationType.searchAlert,
-    title: 'تنبيه بحث مطابق',
-    body: 'تم إضافة 3 عقارات جديدة تطابق بحثك عن "فيلا الرياض"',
-    timestamp: _now.subtract(const Duration(hours: 5)),
-    isRead: false,
-    actionRoute: '/search',
-  ),
-  AppNotification(
-    id: 'n5',
-    type: NotificationType.payment,
-    title: 'تم تأكيد الدفع',
-    body: 'تم استلام دفعة ١٢٥٠ ريال في محفظتك بنجاح',
-    timestamp: _now.subtract(const Duration(hours: 8)),
-    isRead: true,
-    actionRoute: '/account',
-  ),
-  AppNotification(
-    id: 'n6',
-    type: NotificationType.message,
-    title: 'رسالة جديدة من منيرة الزهراني',
-    body: 'شكراً سأتشاور مع العائلة وأرد عليك',
-    timestamp: _now.subtract(const Duration(days: 1, hours: 2)),
-    isRead: true,
-    actionRoute: '/chat/chat_02',
-    photoUrl: 'https://picsum.photos/seed/chat_c2/200/200',
-  ),
-  AppNotification(
-    id: 'n7',
-    type: NotificationType.listingRejected,
-    title: 'إعلانك بحاجة إلى مراجعة',
-    body: 'إعلان "محل تجاري - طريق الملك فهد" يحتاج إلى تحديث الصور',
-    timestamp: _now.subtract(const Duration(days: 2)),
-    isRead: true,
-    actionRoute: '/my-listings',
-  ),
-  AppNotification(
-    id: 'n8',
-    type: NotificationType.system,
-    title: 'تحديث جديد متاح',
-    body: 'تم إضافة ميزة البحث بالخريطة وتحسينات عديدة في الإصدار 2.0',
-    timestamp: _now.subtract(const Duration(days: 3)),
-    isRead: true,
-  ),
-  AppNotification(
-    id: 'n9',
-    type: NotificationType.booking,
-    title: 'تذكير: موعد معاينة غداً',
-    body: 'لديك معاينة مع هيفاء الشمري الساعة العاشرة صباحاً',
-    timestamp: _now.subtract(const Duration(days: 4)),
-    isRead: true,
-    actionRoute: '/my-listings',
-    photoUrl: 'https://picsum.photos/seed/chat_c4/200/200',
-  ),
-  AppNotification(
-    id: 'n10',
-    type: NotificationType.system,
-    title: 'مرحباً بك في عقار!',
-    body: 'أكمل ملفك الشخصي للحصول على تجربة أفضل وظهور أكثر',
-    timestamp: _now.subtract(const Duration(days: 7)),
-    isRead: true,
-    actionRoute: '/account',
-  ),
-];
+  const NotificationsState({
+    this.notifications = const [],
+    this.isLoading = false,
+    this.error,
+    this.page = 1,
+    this.total = 0,
+    this.hasMore = true,
+    this.unreadCount = 0,
+  });
+
+  NotificationsState copyWith({
+    List<AppNotification>? notifications,
+    bool? isLoading,
+    String? error,
+    int? page,
+    int? total,
+    bool? hasMore,
+    int? unreadCount,
+  }) => NotificationsState(
+    notifications: notifications ?? this.notifications,
+    isLoading: isLoading ?? this.isLoading,
+    error: error,
+    page: page ?? this.page,
+    total: total ?? this.total,
+    hasMore: hasMore ?? this.hasMore,
+    unreadCount: unreadCount ?? this.unreadCount,
+  );
+}
 
 // ── Notifier ──────────────────────────────────────────────────────────────────
 
-class NotificationsNotifier extends Notifier<List<AppNotification>> {
-  @override
-  List<AppNotification> build() => List.from(_mockNotifications);
+class NotificationsNotifier extends Notifier<NotificationsState> {
+  static const _limit = 20;
+  bool _socketRegistered = false;
 
-  void markAsRead(String id) {
-    state = state
-        .map((n) => n.id == id ? n.copyWith(isRead: true) : n)
-        .toList();
+  @override
+  NotificationsState build() {
+    // Schedule fetch after build() returns initial state
+    Future.microtask(() {
+      fetchNotifications();
+      fetchUnreadCount();
+    });
+    _registerSocket();
+    return const NotificationsState();
   }
 
-  void markAllAsRead() {
-    state = state.map((n) => n.copyWith(isRead: true)).toList();
+  void _registerSocket() {
+    if (_socketRegistered) return;
+    _socketRegistered = true;
+    SocketService().onNewNotification((data) {
+      final n = AppNotification.fromJson(data);
+      state = state.copyWith(
+        notifications: [n, ...state.notifications],
+        unreadCount: state.unreadCount + 1,
+        total: state.total + 1,
+      );
+    });
+  }
+
+  Future<void> fetchNotifications({bool refresh = false}) async {
+    if (state.isLoading) return;
+
+    final page = refresh ? 1 : state.page;
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final res = await apiClient.get(
+        ApiEndpoints.notifications,
+        queryParameters: {'page': page, 'limit': _limit},
+      );
+      print(
+        '[NOTIF] fetchNotifications raw res.data type=${res.data.runtimeType}',
+      );
+      print('[NOTIF] fetchNotifications raw res.data=${res.data}');
+
+      // After interceptor unwrap: could be {data: [...], total, page}
+      // or the list directly depending on shape
+      List<dynamic> rawList;
+      int total;
+
+      if (res.data is List) {
+        rawList = res.data as List;
+        total = rawList.length;
+      } else {
+        final body = res.data as Map<String, dynamic>;
+        rawList = (body['data'] as List?) ?? [];
+        total = body['total'] as int? ?? rawList.length;
+      }
+
+      final list = rawList
+          .map((j) => AppNotification.fromJson(j as Map<String, dynamic>))
+          .toList();
+      print('[NOTIF] Parsed ${list.length} notifications, total=$total');
+
+      state = state.copyWith(
+        notifications: refresh ? list : [...state.notifications, ...list],
+        isLoading: false,
+        page: page + 1,
+        total: total,
+        hasMore:
+            (refresh ? list.length : state.notifications.length + list.length) <
+            total,
+      );
+    } catch (e, st) {
+      print('[NOTIF] fetchNotifications ERROR: $e');
+      print('[NOTIF] Stack: $st');
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> fetchUnreadCount() async {
+    try {
+      final res = await apiClient.get(ApiEndpoints.notificationsUnreadCount);
+      print('[NOTIF] unread-count raw res.data=${res.data}');
+      // After interceptor unwrap: {count: 7} or just a number
+      if (res.data is Map) {
+        final body = res.data as Map<String, dynamic>;
+        state = state.copyWith(unreadCount: body['count'] as int? ?? 0);
+      } else if (res.data is int) {
+        state = state.copyWith(unreadCount: res.data as int);
+      }
+    } catch (e) {
+      print('[NOTIF] fetchUnreadCount ERROR: $e');
+    }
+  }
+
+  Future<void> markAsRead(String id) async {
+    // Optimistic update
+    state = state.copyWith(
+      notifications: state.notifications
+          .map((n) => n.id == id && !n.isRead ? n.copyWith(isRead: true) : n)
+          .toList(),
+      unreadCount: (state.unreadCount - 1).clamp(0, state.total),
+    );
+    try {
+      await apiClient.patch('${ApiEndpoints.notifications}/$id/read');
+    } catch (_) {}
+  }
+
+  Future<void> markAllAsRead() async {
+    state = state.copyWith(
+      notifications: state.notifications
+          .map((n) => n.copyWith(isRead: true))
+          .toList(),
+      unreadCount: 0,
+    );
+    try {
+      await apiClient.patch('${ApiEndpoints.notifications}/read-all');
+    } catch (_) {}
+  }
+
+  Future<void> loadMore() async {
+    if (!state.hasMore || state.isLoading) return;
+    await fetchNotifications();
+  }
+
+  Future<void> refresh() async {
+    await fetchNotifications(refresh: true);
+    await fetchUnreadCount();
   }
 }
 
 final notificationsProvider =
-    NotifierProvider<NotificationsNotifier, List<AppNotification>>(
-        NotificationsNotifier.new);
+    NotifierProvider<NotificationsNotifier, NotificationsState>(
+      NotificationsNotifier.new,
+    );
 
 final unreadCountProvider = Provider<int>((ref) {
-  return ref.watch(notificationsProvider).where((n) => !n.isRead).length;
+  return ref.watch(notificationsProvider).unreadCount;
 });

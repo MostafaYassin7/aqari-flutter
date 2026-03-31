@@ -177,8 +177,12 @@ class SocketService {
 
   // ── Notification listeners ──────────────────────────────────────────────
 
-  void onNewNotification(void Function(Map<String, dynamic>) cb) => _notifSocket
-      ?.on('new_notification', (d) => cb(Map<String, dynamic>.from(d as Map)));
+  void onNewNotification(void Function(Map<String, dynamic>) cb) {
+    _notifSocket?.on('new_notification', (d) {
+      print('[SOCKET] 🔔 new_notification received: $d');
+      cb(Map<String, dynamic>.from(d as Map));
+    });
+  }
 
   void disconnectAll() {
     print('[SOCKET] disconnectAll');
