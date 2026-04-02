@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../shared/models/listing.dart';
-import '../../../home/data/mock_listings.dart';
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
 
@@ -30,6 +29,7 @@ class MapState {
   final LatLngBounds? visibleBounds;
   final double currentZoom;
   final bool showSearchArea;
+  final List<Listing> allListings;
 
   const MapState({
     this.viewMode = MapViewMode.list,
@@ -37,6 +37,7 @@ class MapState {
     this.visibleBounds,
     this.currentZoom = 5.5,
     this.showSearchArea = false,
+    this.allListings = const [],
   });
 
   MapState copyWith({
@@ -46,6 +47,7 @@ class MapState {
     LatLngBounds? visibleBounds,
     double? currentZoom,
     bool? showSearchArea,
+    List<Listing>? allListings,
   }) {
     return MapState(
       viewMode: viewMode ?? this.viewMode,
@@ -55,6 +57,7 @@ class MapState {
       visibleBounds: visibleBounds ?? this.visibleBounds,
       currentZoom: currentZoom ?? this.currentZoom,
       showSearchArea: showSearchArea ?? this.showSearchArea,
+      allListings: allListings ?? this.allListings,
     );
   }
 
@@ -62,31 +65,31 @@ class MapState {
   bool get showClusters => currentZoom < 8.5;
 
   /// Listings visible inside the current map bounds.
+  /// Returns ALL listings with valid coordinates — the map itself handles
+  /// which markers are rendered based on the viewport.
   List<Listing> get visibleListings {
-    final bounds = visibleBounds;
-    if (bounds == null) return mockListings;
-    return mockListings.where((l) {
-      if (l.lat == 0.0 && l.lng == 0.0) return false;
-      return l.lat >= bounds.southwest.latitude &&
-          l.lat <= bounds.northeast.latitude &&
-          l.lng >= bounds.southwest.longitude &&
-          l.lng <= bounds.northeast.longitude;
-    }).toList();
+    // Return all listings that have valid coordinates.
+    // Items without coordinates still appear in the card shelf.
+    return allListings;
+  }
+
+  /// Only listings with valid lat/lng for placing markers on the map.
+  List<Listing> get mappableListings {
+    return allListings.where((l) => l.lat != 0.0 || l.lng != 0.0).toList();
   }
 
   /// City-level clusters derived from all listings.
   List<CityCluster> get cityClusters {
     final map = <String, List<Listing>>{};
-    for (final l in mockListings) {
+    for (final l in allListings) {
+      if (l.lat == 0.0 && l.lng == 0.0) continue;
       map.putIfAbsent(l.city, () => []).add(l);
     }
     return map.entries.map((e) {
       final lats = e.value.map((l) => l.lat);
       final lngs = e.value.map((l) => l.lng);
-      final centerLat =
-          lats.reduce((a, b) => a + b) / e.value.length;
-      final centerLng =
-          lngs.reduce((a, b) => a + b) / e.value.length;
+      final centerLat = lats.reduce((a, b) => a + b) / e.value.length;
+      final centerLng = lngs.reduce((a, b) => a + b) / e.value.length;
       return CityCluster(
         city: e.key,
         center: LatLng(centerLat, centerLng),
@@ -121,10 +124,7 @@ class MapNotifier extends Notifier<MapState> {
   }
 
   void updateBoundsAndZoom(LatLngBounds bounds, double zoom) {
-    state = state.copyWith(
-      visibleBounds: bounds,
-      currentZoom: zoom,
-    );
+    state = state.copyWith(visibleBounds: bounds, currentZoom: zoom);
   }
 
   void markSearchAreaDirty() {
@@ -134,7 +134,12 @@ class MapNotifier extends Notifier<MapState> {
   void clearSearchAreaFlag() {
     state = state.copyWith(showSearchArea: false);
   }
+
+  void setListings(List<Listing> listings) {
+    if (listings != state.allListings) {
+      state = state.copyWith(allListings: listings);
+    }
+  }
 }
 
-final mapProvider =
-    NotifierProvider<MapNotifier, MapState>(MapNotifier.new);
+final mapProvider = NotifierProvider<MapNotifier, MapState>(MapNotifier.new);

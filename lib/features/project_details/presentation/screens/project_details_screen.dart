@@ -1,40 +1,38 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/models/listing.dart';
-import '../../../chat/presentation/providers/chat_provider.dart';
-import '../../data/mock_property_extras.dart';
-import '../providers/property_details_provider.dart';
-import '../widgets/photo_gallery_viewer.dart';
+import '../../../../shared/models/listing.dart' show formatPrice;
+import '../../../../shared/models/project.dart';
+import '../../../property_details/presentation/widgets/photo_gallery_viewer.dart';
+import '../providers/project_details_provider.dart';
 
-class PropertyDetailsScreen extends ConsumerStatefulWidget {
-  final String listingId;
+class ProjectDetailsScreen extends ConsumerStatefulWidget {
+  final String projectId;
 
-  const PropertyDetailsScreen({required this.listingId, super.key});
+  const ProjectDetailsScreen({required this.projectId, super.key});
 
   @override
-  ConsumerState<PropertyDetailsScreen> createState() =>
-      _PropertyDetailsScreenState();
+  ConsumerState<ProjectDetailsScreen> createState() =>
+      _ProjectDetailsScreenState();
 }
 
-class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
+class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(propertyDetailsProvider.notifier).load(widget.listingId);
+      ref.read(projectDetailsProvider.notifier).load(widget.projectId);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final asyncDetails = ref.watch(propertyDetailsProvider);
+    final asyncProject = ref.watch(projectDetailsProvider);
 
-    return asyncDetails.when(
+    return asyncProject.when(
       loading: () => const Scaffold(
         backgroundColor: AppColors.backgroundLight,
         body: Center(
@@ -63,20 +61,15 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => ref
-                    .read(propertyDetailsProvider.notifier)
-                    .load(widget.listingId),
+                    .read(projectDetailsProvider.notifier)
+                    .load(widget.projectId),
                 child: const Text('إعادة المحاولة'),
               ),
             ],
           ),
         ),
       ),
-      data: (details) {
-        final listing = details.listing;
-        final isFav = details.isFavorited;
-        final owner = getOwnerForListing(listing.id);
-        final features = getFeaturesFromListing(listing);
-
+      data: (project) {
         return Scaffold(
           backgroundColor: AppColors.backgroundLight,
           extendBodyBehindAppBar: true,
@@ -86,27 +79,25 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _PhotoSection(listing: listing),
+                    _PhotoSection(project: project),
                     Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _TitleSection(listing: listing),
+                          _TitleSection(project: project),
                           const _Divider(),
-                          _StatsRow(listing: listing),
+                          _StatsRow(project: project),
                           const _Divider(),
-                          _OwnerCard(owner: owner),
-                          const _Divider(),
-                          _DescriptionSection(listing: listing),
-                          if (features.isNotEmpty) ...[
+                          _DescriptionSection(project: project),
+                          if (project.units.isNotEmpty) ...[
                             const _Divider(),
-                            _FeaturesGrid(features: features),
+                            _UnitsSection(units: project.units),
                           ],
                           const _Divider(),
-                          _LocationSection(listing: listing),
+                          _LocationSection(project: project),
                           const _Divider(),
-                          _PriceSection(listing: listing),
+                          _PriceSection(project: project),
                           const SizedBox(height: 100),
                         ],
                       ),
@@ -114,10 +105,10 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
                   ],
                 ),
               ),
-              _TopOverlayBar(isFav: isFav, ref: ref),
+              _TopOverlayBar(),
             ],
           ),
-          bottomNavigationBar: _BottomBar(listing: listing),
+          bottomNavigationBar: _BottomBar(project: project),
         );
       },
     );
@@ -127,8 +118,8 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
 // ── Photo section ─────────────────────────────────────────────────────────────
 
 class _PhotoSection extends StatefulWidget {
-  final Listing listing;
-  const _PhotoSection({required this.listing});
+  final Project project;
+  const _PhotoSection({required this.project});
 
   @override
   State<_PhotoSection> createState() => _PhotoSectionState();
@@ -152,7 +143,7 @@ class _PhotoSectionState extends State<_PhotoSection> {
 
   @override
   Widget build(BuildContext context) {
-    final urls = widget.listing.imageUrls;
+    final urls = widget.project.imageUrls;
 
     return GestureDetector(
       onTap: () => showPhotoGallery(
@@ -162,7 +153,6 @@ class _PhotoSectionState extends State<_PhotoSection> {
       ),
       child: Stack(
         children: [
-          // Image PageView
           SizedBox(
             height: 320,
             child: PageView.builder(
@@ -187,7 +177,7 @@ class _PhotoSectionState extends State<_PhotoSection> {
                   color: AppColors.surfaceLight,
                   child: const Center(
                     child: Icon(
-                      Icons.home_rounded,
+                      Icons.apartment_rounded,
                       size: 64,
                       color: AppColors.primary,
                     ),
@@ -214,42 +204,43 @@ class _PhotoSectionState extends State<_PhotoSection> {
             ),
           ),
 
-          // Photo counter badge
-          Positioned(
-            bottom: 14,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.overlay,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.photo_library_rounded,
-                      size: 13,
-                      color: AppColors.white,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      '${_current + 1} / ${urls.length}',
-                      style: AppTextStyles.labelSmall.copyWith(
+          // Photo counter
+          if (urls.length > 1)
+            Positioned(
+              bottom: 14,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.overlay,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.photo_library_rounded,
+                        size: 13,
                         color: AppColors.white,
-                        fontWeight: FontWeight.w600,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 5),
+                      Text(
+                        '${_current + 1} / ${urls.length}',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -259,11 +250,6 @@ class _PhotoSectionState extends State<_PhotoSection> {
 // ── Top overlay bar ───────────────────────────────────────────────────────────
 
 class _TopOverlayBar extends StatelessWidget {
-  final bool isFav;
-  final WidgetRef ref;
-
-  const _TopOverlayBar({required this.isFav, required this.ref});
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -271,47 +257,17 @@ class _TopOverlayBar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
-            // Back
             _OverlayIconButton(
               icon: Icons.arrow_back_rounded,
               onTap: () => Navigator.of(context).pop(),
             ),
-
             const Spacer(),
-
-            // Share
             _OverlayIconButton(
               icon: Icons.share_rounded,
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('مشاركة العقار — قريباً'),
-                    duration: Duration(seconds: 1),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-            ),
-            const SizedBox(width: 8),
-
-            // Favorite
-            _OverlayIconButton(
-              icon: isFav
-                  ? Icons.favorite_rounded
-                  : Icons.favorite_border_rounded,
-              iconColor: isFav ? AppColors.error : null,
-              onTap: () =>
-                  ref.read(propertyDetailsProvider.notifier).toggleFavorite(),
-            ),
-            const SizedBox(width: 8),
-
-            // Report (via "...")
-            _OverlayIconButton(
-              icon: Icons.more_horiz_rounded,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('الإبلاغ عن العقار — قريباً'),
+                    content: Text('مشاركة المشروع — قريباً'),
                     duration: Duration(seconds: 1),
                     behavior: SnackBarBehavior.floating,
                   ),
@@ -328,13 +284,8 @@ class _TopOverlayBar extends StatelessWidget {
 class _OverlayIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
-  final Color? iconColor;
 
-  const _OverlayIconButton({
-    required this.icon,
-    required this.onTap,
-    this.iconColor,
-  });
+  const _OverlayIconButton({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -354,11 +305,7 @@ class _OverlayIconButton extends StatelessWidget {
             ),
           ],
         ),
-        child: Icon(
-          icon,
-          size: 18,
-          color: iconColor ?? AppColors.textPrimaryLight,
-        ),
+        child: Icon(icon, size: 18, color: AppColors.textPrimaryLight),
       ),
     );
   }
@@ -367,16 +314,19 @@ class _OverlayIconButton extends StatelessWidget {
 // ── Title section ─────────────────────────────────────────────────────────────
 
 class _TitleSection extends StatelessWidget {
-  final Listing listing;
-  const _TitleSection({required this.listing});
+  final Project project;
+  const _TitleSection({required this.project});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Availability badge
+        _AvailabilityBadge(availability: project.availability),
+        const SizedBox(height: 12),
         Text(
-          listing.title,
+          project.name,
           style: AppTextStyles.headlineMedium.copyWith(
             fontWeight: FontWeight.w800,
             color: AppColors.textPrimaryLight,
@@ -384,13 +334,60 @@ class _TitleSection extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          '${listing.city}  ·  ${listing.district}  ·  ${listing.category}',
+          [
+            if (project.district.isNotEmpty) project.district,
+            project.city,
+          ].join('، '),
           style: AppTextStyles.bodyMedium.copyWith(
             color: AppColors.textSecondaryLight,
           ),
         ),
+        if (project.developerName.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              const Icon(
+                Icons.business_rounded,
+                size: 16,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                project.developerName,
+                style: AppTextStyles.bodyMedium.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 16),
       ],
+    );
+  }
+}
+
+class _AvailabilityBadge extends StatelessWidget {
+  final ProjectAvailability availability;
+  const _AvailabilityBadge({required this.availability});
+
+  @override
+  Widget build(BuildContext context) {
+    final isReady = availability == ProjectAvailability.ready;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: isReady ? AppColors.success : AppColors.primary,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        availability.label,
+        style: AppTextStyles.labelSmall.copyWith(
+          color: AppColors.white,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }
@@ -398,36 +395,32 @@ class _TitleSection extends StatelessWidget {
 // ── Stats row ─────────────────────────────────────────────────────────────────
 
 class _StatsRow extends StatelessWidget {
-  final Listing listing;
-  const _StatsRow({required this.listing});
+  final Project project;
+  const _StatsRow({required this.project});
 
   @override
   Widget build(BuildContext context) {
     final stats = <Map<String, dynamic>>[
-      if (listing.bedrooms > 0)
+      if (project.totalUnits > 0)
         {
-          'value': '${listing.bedrooms}',
-          'label': 'غرف نوم',
-          'icon': Icons.bed_rounded,
+          'value': '${project.totalUnits}',
+          'label': 'وحدة',
+          'icon': Icons.grid_view_rounded,
         },
-      if (listing.bathrooms > 0)
+      if (project.units.isNotEmpty)
         {
-          'value': '${listing.bathrooms}',
-          'label': 'حمامات',
-          'icon': Icons.shower_rounded,
-        },
-      if (listing.livingRooms > 0)
-        {
-          'value': '${listing.livingRooms}',
-          'label': 'مجالس',
-          'icon': Icons.weekend_rounded,
+          'value': '${project.units.length}',
+          'label': 'نوع وحدة',
+          'icon': Icons.category_rounded,
         },
       {
-        'value': '${listing.area}',
-        'label': 'م²',
-        'icon': Icons.straighten_rounded,
+        'value': project.availability.label,
+        'label': 'الحالة',
+        'icon': Icons.check_circle_rounded,
       },
     ];
+
+    if (stats.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -461,111 +454,11 @@ class _StatsRow extends StatelessWidget {
   }
 }
 
-// ── Owner card ────────────────────────────────────────────────────────────────
-
-class _OwnerCard extends StatelessWidget {
-  final PropertyOwner owner;
-  const _OwnerCard({required this.owner});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          // Avatar
-          ClipOval(
-            child: CachedNetworkImage(
-              imageUrl: owner.photoUrl,
-              width: 56,
-              height: 56,
-              fit: BoxFit.cover,
-              errorWidget: (_, __, ___) => Container(
-                width: 56,
-                height: 56,
-                color: AppColors.primaryLight,
-                child: const Icon(
-                  Icons.person_rounded,
-                  size: 32,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 14),
-
-          // Info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      owner.name,
-                      style: AppTextStyles.titleLarge.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimaryLight,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryLight,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        owner.type,
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.star_rounded,
-                      size: 14,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      owner.rating.toStringAsFixed(1),
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textPrimaryLight,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      '  ·  ${owner.reviewCount} تقييم  ·  ${owner.lastActive}',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondaryLight,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ── Description section ───────────────────────────────────────────────────────
 
 class _DescriptionSection extends StatefulWidget {
-  final Listing listing;
-  const _DescriptionSection({required this.listing});
+  final Project project;
+  const _DescriptionSection({required this.project});
 
   @override
   State<_DescriptionSection> createState() => _DescriptionSectionState();
@@ -576,13 +469,15 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.project.description.isEmpty) return const SizedBox.shrink();
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'عن العقار',
+            'عن المشروع',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimaryLight,
@@ -595,7 +490,7 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
                 ? CrossFadeState.showSecond
                 : CrossFadeState.showFirst,
             firstChild: Text(
-              widget.listing.description,
+              widget.project.description,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.bodyMedium.copyWith(
@@ -604,49 +499,67 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
               ),
             ),
             secondChild: Text(
-              widget.listing.description,
+              widget.project.description,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondaryLight,
                 height: 1.7,
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: () => setState(() => _expanded = !_expanded),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  _expanded ? 'عرض أقل' : 'اقرأ المزيد',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimaryLight,
-                    fontWeight: FontWeight.w700,
-                    decoration: TextDecoration.underline,
+          if (widget.project.description.length > 100) ...[
+            const SizedBox(height: 8),
+            GestureDetector(
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _expanded ? 'عرض أقل' : 'اقرأ المزيد',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textPrimaryLight,
+                      fontWeight: FontWeight.w700,
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                Icon(
-                  _expanded
-                      ? Icons.keyboard_arrow_up_rounded
-                      : Icons.keyboard_arrow_down_rounded,
-                  size: 18,
-                  color: AppColors.textPrimaryLight,
-                ),
-              ],
+                  const SizedBox(width: 4),
+                  Icon(
+                    _expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    size: 18,
+                    color: AppColors.textPrimaryLight,
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 }
 
-// ── Features grid ─────────────────────────────────────────────────────────────
+// ── Units section ─────────────────────────────────────────────────────────────
 
-class _FeaturesGrid extends StatelessWidget {
-  final List<ListingFeature> features;
-  const _FeaturesGrid({required this.features});
+const _unitTypeLabels = <String, String>{
+  'studio': 'استوديو',
+  '1br': 'غرفة نوم واحدة',
+  '2br': 'غرفتين نوم',
+  '3br': '3 غرف نوم',
+  '4br': '4 غرف نوم',
+  'villa': 'فيلا',
+  'commercial': 'تجاري',
+};
+
+const _availabilityLabels = <String, String>{
+  'available': 'متاح',
+  'sold': 'مباع',
+  'reserved': 'محجوز',
+};
+
+class _UnitsSection extends StatelessWidget {
+  final List<ProjectUnit> units;
+  const _UnitsSection({required this.units});
 
   @override
   Widget build(BuildContext context) {
@@ -656,24 +569,96 @@ class _FeaturesGrid extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'المرافق والخدمات',
+            'الوحدات المتاحة',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimaryLight,
             ),
           ),
           const SizedBox(height: 16),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 3.5,
+          ...units.map((unit) => _UnitCard(unit: unit)),
+        ],
+      ),
+    );
+  }
+}
+
+class _UnitCard extends StatelessWidget {
+  final ProjectUnit unit;
+  const _UnitCard({required this.unit});
+
+  @override
+  Widget build(BuildContext context) {
+    final typeLabel = _unitTypeLabels[unit.unitType] ?? unit.unitType;
+    final availLabel =
+        _availabilityLabels[unit.availability] ?? unit.availability;
+    final isAvailable = unit.availability == 'available';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.dividerLight),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  typeLabel,
+                  style: AppTextStyles.titleMedium.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimaryLight,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: isAvailable
+                      ? AppColors.success.withValues(alpha: 0.12)
+                      : AppColors.error.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  availLabel,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: isAvailable ? AppColors.success : AppColors.error,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _UnitStat(
+                icon: Icons.straighten_rounded,
+                label: '${unit.area.toInt()} م²',
+              ),
+              const SizedBox(width: 24),
+              if (unit.floor > 0)
+                _UnitStat(
+                  icon: Icons.layers_rounded,
+                  label: 'الدور ${unit.floor}',
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${unit.displayPrice} ريال',
+            style: AppTextStyles.titleMedium.copyWith(
+              fontWeight: FontWeight.w800,
+              color: AppColors.primary,
             ),
-            itemCount: features.length,
-            itemBuilder: (_, i) => _FeatureTile(feature: features[i]),
           ),
         ],
       ),
@@ -681,35 +666,22 @@ class _FeaturesGrid extends StatelessWidget {
   }
 }
 
-class _FeatureTile extends StatelessWidget {
-  final ListingFeature feature;
-  const _FeatureTile({required this.feature});
+class _UnitStat extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _UnitStat({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceLight,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            feature.icon,
-            size: 20,
-            color: AppColors.textPrimaryLight,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            feature.label,
-            style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textPrimaryLight,
-            ),
-            overflow: TextOverflow.ellipsis,
+        Icon(icon, size: 16, color: AppColors.textSecondaryLight),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textSecondaryLight,
           ),
         ),
       ],
@@ -720,8 +692,8 @@ class _FeatureTile extends StatelessWidget {
 // ── Location section ──────────────────────────────────────────────────────────
 
 class _LocationSection extends StatelessWidget {
-  final Listing listing;
-  const _LocationSection({required this.listing});
+  final Project project;
+  const _LocationSection({required this.project});
 
   @override
   Widget build(BuildContext context) {
@@ -738,7 +710,6 @@ class _LocationSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // Map placeholder
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Container(
@@ -746,11 +717,9 @@ class _LocationSection extends StatelessWidget {
               color: const Color(0xFFD6EAD6),
               child: Stack(
                 children: [
-                  // Simulated map grid
                   Positioned.fill(
                     child: CustomPaint(painter: _MapGridPainter()),
                   ),
-                  // Location pin
                   Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -771,7 +740,10 @@ class _LocationSection extends StatelessWidget {
                             ],
                           ),
                           child: Text(
-                            '${listing.district}، ${listing.city}',
+                            [
+                              if (project.district.isNotEmpty) project.district,
+                              project.city,
+                            ].join('، '),
                             style: AppTextStyles.labelMedium.copyWith(
                               color: AppColors.textPrimaryLight,
                               fontWeight: FontWeight.w600,
@@ -791,35 +763,33 @@ class _LocationSection extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('فتح الخريطة — قريباً'),
-                  duration: Duration(seconds: 1),
-                  behavior: SnackBarBehavior.floating,
+          if (project.address.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 16,
+                  color: AppColors.textSecondaryLight,
                 ),
-              );
-            },
-            icon: const Icon(Icons.map_rounded, size: 18),
-            label: const Text('فتح الخريطة'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textPrimaryLight,
-              side: const BorderSide(color: AppColors.dividerLight),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    project.address,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.textSecondaryLight,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 }
 
-// Minimal map-grid painter for the location placeholder
 class _MapGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -833,7 +803,6 @@ class _MapGridPainter extends CustomPainter {
     for (double y = 0; y < size.height; y += step) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
-    // A few "road" lines
     final roadPaint = Paint()
       ..color = AppColors.white.withValues(alpha: 0.7)
       ..strokeWidth = 8;
@@ -856,15 +825,11 @@ class _MapGridPainter extends CustomPainter {
 // ── Price section ─────────────────────────────────────────────────────────────
 
 class _PriceSection extends StatelessWidget {
-  final Listing listing;
-  const _PriceSection({required this.listing});
+  final Project project;
+  const _PriceSection({required this.project});
 
   @override
   Widget build(BuildContext context) {
-    final pricePerSqm = listing.area > 0
-        ? (listing.price / listing.area).round()
-        : 0;
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
@@ -878,17 +843,29 @@ class _PriceSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            formatPrice(listing.price),
-            style: AppTextStyles.headlineLarge.copyWith(
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimaryLight,
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: 'يبدأ من  ',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondaryLight,
+                  ),
+                ),
+                TextSpan(
+                  text: formatPrice(project.startingPrice),
+                  style: AppTextStyles.headlineLarge.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimaryLight,
+                  ),
+                ),
+              ],
             ),
           ),
-          if (pricePerSqm > 0) ...[
+          if (project.priceTo != null && project.priceTo! > 0) ...[
             const SizedBox(height: 4),
             Text(
-              'السعر / م²  ≈  ${_fmtNum(pricePerSqm)} ريال',
+              'حتى  ${formatPrice(project.priceTo!)}',
               style: AppTextStyles.bodyMedium.copyWith(
                 color: AppColors.textSecondaryLight,
               ),
@@ -898,21 +875,16 @@ class _PriceSection extends StatelessWidget {
       ),
     );
   }
-
-  String _fmtNum(int n) => n.toString().replaceAllMapped(
-    RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-    (m) => '${m[1]},',
-  );
 }
 
 // ── Bottom bar ────────────────────────────────────────────────────────────────
 
-class _BottomBar extends ConsumerWidget {
-  final Listing listing;
-  const _BottomBar({required this.listing});
+class _BottomBar extends StatelessWidget {
+  final Project project;
+  const _BottomBar({required this.project});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.white,
@@ -924,21 +896,20 @@ class _BottomBar extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             children: [
-              // Price info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'السعر الإجمالي',
+                      'يبدأ من',
                       style: AppTextStyles.labelSmall.copyWith(
                         color: AppColors.textSecondaryLight,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      formatPrice(listing.price),
+                      formatPrice(project.startingPrice),
                       style: AppTextStyles.titleLarge.copyWith(
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimaryLight,
@@ -947,51 +918,19 @@ class _BottomBar extends ConsumerWidget {
                   ],
                 ),
               ),
-
-              // Chat (outlined)
               _BarButton(
                 label: 'تواصل',
                 icon: Icons.chat_bubble_outline_rounded,
                 outlined: true,
-                onTap: () async {
-                  if (listing.userId.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('لا يمكن التواصل مع هذا المُعلن'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                    return;
-                  }
-                  final chatId = await ref
-                      .read(chatsProvider.notifier)
-                      .findOrCreateChat(
-                        participantId: listing.userId,
-                        listingId: listing.id,
-                      );
-                  if (chatId != null && context.mounted) {
-                    context.push('/chat/$chatId');
-                  }
-                },
-              ),
-              const SizedBox(width: 8),
-
-              // WhatsApp (green)
-              _BarButton(
-                label: 'واتساب',
-                icon: Icons.message_rounded,
-                color: const Color(0xFF25D366),
                 onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('فتح واتساب — قريباً'),
+                    content: Text('المحادثة — قريباً'),
                     duration: Duration(seconds: 1),
                     behavior: SnackBarBehavior.floating,
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-
-              // Call (primary)
               _BarButton(
                 label: 'اتصال',
                 icon: Icons.phone_rounded,
@@ -1061,7 +1000,7 @@ class _BarButton extends StatelessWidget {
   }
 }
 
-// ── Reusable divider ──────────────────────────────────────────────────────────
+// ── Divider ───────────────────────────────────────────────────────────────────
 
 class _Divider extends StatelessWidget {
   const _Divider();

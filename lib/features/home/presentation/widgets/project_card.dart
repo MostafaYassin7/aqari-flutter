@@ -7,7 +7,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/listing.dart' show formatPrice;
 import '../../../../shared/models/project.dart';
-import '../providers/projects_provider.dart';
+
+// ignore: depend_on_referenced_packages
+import 'package:go_router/go_router.dart';
 
 /// Airbnb-Experience-style project listing card.
 class ProjectCard extends ConsumerWidget {
@@ -17,19 +19,8 @@ class ProjectCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final favIds = ref.watch(favoritedProjectsProvider);
-    final isFav = favIds.contains(project.id);
-
     return GestureDetector(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تفاصيل المشروع — قريباً'),
-            duration: Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      },
+      onTap: () => context.push('/project/${project.id}'),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
         child: Column(
@@ -39,8 +30,7 @@ class ProjectCard extends ConsumerWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
                   child: CachedNetworkImage(
                     imageUrl: project.imageUrls.first,
                     width: double.infinity,
@@ -72,36 +62,7 @@ class ProjectCard extends ConsumerWidget {
                 PositionedDirectional(
                   top: 12,
                   start: 12,
-                  child: _AvailabilityBadge(
-                      availability: project.availability),
-                ),
-
-                // Favorite button — top end
-                PositionedDirectional(
-                  top: 12,
-                  end: 12,
-                  child: GestureDetector(
-                    onTap: () => ref
-                        .read(favoritedProjectsProvider.notifier)
-                        .toggle(project.id),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: const BoxDecoration(
-                        color: AppColors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        isFav
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        size: 20,
-                        color: isFav
-                            ? AppColors.error
-                            : AppColors.textSecondaryLight,
-                      ),
-                    ),
-                  ),
+                  child: _AvailabilityBadge(availability: project.availability),
                 ),
               ],
             ),
@@ -132,8 +93,11 @@ class ProjectCard extends ConsumerWidget {
             // ── City ─────────────────────────────────────
             Row(
               children: [
-                const Icon(Icons.location_on_rounded,
-                    size: 14, color: AppColors.textSecondaryLight),
+                const Icon(
+                  Icons.location_on_rounded,
+                  size: 14,
+                  color: AppColors.textSecondaryLight,
+                ),
                 const SizedBox(width: 3),
                 Text(
                   project.city,

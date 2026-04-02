@@ -54,7 +54,7 @@ class DailyRental {
         : (catRaw ?? '').toString();
 
     return DailyRental(
-      id: (json['id'] ?? '').toString(),
+      id: (json['id'] ?? json['objectID'] ?? '').toString(),
       name: (json['title'] ?? json['name'] ?? '').toString(),
       city: (json['city'] ?? '').toString(),
       district: (json['district'] ?? '').toString(),
@@ -62,8 +62,9 @@ class DailyRental {
       imageUrls: imageUrls,
       pricePerNight: ParseHelpers.toDouble(json['totalPrice']),
       rating: ParseHelpers.toDouble(json['averageRating'] ?? json['rating']),
-      reviewCount:
-          ParseHelpers.toInt(json['ratingsCount'] ?? json['reviewCount']),
+      reviewCount: ParseHelpers.toInt(
+        json['ratingsCount'] ?? json['reviewCount'],
+      ),
       area: ParseHelpers.toDouble(json['area']),
       bedrooms: ParseHelpers.toInt(json['bedrooms']),
       bathrooms: ParseHelpers.toInt(json['bathrooms']),

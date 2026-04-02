@@ -82,11 +82,47 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> loadCurrentUser() async {
+  Future<bool> loadCurrentUser() async {
+    final token = (await AuthStorage.getToken())?.trim();
+    if (token == null || token.isEmpty) {
+      state = const AuthState.initial();
+      return false;
+    }
+
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       final user = await _repo.getMe();
-      state = state.copyWith(user: user);
-    } catch (_) {}
+      SocketService().connectAll(token);
+      state = state.copyWith(
+        isLoading: false,
+        user: user,
+        step: AuthStep.authenticated,
+        isNewUser: false,
+      );
+      return true;
+    } on DioException catch (e) {
+      final hasToken = await AuthStorage.isLoggedIn();
+      if (!hasToken) {
+        state = const AuthState.initial();
+        return false;
+      }
+
+      state = state.copyWith(
+        isLoading: false,
+        step: AuthStep.authenticated,
+        error: e.message,
+      );
+      return true;
+    } catch (_) {
+      final hasToken = await AuthStorage.isLoggedIn();
+      if (!hasToken) {
+        state = const AuthState.initial();
+        return false;
+      }
+
+      state = state.copyWith(isLoading: false, step: AuthStep.authenticated);
+      return true;
+    }
   }
 
   Future<void> logout() async {

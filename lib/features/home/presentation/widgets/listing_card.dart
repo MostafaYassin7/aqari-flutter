@@ -6,7 +6,6 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/listing.dart';
-import '../providers/home_provider.dart';
 
 // ignore: depend_on_referenced_packages
 import 'package:go_router/go_router.dart';
@@ -19,9 +18,6 @@ class ListingCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final favIds = ref.watch(favoritedIdsProvider);
-    final isFav = favIds.contains(listing.id);
-
     return GestureDetector(
       onTap: () => context.push('/property/${listing.id}'),
       child: Padding(
@@ -34,8 +30,7 @@ class ListingCard extends ConsumerWidget {
               children: [
                 // Property image
                 ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
                   child: CachedNetworkImage(
                     imageUrl: listing.imageUrls.first,
                     width: double.infinity,
@@ -58,36 +53,6 @@ class ListingCard extends ConsumerWidget {
                           size: 56,
                           color: AppColors.primary,
                         ),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Favorite / heart button
-                PositionedDirectional(
-                  top: 12,
-                  end: 12,
-                  child: GestureDetector(
-                    onTap: () {
-                      ref
-                          .read(favoritedIdsProvider.notifier)
-                          .toggle(listing.id);
-                    },
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: const BoxDecoration(
-                        color: AppColors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        isFav
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        size: 20,
-                        color: isFav
-                            ? AppColors.error
-                            : AppColors.textSecondaryLight,
                       ),
                     ),
                   ),
@@ -153,16 +118,17 @@ class _StatsRow extends StatelessWidget {
       children: [
         _Stat(icon: Icons.straighten_rounded, label: '${listing.area} م²'),
         if (listing.bedrooms > 0)
-          _Stat(
-              icon: Icons.bed_rounded, label: '${listing.bedrooms} غرف'),
+          _Stat(icon: Icons.bed_rounded, label: '${listing.bedrooms} غرف'),
         if (listing.bathrooms > 0)
           _Stat(
-              icon: Icons.shower_rounded,
-              label: '${listing.bathrooms} حمامات'),
+            icon: Icons.shower_rounded,
+            label: '${listing.bathrooms} حمامات',
+          ),
         if (listing.livingRooms > 0)
           _Stat(
-              icon: Icons.weekend_rounded,
-              label: '${listing.livingRooms} مجالس'),
+            icon: Icons.weekend_rounded,
+            label: '${listing.livingRooms} مجالس',
+          ),
       ],
     );
   }

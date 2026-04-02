@@ -9,6 +9,7 @@ import '../../../map/presentation/widgets/map_toggle_button.dart';
 import '../../../map/presentation/widgets/map_view.dart';
 import '../providers/home_provider.dart';
 import '../widgets/category_chips_row.dart';
+import '../widgets/country_chips_row.dart';
 import '../widgets/home_search_bar.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/daily_rent_tab.dart';
@@ -58,7 +59,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         child: Column(
           children: [
             // ── Search bar (subtitle adapts per tab) ──────
-            HomeSearchBar(subtitle: _subtitles[_currentTab]),
+            HomeSearchBar(
+              subtitle: _subtitles[_currentTab],
+              currentTab: _currentTab,
+            ),
 
             // ── Tab bar ───────────────────────────────────
             TabBar(
@@ -107,7 +111,8 @@ class _RealEstateTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isMapMode = ref.watch(
-        mapProvider.select((s) => s.viewMode == MapViewMode.map));
+      mapProvider.select((s) => s.viewMode == MapViewMode.map),
+    );
 
     return Stack(
       children: [
@@ -139,50 +144,96 @@ class _ListContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final listings = ref.watch(filteredListingsProvider);
+    final isLoading = ref.watch(listingsIsLoadingProvider);
 
-    return CustomScrollView(
-      physics: const BouncingScrollPhysics(),
-      slivers: [
-        const SliverToBoxAdapter(child: CategoryChipsRow()),
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification is ScrollEndNotification &&
+            notification.metrics.pixels >=
+                notification.metrics.maxScrollExtent - 200) {
+          ref.read(listingsNotifierProvider.notifier).loadMore();
+        }
+        return false;
+      },
+      child: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(
+            child: CountryChipsRow(cityProvider: selectedCityProvider),
+          ),
 
-        const SliverToBoxAdapter(
-          child: Divider(
-              height: 1, thickness: 1, color: AppColors.dividerLight),
-        ),
+          SliverToBoxAdapter(
+            child: CategoryChipsRow(
+              propertyTypeProvider: selectedPropertyTypeProvider,
+            ),
+          ),
 
-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          const SliverToBoxAdapter(
+            child: Divider(
+              height: 1,
+              thickness: 1,
+              color: AppColors.dividerLight,
+            ),
+          ),
 
-        listings.isEmpty
-            ? SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.home_work_outlined,
-                          size: 64, color: AppColors.iconLight),
-                      const SizedBox(height: 16),
-                      Text(
-                        'لا توجد عقارات في هذه الفئة',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondaryLight,
-                        ),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+          if (isLoading && listings.isEmpty)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            )
+          else if (listings.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.home_work_outlined,
+                      size: 64,
+                      color: AppColors.iconLight,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'لا توجد عقارات في هذه الفئة',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondaryLight,
                       ),
-                    ],
-                  ),
-                ),
-              )
-            : SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) =>
-                      ListingCard(listing: listings[index]),
-                  childCount: listings.length,
+                    ),
+                  ],
                 ),
               ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => ListingCard(listing: listings[index]),
+                childCount: listings.length,
+              ),
+            ),
 
-        // Extra bottom padding so the last card clears the toggle pill.
-        const SliverToBoxAdapter(child: SizedBox(height: 72)),
-      ],
+          if (isLoading && listings.isNotEmpty)
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ),
+
+          // Extra bottom padding so the last card clears the toggle pill.
+          const SliverToBoxAdapter(child: SizedBox(height: 72)),
+        ],
+      ),
     );
   }
 }
+  

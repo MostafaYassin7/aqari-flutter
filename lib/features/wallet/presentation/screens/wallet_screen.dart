@@ -7,16 +7,44 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../providers/wallet_provider.dart';
 
-class WalletScreen extends ConsumerWidget {
+class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WalletScreen> createState() => _WalletScreenState();
+}
+
+class _WalletScreenState extends ConsumerState<WalletScreen> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(walletProvider.notifier).loadMore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final wallet = ref.watch(walletProvider);
 
     return Scaffold(
       backgroundColor: AppColors.surfaceLight,
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           // ── App bar ────────────────────────────────────────────
           SliverAppBar(
@@ -25,8 +53,11 @@ class WalletScreen extends ConsumerWidget {
             scrolledUnderElevation: 0,
             pinned: true,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: AppColors.textPrimaryLight),
+              icon: const Icon(
+                Icons.arrow_back_ios_rounded,
+                size: 20,
+                color: AppColors.textPrimaryLight,
+              ),
               onPressed: () => Navigator.of(context).maybePop(),
             ),
             title: Text(
@@ -78,51 +109,78 @@ class WalletScreen extends ConsumerWidget {
             ),
           ),
 
-          SliverToBoxAdapter(
-            child: _FilterChips(current: wallet.filter),
-          ),
+          SliverToBoxAdapter(child: _FilterChips(current: wallet.filter)),
 
           const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
           // ── Transactions ───────────────────────────────────────
-          wallet.filtered.isEmpty
-              ? const SliverFillRemaining(child: _EmptyFilter())
-              : SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppConstants.spaceM,
-                    0,
-                    AppConstants.spaceM,
-                    AppConstants.spaceXL,
-                  ),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (_, i) {
-                        final txList = wallet.filtered;
-                        // Show month header when month changes
-                        final tx = txList[i];
-                        final prev = i > 0 ? txList[i - 1] : null;
-                        final showHeader = prev == null ||
-                            _monthKey(tx.dateTime) !=
-                                _monthKey(prev.dateTime);
+          if (wallet.isLoading && wallet.transactions.isEmpty)
+            const SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            )
+          else if (wallet.transactions.isEmpty)
+            const SliverFillRemaining(child: _EmptyFilter())
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                AppConstants.spaceM,
+                0,
+                AppConstants.spaceM,
+                AppConstants.spaceXL,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (_, i) {
+                    final txList = wallet.transactions;
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (showHeader)
-                              _MonthHeader(dateTime: tx.dateTime),
-                            _TransactionRow(transaction: tx),
-                            if (i < txList.length - 1)
-                              const Divider(
-                                  height: 1,
-                                  color: AppColors.dividerLight,
-                                  indent: 60),
-                          ],
-                        );
-                      },
-                      childCount: wallet.filtered.length,
-                    ),
-                  ),
+                    // Loading indicator at the bottom
+                    if (i == txList.length) {
+                      return wallet.hasMore
+                          ? const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : const SizedBox.shrink();
+                    }
+
+                    // Show month header when month changes
+                    final tx = txList[i];
+                    final prev = i > 0 ? txList[i - 1] : null;
+                    final showHeader =
+                        prev == null ||
+                        _monthKey(tx.dateTime) != _monthKey(prev.dateTime);
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (showHeader) _MonthHeader(dateTime: tx.dateTime),
+                        _TransactionRow(transaction: tx),
+                        if (i < txList.length - 1)
+                          const Divider(
+                            height: 1,
+                            color: AppColors.dividerLight,
+                            indent: 60,
+                          ),
+                      ],
+                    );
+                  },
+                  childCount:
+                      wallet.transactions.length +
+                      (wallet.isLoadingMore ? 1 : 0),
                 ),
+              ),
+            ),
         ],
       ),
     );
@@ -141,8 +199,8 @@ class WalletScreen extends ConsumerWidget {
         ),
       ),
       builder: (_) => _TopUpSheet(
-        onConfirm: (amount) {
-          ref.read(walletProvider.notifier).topUp(amount);
+        onConfirm: (amount) async {
+          await ref.read(walletProvider.notifier).topUp(amount);
         },
       ),
     );
@@ -187,8 +245,7 @@ class _BalanceCard extends StatelessWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withValues(alpha: 0.2),
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 ),
                 child: const Icon(
                   Icons.account_balance_wallet_rounded,
@@ -233,10 +290,7 @@ class _BalanceCard extends StatelessWidget {
           const SizedBox(height: 24),
 
           // ── Divider ──────────────────────────────────────
-          Divider(
-            color: AppColors.white.withValues(alpha: 0.12),
-            height: 1,
-          ),
+          Divider(color: AppColors.white.withValues(alpha: 0.12), height: 1),
 
           const SizedBox(height: 20),
 
@@ -259,8 +313,7 @@ class _BalanceCard extends StatelessWidget {
                 foregroundColor: AppColors.textPrimaryLight,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 ),
               ),
             ),
@@ -296,25 +349,26 @@ class _FilterChips extends ConsumerWidget {
       height: 38,
       child: ListView(
         scrollDirection: Axis.horizontal,
-        padding:
-            const EdgeInsets.symmetric(horizontal: AppConstants.spaceM),
+        padding: const EdgeInsets.symmetric(horizontal: AppConstants.spaceM),
         children: TransactionFilter.values.map((f) {
           final isActive = f == current;
           return Padding(
             padding: const EdgeInsetsDirectional.only(end: 8),
             child: GestureDetector(
-              onTap: () =>
-                  ref.read(walletProvider.notifier).setFilter(f),
+              onTap: () => ref.read(walletProvider.notifier).setFilter(f),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 8),
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isActive
                       ? AppColors.primary
                       : AppColors.backgroundLight,
                   borderRadius: BorderRadius.circular(
-                      AppConstants.radiusCircle),
+                    AppConstants.radiusCircle,
+                  ),
                   border: Border.all(
                     color: isActive
                         ? AppColors.primary
@@ -327,9 +381,7 @@ class _FilterChips extends ConsumerWidget {
                     color: isActive
                         ? AppColors.textPrimaryLight
                         : AppColors.textSecondaryLight,
-                    fontWeight: isActive
-                        ? FontWeight.w700
-                        : FontWeight.w400,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
                   ),
                 ),
               ),
@@ -350,8 +402,18 @@ class _MonthHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const months = [
-      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+      'يناير',
+      'فبراير',
+      'مارس',
+      'أبريل',
+      'مايو',
+      'يونيو',
+      'يوليو',
+      'أغسطس',
+      'سبتمبر',
+      'أكتوبر',
+      'نوفمبر',
+      'ديسمبر',
     ];
     final label = '${months[dateTime.month - 1]} ${dateTime.year}';
 
@@ -391,8 +453,7 @@ class _TransactionRow extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: tx.type.color.withValues(alpha: 0.12),
-              borderRadius:
-                  BorderRadius.circular(AppConstants.radiusM),
+              borderRadius: BorderRadius.circular(AppConstants.radiusM),
             ),
             child: Icon(tx.type.icon, color: tx.type.color, size: 22),
           ),
@@ -429,9 +490,7 @@ class _TransactionRow extends StatelessWidget {
             '${isCredit ? '+' : ''}${tx.amount.toStringAsFixed(0)} ر.س',
             style: AppTextStyles.bodyMedium.copyWith(
               fontWeight: FontWeight.w800,
-              color: isCredit
-                  ? AppColors.success
-                  : AppColors.error,
+              color: isCredit ? AppColors.success : AppColors.error,
             ),
           ),
         ],
@@ -466,8 +525,11 @@ class _EmptyFilter extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.receipt_long_rounded,
-              size: 56, color: AppColors.dividerLight),
+          const Icon(
+            Icons.receipt_long_rounded,
+            size: 56,
+            color: AppColors.dividerLight,
+          ),
           const SizedBox(height: 12),
           Text(
             'لا توجد معاملات',
@@ -493,16 +555,9 @@ class _TopUpSheet extends StatefulWidget {
 
 class _TopUpSheetState extends State<_TopUpSheet> {
   static const _quickAmounts = [50.0, 100.0, 200.0, 500.0];
-  static const _paymentMethods = ['بطاقة ائتمان', 'Apple Pay', 'مدى'];
-  static const _paymentIcons = [
-    Icons.credit_card_rounded,
-    Icons.apple_rounded,
-    Icons.payment_rounded,
-  ];
 
   double? _selectedQuick;
   final _customCtrl = TextEditingController();
-  int _selectedPaymentIdx = 0;
   bool _isCustomActive = false;
 
   @override
@@ -526,9 +581,7 @@ class _TopUpSheetState extends State<_TopUpSheet> {
     Navigator.of(context).pop();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          'تم شحن ${amount.toStringAsFixed(0)} ريال بنجاح ✓',
-        ),
+        content: Text('تم شحن ${amount.toStringAsFixed(0)} ريال بنجاح ✓'),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 2),
@@ -560,8 +613,9 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                   height: 4,
                   decoration: BoxDecoration(
                     color: AppColors.dividerLight,
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusCircle),
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.radiusCircle,
+                    ),
                   ),
                 ),
               ),
@@ -570,7 +624,11 @@ class _TopUpSheetState extends State<_TopUpSheet> {
             // ── Title ──────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                  AppConstants.spaceM, 16, AppConstants.spaceM, 4),
+                AppConstants.spaceM,
+                16,
+                AppConstants.spaceM,
+                4,
+              ),
               child: Text(
                 'شحن المحفظة',
                 style: AppTextStyles.headlineSmall.copyWith(
@@ -581,7 +639,8 @@ class _TopUpSheetState extends State<_TopUpSheet> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spaceM),
+                horizontal: AppConstants.spaceM,
+              ),
               child: Text(
                 'كم تريد أن تشحن؟',
                 style: AppTextStyles.bodyMedium.copyWith(
@@ -595,11 +654,11 @@ class _TopUpSheetState extends State<_TopUpSheet> {
             // ── Quick amounts ───────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spaceM),
+                horizontal: AppConstants.spaceM,
+              ),
               child: Row(
                 children: _quickAmounts.map((amt) {
-                  final isSelected =
-                      !_isCustomActive && _selectedQuick == amt;
+                  final isSelected = !_isCustomActive && _selectedQuick == amt;
                   return Expanded(
                     child: Padding(
                       padding: const EdgeInsetsDirectional.only(end: 8),
@@ -617,7 +676,8 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                                 ? AppColors.primary
                                 : AppColors.surfaceLight,
                             borderRadius: BorderRadius.circular(
-                                AppConstants.radiusM),
+                              AppConstants.radiusM,
+                            ),
                             border: Border.all(
                               color: isSelected
                                   ? AppColors.primary
@@ -648,34 +708,40 @@ class _TopUpSheetState extends State<_TopUpSheet> {
             // ── Custom amount ───────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spaceM),
+                horizontal: AppConstants.spaceM,
+              ),
               child: TextField(
                 controller: _customCtrl,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: false),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: false,
+                ),
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 onChanged: (_) => setState(() {
                   _isCustomActive = _customCtrl.text.isNotEmpty;
                   if (_isCustomActive) _selectedQuick = null;
                 }),
                 style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimaryLight),
+                  color: AppColors.textPrimaryLight,
+                ),
                 decoration: InputDecoration(
                   hintText: 'مبلغ مخصص (ريال)',
                   hintStyle: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textHintLight),
+                    color: AppColors.textHintLight,
+                  ),
                   suffixText: 'ر.س',
                   suffixStyle: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondaryLight),
+                    color: AppColors.textSecondaryLight,
+                  ),
                   filled: true,
                   fillColor: _isCustomActive
                       ? AppColors.primaryLight
                       : AppColors.surfaceLight,
                   contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 14),
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     borderSide: BorderSide(
                       color: _isCustomActive
                           ? AppColors.primary
@@ -683,8 +749,7 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     borderSide: BorderSide(
                       color: _isCustomActive
                           ? AppColors.primary
@@ -692,105 +757,13 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     borderSide: const BorderSide(
-                        color: AppColors.primary, width: 2),
+                      color: AppColors.primary,
+                      width: 2,
+                    ),
                   ),
                 ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // ── Payment method ──────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spaceM),
-              child: Text(
-                'طريقة الدفع',
-                style: AppTextStyles.titleSmall.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spaceM),
-              child: Column(
-                children: List.generate(_paymentMethods.length, (i) {
-                  final isSelected = _selectedPaymentIdx == i;
-                  return GestureDetector(
-                    onTap: () =>
-                        setState(() => _selectedPaymentIdx = i),
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? AppColors.primaryLight
-                            : AppColors.backgroundLight,
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.radiusM),
-                        border: Border.all(
-                          color: isSelected
-                              ? AppColors.primary
-                              : AppColors.dividerLight,
-                          width: isSelected ? 2 : 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            _paymentIcons[i],
-                            size: 22,
-                            color: isSelected
-                                ? AppColors.primary
-                                : AppColors.textSecondaryLight,
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            _paymentMethods[i],
-                            style: AppTextStyles.bodyMedium.copyWith(
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w400,
-                              color: isSelected
-                                  ? AppColors.textPrimaryLight
-                                  : AppColors.textSecondaryLight,
-                            ),
-                          ),
-                          const Spacer(),
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : AppColors.transparent,
-                              border: Border.all(
-                                color: isSelected
-                                    ? AppColors.primary
-                                    : AppColors.dividerLight,
-                                width: 2,
-                              ),
-                            ),
-                            child: isSelected
-                                ? const Icon(Icons.check_rounded,
-                                    size: 12,
-                                    color: AppColors.textPrimaryLight)
-                                : null,
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
               ),
             ),
 
@@ -814,8 +787,7 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                     disabledBackgroundColor: AppColors.dividerLight,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusM),
+                      borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     ),
                   ),
                   child: Text(

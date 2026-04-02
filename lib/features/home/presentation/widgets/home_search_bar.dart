@@ -1,24 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../search/presentation/providers/search_provider.dart';
 
 /// Airbnb-style collapsed search pill at the top of the home feed.
 /// Tapping navigates to the full Search screen.
-class HomeSearchBar extends StatelessWidget {
+class HomeSearchBar extends ConsumerWidget {
   final String subtitle;
+  final int currentTab;
 
   const HomeSearchBar({
     this.subtitle = 'المدينة  ·  الفئة  ·  المزيد من الفلاتر',
+    this.currentTab = 0,
     super.key,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: () => context.push(AppRoutes.search),
+      onTap: () {
+        ref.read(searchTabProvider.notifier).select(currentTab);
+        context.push(AppRoutes.search);
+      },
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),

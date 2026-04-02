@@ -9,7 +9,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/listing.dart';
-import '../../../home/data/mock_listings.dart';
+import '../../../home/presentation/providers/home_provider.dart';
 import '../providers/map_provider.dart';
 
 // ── Map View ──────────────────────────────────────────────────────────────────
@@ -66,7 +66,9 @@ class _MapViewState extends ConsumerState<MapView> {
   }
 
   Future<BitmapDescriptor> _buildPriceMarker(
-      double price, bool selected) async {
+    double price,
+    bool selected,
+  ) async {
     final label = _compactPrice(price);
     final cacheKey = '${label}_$selected';
     if (_markerCache.containsKey(cacheKey)) return _markerCache[cacheKey]!;
@@ -94,10 +96,7 @@ class _MapViewState extends ConsumerState<MapView> {
     final shadowPaint = Paint()
       ..color = const Color(0x33000000)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-    canvas.drawRRect(
-      rrect.shift(const Offset(0, 2)),
-      shadowPaint,
-    );
+    canvas.drawRRect(rrect.shift(const Offset(0, 2)), shadowPaint);
 
     // Fill
     canvas.drawRRect(rrect, paint);
@@ -155,7 +154,8 @@ class _MapViewState extends ConsumerState<MapView> {
     final canvas = Canvas(recorder);
 
     // Outer ring (translucent)
-    final ringPaint = Paint()..color = AppColors.primary.withValues(alpha: 0.25);
+    final ringPaint = Paint()
+      ..color = AppColors.primary.withValues(alpha: 0.25);
     canvas.drawCircle(const Offset(size / 2, size / 2), size / 2, ringPaint);
 
     // Inner filled circle
@@ -174,8 +174,7 @@ class _MapViewState extends ConsumerState<MapView> {
       ),
       textDirection: TextDirection.ltr,
     )..layout(maxWidth: size);
-    tp.paint(
-        canvas, Offset((size - tp.width) / 2, (size - tp.height) / 2));
+    tp.paint(canvas, Offset((size - tp.width) / 2, (size - tp.height) / 2));
 
     final picture = recorder.endRecording();
     final image = await picture.toImage(size.toInt(), size.toInt());
@@ -196,40 +195,42 @@ class _MapViewState extends ConsumerState<MapView> {
       // City-level clusters
       for (final cluster in mapState.cityClusters) {
         final icon = await _buildClusterMarker(cluster.count);
-        markers.add(Marker(
-          markerId: MarkerId('cluster_${cluster.city}'),
-          position: cluster.center,
-          icon: icon,
-          onTap: () {
-            _mapController?.animateCamera(
-              CameraUpdate.newCameraPosition(
-                CameraPosition(target: cluster.center, zoom: 10.0),
-              ),
-            );
-          },
-        ));
+        markers.add(
+          Marker(
+            markerId: MarkerId('cluster_${cluster.city}'),
+            position: cluster.center,
+            icon: icon,
+            onTap: () {
+              _mapController?.animateCamera(
+                CameraUpdate.newCameraPosition(
+                  CameraPosition(target: cluster.center, zoom: 10.0),
+                ),
+              );
+            },
+          ),
+        );
       }
     } else {
-      // Individual price pins
-      final listings = mapState.visibleListings.isEmpty
-          ? mockListings
-          : mapState.visibleListings;
+      // Individual price pins — use all listings with valid coords
+      final listings = mapState.mappableListings;
 
       for (final listing in listings) {
         if (listing.lat == 0.0 && listing.lng == 0.0) continue;
         final selected = listing.id == mapState.selectedListingId;
         final icon = await _buildPriceMarker(listing.price, selected);
-        markers.add(Marker(
-          markerId: MarkerId(listing.id),
-          position: LatLng(listing.lat, listing.lng),
-          icon: icon,
-          anchor: const Offset(0.5, 1.0),
-          zIndex: selected ? 1.0 : 0.0,
-          onTap: () {
-            ref.read(mapProvider.notifier).selectListing(listing.id);
-            _scrollCardToListing(listing.id);
-          },
-        ));
+        markers.add(
+          Marker(
+            markerId: MarkerId(listing.id),
+            position: LatLng(listing.lat, listing.lng),
+            icon: icon,
+            anchor: const Offset(0.5, 1.0),
+            zIndex: selected ? 1.0 : 0.0,
+            onTap: () {
+              ref.read(mapProvider.notifier).selectListing(listing.id);
+              _scrollCardToListing(listing.id);
+            },
+          ),
+        );
       }
     }
     return markers;
@@ -238,10 +239,7 @@ class _MapViewState extends ConsumerState<MapView> {
   // ── Card shelf helpers ───────────────────────────────────────────────────
 
   void _scrollCardToListing(String id) {
-    final listings =
-        ref.read(mapProvider).visibleListings.isEmpty
-            ? mockListings
-            : ref.read(mapProvider).visibleListings;
+    final listings = ref.read(mapProvider).visibleListings;
     final idx = listings.indexWhere((l) => l.id == id);
     if (idx < 0) return;
     _programmingPageChange = true;
@@ -257,10 +255,7 @@ class _MapViewState extends ConsumerState<MapView> {
       _programmingPageChange = false;
       return;
     }
-    final listings =
-        ref.read(mapProvider).visibleListings.isEmpty
-            ? mockListings
-            : ref.read(mapProvider).visibleListings;
+    final listings = ref.read(mapProvider).visibleListings;
     if (index >= listings.length) return;
     final listing = listings[index];
     ref.read(mapProvider.notifier).selectListing(listing.id);
@@ -274,12 +269,60 @@ class _MapViewState extends ConsumerState<MapView> {
     }
   }
 
+  // Track whether we've done the initial camera fit.
+  bool _didInitialFit = false;
+
+  void _fitCameraToListings(List<Listing> listings) {
+    if (_mapController == null) return;
+    final points = listings
+        .where((l) => l.lat != 0.0 || l.lng != 0.0)
+        .map((l) => LatLng(l.lat, l.lng))
+        .toList();
+    if (points.isEmpty) return;
+    if (points.length == 1) {
+      _mapController!.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: points.first, zoom: 12.0),
+        ),
+      );
+      return;
+    }
+    double minLat = points.first.latitude, maxLat = points.first.latitude;
+    double minLng = points.first.longitude, maxLng = points.first.longitude;
+    for (final p in points) {
+      if (p.latitude < minLat) minLat = p.latitude;
+      if (p.latitude > maxLat) maxLat = p.latitude;
+      if (p.longitude < minLng) minLng = p.longitude;
+      if (p.longitude > maxLng) maxLng = p.longitude;
+    }
+    _mapController!.animateCamera(
+      CameraUpdate.newLatLngBounds(
+        LatLngBounds(
+          southwest: LatLng(minLat, minLng),
+          northeast: LatLng(maxLat, maxLng),
+        ),
+        60, // padding
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final mapState = ref.watch(mapProvider);
-    final listings = mapState.visibleListings.isEmpty
-        ? mockListings
-        : mapState.visibleListings;
+    final listings = mapState.visibleListings;
+
+    // Feed real listings into the map state
+    final realListings = ref.watch(filteredListingsProvider);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(mapProvider.notifier).setListings(realListings);
+      // Auto-fit camera to show all markers on first data load
+      if (!_didInitialFit && realListings.isNotEmpty) {
+        _didInitialFit = true;
+        Future.delayed(const Duration(milliseconds: 300), () {
+          _fitCameraToListings(realListings);
+        });
+      }
+    });
 
     return FutureBuilder<Set<Marker>>(
       future: _buildMarkers(mapState),
@@ -303,8 +346,7 @@ class _MapViewState extends ConsumerState<MapView> {
                 // Reset the programmatic flag so the next user gesture
                 // can mark the search area as dirty again.
                 _programmingCameraMove = false;
-                final bounds =
-                    await _mapController!.getVisibleRegion();
+                final bounds = await _mapController!.getVisibleRegion();
                 final zoom = await _mapController!.getZoomLevel();
                 ref
                     .read(mapProvider.notifier)
@@ -312,9 +354,7 @@ class _MapViewState extends ConsumerState<MapView> {
               },
               onCameraMove: (_) {
                 if (!_programmingCameraMove) {
-                  ref
-                      .read(mapProvider.notifier)
-                      .markSearchAreaDirty();
+                  ref.read(mapProvider.notifier).markSearchAreaDirty();
                 }
               },
             ),
@@ -328,9 +368,7 @@ class _MapViewState extends ConsumerState<MapView> {
                 child: Center(
                   child: _SearchAreaButton(
                     onTap: () {
-                      ref
-                          .read(mapProvider.notifier)
-                          .clearSearchAreaFlag();
+                      ref.read(mapProvider.notifier).clearSearchAreaFlag();
                     },
                   ),
                 ),
@@ -349,12 +387,8 @@ class _MapViewState extends ConsumerState<MapView> {
                   itemCount: listings.length,
                   itemBuilder: (context, index) {
                     final listing = listings[index];
-                    final selected =
-                        listing.id == mapState.selectedListingId;
-                    return _MapCard(
-                      listing: listing,
-                      selected: selected,
-                    );
+                    final selected = listing.id == mapState.selectedListingId;
+                    return _MapCard(listing: listing, selected: selected);
                   },
                 ),
               ),
@@ -377,8 +411,7 @@ class _SearchAreaButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(100),
@@ -393,8 +426,11 @@ class _SearchAreaButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.search_rounded,
-                size: 16, color: AppColors.textPrimaryLight),
+            const Icon(
+              Icons.search_rounded,
+              size: 16,
+              color: AppColors.textPrimaryLight,
+            ),
             const SizedBox(width: 6),
             Text(
               'ابحث في هذه المنطقة',
@@ -456,16 +492,22 @@ class _MapCard extends StatelessWidget {
                 height: double.infinity,
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(
-                    color: AppColors.surfaceLight,
-                    child: const Center(
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary))),
+                  color: AppColors.surfaceLight,
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
                 errorWidget: (_, __, ___) => Container(
                   color: AppColors.surfaceLight,
                   child: const Center(
-                    child: Icon(Icons.home_rounded,
-                        size: 32, color: AppColors.primary),
+                    child: Icon(
+                      Icons.home_rounded,
+                      size: 32,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ),
@@ -475,7 +517,9 @@ class _MapCard extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 10),
+                  horizontal: 12,
+                  vertical: 10,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
