@@ -1,264 +1,193 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// ── Listing status ────────────────────────────────────────────────────────────
-
-enum ListingStatus { published, pausedTemp, paused, expired }
-
-extension ListingStatusX on ListingStatus {
-  String get label {
-    switch (this) {
-      case ListingStatus.published:
-        return 'منشور';
-      case ListingStatus.pausedTemp:
-        return 'موقوف مؤقتاً';
-      case ListingStatus.paused:
-        return 'موقوف';
-      case ListingStatus.expired:
-        return 'منتهي الصلاحية';
-    }
-  }
-}
+import '../../../../shared/models/listing_category.dart';
+import '../../../home/data/listings_repository.dart';
 
 // ── My listing model ──────────────────────────────────────────────────────────
 
 class MyListing {
   final String id;
+  final String createdAt;
   final String title;
-  final String address;
-  final String category;
-  final double price;
-  final int area;
+  final String status;
+  final int viewCount;
+  final int messageCount;
+  final String adNumber;
+  final ListingCategory? category;
+  final String propertyType;
+  final String listingType;
+  final double totalPrice;
+  final double pricePerMeter;
+  final double area;
   final int bedrooms;
   final int bathrooms;
-  final int livingRooms;
-  final String imageUrl;
-  final ListingStatus status;
-  final int messageRequests;
-  final int views;
-  final String lastUpdated;
+  final String city;
+  final String district;
+  final String address;
+  final String? coverPhoto;
 
   const MyListing({
     required this.id,
+    required this.createdAt,
     required this.title,
-    required this.address,
-    required this.category,
-    required this.price,
+    required this.status,
+    required this.viewCount,
+    required this.messageCount,
+    required this.adNumber,
+    this.category,
+    required this.propertyType,
+    required this.listingType,
+    required this.totalPrice,
+    required this.pricePerMeter,
     required this.area,
     required this.bedrooms,
     required this.bathrooms,
-    required this.livingRooms,
-    required this.imageUrl,
-    required this.status,
-    required this.messageRequests,
-    required this.views,
-    required this.lastUpdated,
-  });
-}
-
-// ── Mock data ─────────────────────────────────────────────────────────────────
-
-const _mockMyListings = <MyListing>[
-  MyListing(
-    id: 'ml_01',
-    title: 'شقة فاخرة في حي العليا',
-    address: 'الرياض  ·  حي العليا',
-    category: 'شقة للبيع',
-    price: 850000,
-    area: 180,
-    bedrooms: 3,
-    bathrooms: 2,
-    livingRooms: 1,
-    imageUrl: 'https://picsum.photos/seed/ml01/300/300',
-    status: ListingStatus.published,
-    messageRequests: 7,
-    views: 342,
-    lastUpdated: 'منذ يومين',
-  ),
-  MyListing(
-    id: 'ml_02',
-    title: 'فيلا مع مسبح - حي الياسمين',
-    address: 'الرياض  ·  حي الياسمين',
-    category: 'فيلا للبيع',
-    price: 3200000,
-    area: 520,
-    bedrooms: 6,
-    bathrooms: 5,
-    livingRooms: 3,
-    imageUrl: 'https://picsum.photos/seed/ml02/300/300',
-    status: ListingStatus.published,
-    messageRequests: 12,
-    views: 891,
-    lastUpdated: 'منذ 5 أيام',
-  ),
-  MyListing(
-    id: 'ml_03',
-    title: 'أرض سكنية في حي الملقا',
-    address: 'الرياض  ·  حي الملقا',
-    category: 'أرض',
-    price: 1450000,
-    area: 600,
-    bedrooms: 0,
-    bathrooms: 0,
-    livingRooms: 0,
-    imageUrl: 'https://picsum.photos/seed/ml03/300/300',
-    status: ListingStatus.pausedTemp,
-    messageRequests: 0,
-    views: 156,
-    lastUpdated: 'منذ أسبوع',
-  ),
-  MyListing(
-    id: 'ml_04',
-    title: 'شقة للإيجار - النزهة',
-    address: 'الرياض  ·  حي النزهة',
-    category: 'شقة للإيجار',
-    price: 45000,
-    area: 120,
-    bedrooms: 2,
-    bathrooms: 1,
-    livingRooms: 1,
-    imageUrl: 'https://picsum.photos/seed/ml04/300/300',
-    status: ListingStatus.paused,
-    messageRequests: 3,
-    views: 210,
-    lastUpdated: 'منذ أسبوعين',
-  ),
-  MyListing(
-    id: 'ml_05',
-    title: 'محل تجاري - طريق الملك فهد',
-    address: 'الرياض  ·  طريق الملك فهد',
-    category: 'تجاري',
-    price: 620000,
-    area: 95,
-    bedrooms: 0,
-    bathrooms: 1,
-    livingRooms: 0,
-    imageUrl: 'https://picsum.photos/seed/ml05/300/300',
-    status: ListingStatus.expired,
-    messageRequests: 0,
-    views: 78,
-    lastUpdated: 'منذ شهر',
-  ),
-  MyListing(
-    id: 'ml_06',
-    title: 'دوبلكس حديث - حي الربيع',
-    address: 'الرياض  ·  حي الربيع',
-    category: 'دوبلكس',
-    price: 1100000,
-    area: 280,
-    bedrooms: 4,
-    bathrooms: 3,
-    livingRooms: 2,
-    imageUrl: 'https://picsum.photos/seed/ml06/300/300',
-    status: ListingStatus.published,
-    messageRequests: 5,
-    views: 430,
-    lastUpdated: 'منذ 3 أيام',
-  ),
-];
-
-// ── Filter tab ────────────────────────────────────────────────────────────────
-
-enum ListingFilter { all, published, pausedTemp, paused, expired }
-
-extension ListingFilterX on ListingFilter {
-  String get label {
-    switch (this) {
-      case ListingFilter.all:
-        return 'الكل';
-      case ListingFilter.published:
-        return 'منشور';
-      case ListingFilter.pausedTemp:
-        return 'موقوف مؤقتاً';
-      case ListingFilter.paused:
-        return 'موقوف';
-      case ListingFilter.expired:
-        return 'منتهي الصلاحية';
-    }
-  }
-}
-
-// ── State ─────────────────────────────────────────────────────────────────────
-
-class MyListingsState {
-  final List<MyListing> listings;
-  final ListingFilter filter;
-
-  const MyListingsState({
-    this.listings = _mockMyListings,
-    this.filter = ListingFilter.all,
+    required this.city,
+    required this.district,
+    required this.address,
+    this.coverPhoto,
   });
 
-  List<MyListing> get filtered {
-    if (filter == ListingFilter.all) return listings;
-    final targetStatus = _filterToStatus(filter);
-    return listings.where((l) => l.status == targetStatus).toList();
-  }
-
-  ListingStatus _filterToStatus(ListingFilter f) {
-    switch (f) {
-      case ListingFilter.published:
-        return ListingStatus.published;
-      case ListingFilter.pausedTemp:
-        return ListingStatus.pausedTemp;
-      case ListingFilter.paused:
-        return ListingStatus.paused;
-      case ListingFilter.expired:
-        return ListingStatus.expired;
-      case ListingFilter.all:
-        return ListingStatus.published;
-    }
-  }
-
-  MyListingsState copyWith({List<MyListing>? listings, ListingFilter? filter}) {
-    return MyListingsState(
-      listings: listings ?? this.listings,
-      filter: filter ?? this.filter,
+  factory MyListing.fromJson(Map<String, dynamic> json) {
+    return MyListing(
+      id: json['id'] as String,
+      createdAt: json['createdAt'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      status: json['status'] as String? ?? 'pending',
+      viewCount: json['viewCount'] as int? ?? 0,
+      messageCount: json['messageCount'] as int? ?? 0,
+      adNumber: json['adNumber'] as String? ?? '',
+      category: json['category'] is Map
+          ? ListingCategory.fromJson(
+              Map<String, dynamic>.from(json['category'] as Map),
+            )
+          : null,
+      propertyType: json['propertyType'] as String? ?? '',
+      listingType: json['listingType'] as String? ?? '',
+      totalPrice: double.tryParse('${json['totalPrice']}') ?? 0,
+      pricePerMeter: double.tryParse('${json['pricePerMeter']}') ?? 0,
+      area: double.tryParse('${json['area']}') ?? 0,
+      bedrooms: json['bedrooms'] as int? ?? 0,
+      bathrooms: json['bathrooms'] as int? ?? 0,
+      city: json['city'] as String? ?? '',
+      district: json['district'] as String? ?? '',
+      address: json['address'] as String? ?? '',
+      coverPhoto: json['coverPhoto'] as String?,
     );
   }
+
+  String get statusLabel {
+    switch (status) {
+      case 'published':
+        return 'منشور';
+      case 'paused_temp':
+        return 'موقوف مؤقتاً';
+      case 'paused':
+        return 'موقوف';
+      case 'expired':
+        return 'منتهي الصلاحية';
+      case 'pending':
+        return 'قيد المراجعة';
+      default:
+        return status;
+    }
+  }
 }
 
-// ── Notifier ──────────────────────────────────────────────────────────────────
+// ── Status filter values ──────────────────────────────────────────────────────
 
-class MyListingsNotifier extends Notifier<MyListingsState> {
+const statusFilters = <String, String>{
+  '': 'الكل',
+  'published': 'منشور',
+  'paused_temp': 'موقوف مؤقتاً',
+  'paused': 'موقوف',
+  'expired': 'منتهي',
+  'pending': 'قيد المراجعة',
+};
+
+// ── Selected category provider ────────────────────────────────────────────────
+
+class SelectedCategoryNotifier extends Notifier<String?> {
   @override
-  MyListingsState build() => const MyListingsState();
+  String? build() => null;
+  void select(String? id) => state = id;
+}
 
-  void setFilter(ListingFilter f) =>
-      state = state.copyWith(filter: f);
+final selectedCategoryProvider =
+    NotifierProvider<SelectedCategoryNotifier, String?>(
+      SelectedCategoryNotifier.new,
+    );
 
-  void deleteListing(String id) {
-    final updated =
-        state.listings.where((l) => l.id != id).toList();
-    state = state.copyWith(listings: updated);
+// ── Selected status provider ──────────────────────────────────────────────────
+
+class SelectedStatusNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+  void select(String v) => state = v;
+}
+
+final selectedStatusProvider = NotifierProvider<SelectedStatusNotifier, String>(
+  SelectedStatusNotifier.new,
+);
+
+// ── Listing categories provider ───────────────────────────────────────────────
+
+class ListingCategoriesNotifier extends AsyncNotifier<List<ListingCategory>> {
+  final _repo = ListingsRepository();
+
+  @override
+  Future<List<ListingCategory>> build() async {
+    return _repo.getListingCategories();
+  }
+}
+
+final listingCategoriesProvider =
+    AsyncNotifierProvider<ListingCategoriesNotifier, List<ListingCategory>>(
+      ListingCategoriesNotifier.new,
+    );
+
+// ── My listings provider ──────────────────────────────────────────────────────
+
+class MyListingsNotifier extends AsyncNotifier<List<MyListing>> {
+  final _repo = ListingsRepository();
+  int _page = 1;
+  bool hasMore = true;
+
+  @override
+  Future<List<MyListing>> build() async {
+    _page = 1;
+    hasMore = true;
+    final categoryId = ref.watch(selectedCategoryProvider);
+    final status = ref.watch(selectedStatusProvider);
+
+    return _repo.getMyListings(
+      page: _page,
+      limit: 20,
+      categoryId: categoryId,
+      status: status.isEmpty ? null : status,
+    );
   }
 
-  void togglePause(String id) {
-    final updated = state.listings.map((l) {
-      if (l.id != id) return l;
-      final newStatus = l.status == ListingStatus.published
-          ? ListingStatus.pausedTemp
-          : ListingStatus.published;
-      return MyListing(
-        id: l.id,
-        title: l.title,
-        address: l.address,
-        category: l.category,
-        price: l.price,
-        area: l.area,
-        bedrooms: l.bedrooms,
-        bathrooms: l.bathrooms,
-        livingRooms: l.livingRooms,
-        imageUrl: l.imageUrl,
-        status: newStatus,
-        messageRequests: l.messageRequests,
-        views: l.views,
-        lastUpdated: l.lastUpdated,
-      );
-    }).toList();
-    state = state.copyWith(listings: updated);
+  Future<void> loadMore() async {
+    if (!hasMore) return;
+    final current = state.value;
+    if (current == null) return;
+    _page++;
+    final categoryId = ref.read(selectedCategoryProvider);
+    final status = ref.read(selectedStatusProvider);
+
+    final newItems = await _repo.getMyListings(
+      page: _page,
+      limit: 20,
+      categoryId: categoryId,
+      status: status.isEmpty ? null : status,
+    );
+    if (newItems.length < 20) hasMore = false;
+    state = AsyncData([...current, ...newItems]);
   }
 }
 
 final myListingsProvider =
-    NotifierProvider<MyListingsNotifier, MyListingsState>(
-        MyListingsNotifier.new);
+    AsyncNotifierProvider<MyListingsNotifier, List<MyListing>>(
+      MyListingsNotifier.new,
+    );

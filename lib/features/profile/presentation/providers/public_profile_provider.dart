@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../auth/presentation/providers/auth_provider.dart';
+
 // ── Review model ──────────────────────────────────────────────────────────────
 
 class UserReview {
@@ -26,6 +28,7 @@ class PublicProfile {
   final String id;
   final String name;
   final String phone;
+  final String? email;
   final String photoUrl;
   final bool isBroker;
   final bool isVerified;
@@ -49,6 +52,7 @@ class PublicProfile {
     required this.id,
     required this.name,
     required this.phone,
+    this.email,
     required this.photoUrl,
     required this.isBroker,
     required this.isVerified,
@@ -103,7 +107,8 @@ final _mockProfiles = <String, PublicProfile>{
         reviewerName: 'سلطان الحربي',
         reviewerPhotoUrl: 'https://picsum.photos/seed/rev1/200/200',
         rating: 5,
-        text: 'تجربة ممتازة، محمد محترف ودقيق جداً في تفاصيل العقار. أنهى الصفقة في وقت قياسي وبأفضل سعر. أنصح به بشدة لكل من يبحث عن وسيط موثوق.',
+        text:
+            'تجربة ممتازة، محمد محترف ودقيق جداً في تفاصيل العقار. أنهى الصفقة في وقت قياسي وبأفضل سعر. أنصح به بشدة لكل من يبحث عن وسيط موثوق.',
         date: _now.subtract(const Duration(days: 5)),
       ),
       UserReview(
@@ -111,7 +116,8 @@ final _mockProfiles = <String, PublicProfile>{
         reviewerName: 'نورة العمري',
         reviewerPhotoUrl: 'https://picsum.photos/seed/rev2/200/200',
         rating: 5,
-        text: 'الأستاذ محمد ساعدنا في إيجاد شقتنا الأولى. كان صبوراً ومتفهماً لاحتياجاتنا. شكراً جزيلاً على المتابعة المستمرة حتى بعد إتمام الصفقة.',
+        text:
+            'الأستاذ محمد ساعدنا في إيجاد شقتنا الأولى. كان صبوراً ومتفهماً لاحتياجاتنا. شكراً جزيلاً على المتابعة المستمرة حتى بعد إتمام الصفقة.',
         date: _now.subtract(const Duration(days: 18)),
       ),
       UserReview(
@@ -119,7 +125,8 @@ final _mockProfiles = <String, PublicProfile>{
         reviewerName: 'خالد المطيري',
         reviewerPhotoUrl: 'https://picsum.photos/seed/rev3/200/200',
         rating: 4,
-        text: 'خدمة جيدة جداً وسريعة الاستجابة. الوسيط على دراية تامة بالمنطقة وأسعار السوق. سأتعامل معه مجدداً في المستقبل.',
+        text:
+            'خدمة جيدة جداً وسريعة الاستجابة. الوسيط على دراية تامة بالمنطقة وأسعار السوق. سأتعامل معه مجدداً في المستقبل.',
         date: _now.subtract(const Duration(days: 35)),
       ),
       UserReview(
@@ -127,7 +134,8 @@ final _mockProfiles = <String, PublicProfile>{
         reviewerName: 'ريم الشمري',
         reviewerPhotoUrl: 'https://picsum.photos/seed/rev4/200/200',
         rating: 5,
-        text: 'وسيط محترف وأمين. ساعدنا في بيع عقار كنا نحاول بيعه منذ أشهر وأنهى الصفقة خلال أسبوعين فقط.',
+        text:
+            'وسيط محترف وأمين. ساعدنا في بيع عقار كنا نحاول بيعه منذ أشهر وأنهى الصفقة خلال أسبوعين فقط.',
         date: _now.subtract(const Duration(days: 52)),
       ),
       UserReview(
@@ -135,7 +143,8 @@ final _mockProfiles = <String, PublicProfile>{
         reviewerName: 'بدر العنزي',
         reviewerPhotoUrl: 'https://picsum.photos/seed/rev5/200/200',
         rating: 5,
-        text: 'من أفضل الوسطاء الذين تعاملت معهم. يهتم بتفاصيل كل عقار ويقدم نصائح صادقة دون مبالغة.',
+        text:
+            'من أفضل الوسطاء الذين تعاملت معهم. يهتم بتفاصيل كل عقار ويقدم نصائح صادقة دون مبالغة.',
         date: _now.subtract(const Duration(days: 70)),
       ),
     ],
@@ -168,7 +177,8 @@ final _mockProfiles = <String, PublicProfile>{
         reviewerName: 'عبدالله القحطاني',
         reviewerPhotoUrl: 'https://picsum.photos/seed/rev6/200/200',
         rating: 5,
-        text: 'فهد وسيط ممتاز، سريع الاستجابة ومعرفته بالمنطقة عالية جداً. أنصح به للراغبين في الإيجار بجدة.',
+        text:
+            'فهد وسيط ممتاز، سريع الاستجابة ومعرفته بالمنطقة عالية جداً. أنصح به للراغبين في الإيجار بجدة.',
         date: _now.subtract(const Duration(days: 10)),
       ),
       UserReview(
@@ -176,7 +186,8 @@ final _mockProfiles = <String, PublicProfile>{
         reviewerName: 'مها السلمي',
         reviewerPhotoUrl: 'https://picsum.photos/seed/rev7/200/200',
         rating: 4,
-        text: 'تعاملت معه لإيجاد شقة للإيجار. كان مفيداً ومتعاوناً رغم كثرة خياراتنا.',
+        text:
+            'تعاملت معه لإيجاد شقة للإيجار. كان مفيداً ومتعاوناً رغم كثرة خياراتنا.',
         date: _now.subtract(const Duration(days: 40)),
       ),
       UserReview(
@@ -184,7 +195,8 @@ final _mockProfiles = <String, PublicProfile>{
         reviewerName: 'حسن الزهراني',
         reviewerPhotoUrl: 'https://picsum.photos/seed/rev8/200/200',
         rating: 4,
-        text: 'محترف ومنظم في عمله. يُحدّث العملاء باستمرار ويُسهّل إجراءات التعاقد.',
+        text:
+            'محترف ومنظم في عمله. يُحدّث العملاء باستمرار ويُسهّل إجراءات التعاقد.',
         date: _now.subtract(const Duration(days: 65)),
       ),
     ],
@@ -230,7 +242,38 @@ final _mockProfiles = <String, PublicProfile>{
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
-final publicProfileProvider =
-    Provider.family<PublicProfile?, String>((ref, id) {
+final publicProfileProvider = Provider.family<PublicProfile?, String>((
+  ref,
+  id,
+) {
+  final currentUser = ref.watch(authProvider.select((state) => state.user));
+  if (currentUser != null && currentUser.id == id) {
+    final name = currentUser.name?.trim();
+    final email = currentUser.email?.trim();
+    final bio = currentUser.bio?.trim();
+
+    return PublicProfile(
+      id: currentUser.id,
+      name: (name == null || name.isEmpty) ? 'مستخدم عقار' : name,
+      phone: currentUser.phone,
+      email: (email == null || email.isEmpty) ? null : email,
+      photoUrl: currentUser.profilePhoto ?? '',
+      isBroker: currentUser.isOwnerOrBroker,
+      isVerified: currentUser.isVerified,
+      hasAqarPlus: false,
+      rating: 0,
+      reviewCount: 0,
+      memberSince: currentUser.createdAt,
+      lastActive: currentUser.lastActive ?? DateTime.now(),
+      bio: (bio == null || bio.isEmpty) ? null : bio,
+      totalListings: 0,
+      totalDeals: 0,
+      responseRate: 0,
+      listingIds: const [],
+      reviews: const [],
+      ratingBreakdown: const {},
+    );
+  }
+
   return _mockProfiles[id];
 });

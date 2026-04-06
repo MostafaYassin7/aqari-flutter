@@ -9,6 +9,7 @@ import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/property_details/presentation/screens/property_details_screen.dart';
+import '../../features/project_details/presentation/screens/project_details_screen.dart';
 import '../../features/rental_details/presentation/screens/rental_details_screen.dart';
 import '../../features/account/presentation/screens/account_screen.dart';
 import '../../features/my_listings/presentation/screens/my_listings_screen.dart';
@@ -58,15 +59,15 @@ final appRouter = GoRouter(
       builder: (context, state) => const LoginScreen(),
       routes: [
         GoRoute(
-          path: 'phone',       // full path: /login/phone
+          path: 'phone', // full path: /login/phone
           builder: (context, state) => const PhoneInputScreen(),
         ),
         GoRoute(
-          path: 'otp',         // full path: /login/otp
+          path: 'otp', // full path: /login/otp
           builder: (context, state) => const OtpScreen(),
         ),
         GoRoute(
-          path: 'register',    // full path: /login/register
+          path: 'register', // full path: /login/register
           builder: (context, state) => const RegisterScreen(),
         ),
       ],
@@ -77,15 +78,18 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/property/:id',
-      builder: (context, state) => PropertyDetailsScreen(
-        listingId: state.pathParameters['id']!,
-      ),
+      builder: (context, state) =>
+          PropertyDetailsScreen(listingId: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/project/:id',
+      builder: (context, state) =>
+          ProjectDetailsScreen(projectId: state.pathParameters['id']!),
     ),
     GoRoute(
       path: '/rental/:id',
-      builder: (context, state) => RentalDetailsScreen(
-        rentalId: state.pathParameters['id']!,
-      ),
+      builder: (context, state) =>
+          RentalDetailsScreen(rentalId: state.pathParameters['id']!),
     ),
     GoRoute(
       path: AppRoutes.search,
@@ -109,9 +113,8 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.chatDetail,
-      builder: (context, state) => ChatDetailScreen(
-        chatId: state.pathParameters['id']!,
-      ),
+      builder: (context, state) =>
+          ChatDetailScreen(chatId: state.pathParameters['id']!),
     ),
     GoRoute(
       path: AppRoutes.notifications,
@@ -127,9 +130,8 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/profile/:id',
-      builder: (context, state) => ProfileScreen(
-        profileId: state.pathParameters['id']!,
-      ),
+      builder: (context, state) =>
+          ProfileScreen(profileId: state.pathParameters['id']!),
     ),
     GoRoute(
       path: AppRoutes.settings,

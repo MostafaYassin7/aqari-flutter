@@ -27,8 +27,11 @@ class ProfileScreen extends ConsumerWidget {
           backgroundColor: AppColors.backgroundLight,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded,
-                size: 20, color: AppColors.textPrimaryLight),
+            icon: const Icon(
+              Icons.arrow_back_ios_rounded,
+              size: 20,
+              color: AppColors.textPrimaryLight,
+            ),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
         ),
@@ -47,8 +50,11 @@ class ProfileScreen extends ConsumerWidget {
             scrolledUnderElevation: 0,
             pinned: true,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_rounded,
-                  size: 20, color: AppColors.textPrimaryLight),
+              icon: const Icon(
+                Icons.arrow_back_ios_rounded,
+                size: 20,
+                color: AppColors.textPrimaryLight,
+              ),
               onPressed: () => Navigator.of(context).maybePop(),
             ),
             title: Text(
@@ -73,23 +79,30 @@ class ProfileScreen extends ConsumerWidget {
                 _TopSection(profile: profile),
 
                 const Divider(
-                    height: 1,
-                    color: AppColors.dividerLight,
-                    indent: AppConstants.spaceM,
-                    endIndent: AppConstants.spaceM),
+                  height: 1,
+                  color: AppColors.dividerLight,
+                  indent: AppConstants.spaceM,
+                  endIndent: AppConstants.spaceM,
+                ),
 
-                // ── Stats row ──────────────────────────────────
-                _StatsRow(profile: profile),
+                if (profile.totalListings > 0 ||
+                    profile.totalDeals > 0 ||
+                    profile.responseRate > 0) ...[
+                  // ── Stats row ────────────────────────────────
+                  _StatsRow(profile: profile),
 
-                const Divider(height: 8, color: AppColors.surfaceLight),
+                  const Divider(height: 8, color: AppColors.surfaceLight),
+                ],
 
                 // ── Active listings ────────────────────────────
                 _ListingsSection(listingIds: profile.listingIds),
 
-                const Divider(height: 8, color: AppColors.surfaceLight),
+                if (profile.reviewCount > 0) ...[
+                  const Divider(height: 8, color: AppColors.surfaceLight),
 
-                // ── Reviews ────────────────────────────────────
-                _ReviewsSection(profile: profile),
+                  // ── Reviews ──────────────────────────────────
+                  _ReviewsSection(profile: profile),
+                ],
 
                 // Bottom padding for contact bar
                 SizedBox(
@@ -103,9 +116,7 @@ class ProfileScreen extends ConsumerWidget {
         ],
       ),
       // ── Contact buttons (other user's profile) ────────────────
-      bottomNavigationBar: isOwnProfile
-          ? null
-          : _ContactBar(profile: profile),
+      bottomNavigationBar: isOwnProfile ? null : _ContactBar(profile: profile),
     );
   }
 }
@@ -131,7 +142,9 @@ class _TopSectionState extends State<_TopSection> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(
-          horizontal: AppConstants.spaceM, vertical: AppConstants.spaceL),
+        horizontal: AppConstants.spaceM,
+        vertical: AppConstants.spaceL,
+      ),
       child: Column(
         children: [
           // ── Avatar ───────────────────────────────────────────
@@ -160,13 +173,19 @@ class _TopSectionState extends State<_TopSection> {
                       fit: BoxFit.cover,
                       placeholder: (_, __) => Container(
                         color: AppColors.primaryLight,
-                        child: const Icon(Icons.person_rounded,
-                            color: AppColors.primary, size: 52),
+                        child: const Icon(
+                          Icons.person_rounded,
+                          color: AppColors.primary,
+                          size: 52,
+                        ),
                       ),
                       errorWidget: (_, __, ___) => Container(
                         color: AppColors.primaryLight,
-                        child: const Icon(Icons.person_rounded,
-                            color: AppColors.primary, size: 52),
+                        child: const Icon(
+                          Icons.person_rounded,
+                          color: AppColors.primary,
+                          size: 52,
+                        ),
                       ),
                     ),
                   ),
@@ -177,11 +196,14 @@ class _TopSectionState extends State<_TopSection> {
                     offset: const Offset(0, 4),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 3),
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primary,
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.radiusCircle),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.radiusCircle,
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: AppColors.primary.withValues(alpha: 0.4),
@@ -233,33 +255,53 @@ class _TopSectionState extends State<_TopSection> {
             ),
           ],
 
-          const SizedBox(height: 10),
+          if (p.phone.isNotEmpty || (p.email?.isNotEmpty ?? false)) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 12,
+              runSpacing: 8,
+              children: [
+                if (p.phone.isNotEmpty)
+                  _MetaChip(icon: Icons.phone_outlined, label: p.phone),
+                if (p.email != null && p.email!.isNotEmpty)
+                  _MetaChip(icon: Icons.email_outlined, label: p.email!),
+              ],
+            ),
+          ],
 
           // ── Rating ────────────────────────────────────────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.star_rounded,
-                  color: AppColors.primary, size: 18),
-              const SizedBox(width: 4),
-              Text(
-                p.rating.toStringAsFixed(1),
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight,
+          if (p.reviewCount > 0) ...[
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.star_rounded,
+                  color: AppColors.primary,
+                  size: 18,
                 ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '(${p.reviewCount} تقييم)',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondaryLight,
+                const SizedBox(width: 4),
+                Text(
+                  p.rating.toStringAsFixed(1),
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimaryLight,
+                  ),
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: 4),
+                Text(
+                  '(${p.reviewCount} تقييم)',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondaryLight,
+                  ),
+                ),
+              ],
+            ),
 
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
+          ] else
+            const SizedBox(height: 12),
 
           // ── Meta row: member since · last active ──────────────
           Wrap(
@@ -328,8 +370,18 @@ class _TopSectionState extends State<_TopSection> {
 
   String _formatYear(DateTime dt) {
     const months = [
-      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+      'يناير',
+      'فبراير',
+      'مارس',
+      'أبريل',
+      'مايو',
+      'يونيو',
+      'يوليو',
+      'أغسطس',
+      'سبتمبر',
+      'أكتوبر',
+      'نوفمبر',
+      'ديسمبر',
     ];
     return '${months[dt.month - 1]} ${dt.year}';
   }
@@ -357,13 +409,14 @@ class _VerifiedBadge extends StatelessWidget {
         color: AppColors.info.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppConstants.radiusCircle),
         border: Border.all(
-            color: AppColors.info.withValues(alpha: 0.4), width: 1),
+          color: AppColors.info.withValues(alpha: 0.4),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.verified_rounded,
-              size: 13, color: AppColors.info),
+          Icon(Icons.verified_rounded, size: 13, color: AppColors.info),
           const SizedBox(width: 3),
           Text(
             'موثّق',
@@ -413,24 +466,16 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(
-          vertical: AppConstants.spaceL,
-          horizontal: AppConstants.spaceM),
+        vertical: AppConstants.spaceL,
+        horizontal: AppConstants.spaceM,
+      ),
       child: Row(
         children: [
-          _StatCell(
-            value: '${profile.totalListings}',
-            label: 'إعلان نشط',
-          ),
+          _StatCell(value: '${profile.totalListings}', label: 'إعلان نشط'),
           _StatDivider(),
-          _StatCell(
-            value: '${profile.totalDeals}',
-            label: 'صفقة مُنجزة',
-          ),
+          _StatCell(value: '${profile.totalDeals}', label: 'صفقة مُنجزة'),
           _StatDivider(),
-          _StatCell(
-            value: '${profile.responseRate}%',
-            label: 'نسبة الرد',
-          ),
+          _StatCell(value: '${profile.responseRate}%', label: 'نسبة الرد'),
         ],
       ),
     );
@@ -471,11 +516,7 @@ class _StatCell extends StatelessWidget {
 class _StatDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 36,
-      color: AppColors.dividerLight,
-    );
+    return Container(width: 1, height: 36, color: AppColors.dividerLight);
   }
 }
 
@@ -535,7 +576,8 @@ class _ListingsSection extends StatelessWidget {
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(
-                horizontal: AppConstants.spaceM),
+              horizontal: AppConstants.spaceM,
+            ),
             itemCount: listings.length,
             itemBuilder: (_, i) => Padding(
               padding: const EdgeInsetsDirectional.only(end: 12),
@@ -587,8 +629,11 @@ class _ProfileListingCard extends StatelessWidget {
                   height: 140,
                   color: AppColors.surfaceLight,
                   child: const Center(
-                    child: Icon(Icons.home_rounded,
-                        size: 36, color: AppColors.primary),
+                    child: Icon(
+                      Icons.home_rounded,
+                      size: 36,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ),
@@ -633,9 +678,9 @@ class _ProfileListingCard extends StatelessWidget {
       return '$s م ريال';
     }
     final f = price.toInt().toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]},',
-        );
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]},',
+    );
     return '$f ريال';
   }
 }
@@ -652,8 +697,7 @@ class _ReviewsSection extends StatelessWidget {
     final shown = reviews.take(3).toList();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppConstants.spaceM),
+      padding: const EdgeInsets.symmetric(horizontal: AppConstants.spaceM),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -662,8 +706,11 @@ class _ReviewsSection extends StatelessWidget {
           // Section title
           Row(
             children: [
-              const Icon(Icons.star_rounded,
-                  color: AppColors.primary, size: 20),
+              const Icon(
+                Icons.star_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
               const SizedBox(width: 6),
               Text(
                 '${profile.rating.toStringAsFixed(1)}  ·  ${profile.reviewCount} تقييم',
@@ -698,8 +745,7 @@ class _ReviewsSection extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppColors.dividerLight),
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
                   ),
                   minimumSize: const Size(220, 46),
                 ),
@@ -748,8 +794,11 @@ class _RatingBreakdown extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
-              const Icon(Icons.star_rounded,
-                  size: 13, color: AppColors.primary),
+              const Icon(
+                Icons.star_rounded,
+                size: 13,
+                color: AppColors.primary,
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: LayoutBuilder(
@@ -761,7 +810,8 @@ class _RatingBreakdown extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: AppColors.dividerLight,
                           borderRadius: BorderRadius.circular(
-                              AppConstants.radiusCircle),
+                            AppConstants.radiusCircle,
+                          ),
                         ),
                       ),
                       AnimatedContainer(
@@ -772,7 +822,8 @@ class _RatingBreakdown extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: AppColors.primary,
                           borderRadius: BorderRadius.circular(
-                              AppConstants.radiusCircle),
+                            AppConstants.radiusCircle,
+                          ),
                         ),
                       ),
                     ],
@@ -824,15 +875,21 @@ class _ReviewCard extends StatelessWidget {
                     width: 42,
                     height: 42,
                     color: AppColors.primaryLight,
-                    child: const Icon(Icons.person_rounded,
-                        color: AppColors.primary, size: 20),
+                    child: const Icon(
+                      Icons.person_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
                   ),
                   errorWidget: (_, __, ___) => Container(
                     width: 42,
                     height: 42,
                     color: AppColors.primaryLight,
-                    child: const Icon(Icons.person_rounded,
-                        color: AppColors.primary, size: 20),
+                    child: const Icon(
+                      Icons.person_rounded,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
                   ),
                 ),
               ),
@@ -894,8 +951,18 @@ class _ReviewCard extends StatelessWidget {
 
   String _formatDate(DateTime dt) {
     const months = [
-      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+      'يناير',
+      'فبراير',
+      'مارس',
+      'أبريل',
+      'مايو',
+      'يونيو',
+      'يوليو',
+      'أغسطس',
+      'سبتمبر',
+      'أكتوبر',
+      'نوفمبر',
+      'ديسمبر',
     ];
     return '${months[dt.month - 1]} ${dt.year}';
   }
@@ -920,8 +987,7 @@ class _ContactBar extends ConsumerWidget {
       ),
       decoration: const BoxDecoration(
         color: AppColors.backgroundLight,
-        border:
-            Border(top: BorderSide(color: AppColors.dividerLight)),
+        border: Border(top: BorderSide(color: AppColors.dividerLight)),
       ),
       child: Row(
         children: [
@@ -945,8 +1011,7 @@ class _ContactBar extends ConsumerWidget {
                   foregroundColor: AppColors.textPrimaryLight,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
                   ),
                 ),
               ),
@@ -961,8 +1026,7 @@ class _ContactBar extends ConsumerWidget {
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content:
-                        Text('الاتصال بـ ${profile.phone}'),
+                    content: Text('الاتصال بـ ${profile.phone}'),
                     behavior: SnackBarBehavior.floating,
                     duration: const Duration(seconds: 2),
                   ),
@@ -972,12 +1036,14 @@ class _ContactBar extends ConsumerWidget {
                 padding: EdgeInsets.zero,
                 side: const BorderSide(color: AppColors.dividerLight),
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 ),
               ),
-              child: const Icon(Icons.phone_rounded,
-                  color: AppColors.textPrimaryLight, size: 22),
+              child: const Icon(
+                Icons.phone_rounded,
+                color: AppColors.textPrimaryLight,
+                size: 22,
+              ),
             ),
           ),
         ],

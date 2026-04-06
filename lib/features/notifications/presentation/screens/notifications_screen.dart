@@ -8,13 +8,41 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../providers/notifications_provider.dart';
 
-class NotificationsScreen extends ConsumerWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final notifications = ref.watch(notificationsProvider);
+  ConsumerState<NotificationsScreen> createState() =>
+      _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(notificationsProvider.notifier).loadMore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(notificationsProvider);
     final unreadCount = ref.watch(unreadCountProvider);
+    final notifications = state.notifications;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -23,8 +51,11 @@ class NotificationsScreen extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: AppColors.textPrimaryLight),
+          icon: const Icon(
+            Icons.arrow_back_ios_rounded,
+            size: 20,
+            color: AppColors.textPrimaryLight,
+          ),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
@@ -54,20 +85,57 @@ class NotificationsScreen extends ConsumerWidget {
           child: Divider(height: 1, color: AppColors.dividerLight),
         ),
       ),
-      body: notifications.isEmpty
+      body: state.isLoading && notifications.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : state.error != null && notifications.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'خطأ: ${state.error}',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bodySmall,
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: () =>
+                        ref.read(notificationsProvider.notifier).refresh(),
+                    child: const Text('إعادة المحاولة'),
+                  ),
+                ],
+              ),
+            )
+          : notifications.isEmpty
           ? const _EmptyState()
-          : ListView.separated(
-              itemCount: notifications.length,
-              separatorBuilder: (_, __) =>
-                  const Divider(height: 1, color: AppColors.dividerLight),
-              itemBuilder: (_, i) => _NotificationRow(
-                notification: notifications[i],
-                onTap: () {
-                  ref
-                      .read(notificationsProvider.notifier)
-                      .markAsRead(notifications[i].id);
-                  final route = notifications[i].actionRoute;
-                  if (route != null) context.push(route);
+          : RefreshIndicator(
+              onRefresh: () =>
+                  ref.read(notificationsProvider.notifier).refresh(),
+              child: ListView.separated(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: notifications.length + (state.hasMore ? 1 : 0),
+                separatorBuilder: (_, __) =>
+                    const Divider(height: 1, color: AppColors.dividerLight),
+                itemBuilder: (_, i) {
+                  if (i >= notifications.length) {
+                    return const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  }
+                  return _NotificationRow(
+                    notification: notifications[i],
+                    onTap: () {
+                      ref
+                          .read(notificationsProvider.notifier)
+                          .markAsRead(notifications[i].id);
+                      final route = notifications[i].actionRoute;
+                      if (route != null) context.push(route);
+                    },
+                  );
                 },
               ),
             ),
@@ -81,10 +149,7 @@ class _NotificationRow extends StatelessWidget {
   final AppNotification notification;
   final VoidCallback onTap;
 
-  const _NotificationRow({
-    required this.notification,
-    required this.onTap,
-  });
+  const _NotificationRow({required this.notification, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -95,9 +160,7 @@ class _NotificationRow extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        color: isUnread
-            ? const Color(0xFFFFF8EC)
-            : AppColors.backgroundLight,
+        color: isUnread ? const Color(0xFFFFF8EC) : AppColors.backgroundLight,
         padding: const EdgeInsets.symmetric(
           horizontal: AppConstants.spaceM,
           vertical: 14,
@@ -224,11 +287,7 @@ class _IconAvatar extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         shape: BoxShape.circle,
       ),
-      child: Icon(
-        notification.type.icon,
-        color: color,
-        size: 24,
-      ),
+      child: Icon(notification.type.icon, color: color, size: 24),
     );
   }
 }

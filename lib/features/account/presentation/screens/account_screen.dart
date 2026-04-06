@@ -1,3 +1,4 @@
+import 'package:aqar_app/core/network/auth_storage.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
+import '../../../wallet/presentation/providers/wallet_provider.dart';
 import '../../../../shared/widgets/app_bottom_nav.dart';
 import '../providers/account_provider.dart';
 
@@ -16,8 +18,9 @@ class AccountScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authProvider);
     final user = ref.watch(userProfileProvider);
-    final isLoggedIn = user != null;
+    final isLoggedIn = auth.step == AuthStep.authenticated;
     final unreadNotifications = ref.watch(unreadCountProvider);
 
     return Scaffold(
@@ -43,8 +46,10 @@ class AccountScreen extends ConsumerWidget {
                 alignment: Alignment.center,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.notifications_none_rounded,
-                        color: AppColors.textPrimaryLight),
+                    icon: const Icon(
+                      Icons.notifications_none_rounded,
+                      color: AppColors.textPrimaryLight,
+                    ),
                     onPressed: () => context.push(AppRoutes.notifications),
                   ),
                   if (unreadNotifications > 0)
@@ -75,15 +80,24 @@ class AccountScreen extends ConsumerWidget {
               children: [
                 // ── Top profile section ─────────────────────
                 isLoggedIn
-                    ? _ProfileSection(user: user)
+                    ? (user != null
+                          ? _ProfileSection(user: user)
+                          : _ProfileLoadingSection(
+                              isLoading: auth.isLoading,
+                              error: auth.error,
+                              onRetry: () {
+                                ref
+                                    .read(authProvider.notifier)
+                                    .loadCurrentUser();
+                              },
+                            ))
                     : const _GuestSection(),
 
                 const SizedBox(height: 8),
 
                 // ── Wallet card (logged in only) ────────────
                 if (isLoggedIn) ...[
-                  _WalletCard(
-                    balance: user.walletBalance,
+                  _WalletCardFromProvider(
                     onTopUp: () => context.push(AppRoutes.wallet),
                   ),
                   const SizedBox(height: 8),
@@ -146,15 +160,13 @@ class AccountScreen extends ConsumerWidget {
                     _MenuItem(
                       icon: Icons.rocket_launch_rounded,
                       label: 'ترقية الإعلانات',
-                      onTap: () =>
-                          _showComingSoon(context, 'ترقية الإعلانات'),
+                      onTap: () => _showComingSoon(context, 'ترقية الإعلانات'),
                     ),
                     _MenuItem(
                       icon: Icons.workspace_premium_rounded,
                       label: 'اشتراك عقار+',
                       badge: 'مميز',
-                      onTap: () =>
-                          _showComingSoon(context, 'اشتراك عقار+'),
+                      onTap: () => _showComingSoon(context, 'اشتراك عقار+'),
                       isLast: true,
                     ),
                   ],
@@ -186,14 +198,12 @@ class AccountScreen extends ConsumerWidget {
                     _MenuItem(
                       icon: Icons.smartphone_rounded,
                       label: 'تغيير رقم الجوال',
-                      onTap: () =>
-                          _showComingSoon(context, 'تغيير رقم الجوال'),
+                      onTap: () => _showComingSoon(context, 'تغيير رقم الجوال'),
                     ),
                     _MenuItem(
                       icon: Icons.business_rounded,
                       label: 'حساب المنشأة',
-                      onTap: () =>
-                          _showComingSoon(context, 'حساب المنشأة'),
+                      onTap: () => _showComingSoon(context, 'حساب المنشأة'),
                     ),
                     _MenuItem(
                       icon: Icons.settings_rounded,
@@ -210,7 +220,7 @@ class AccountScreen extends ConsumerWidget {
                 if (isLoggedIn)
                   _LogoutButton(
                     onLogout: () {
-                      ref.read(authProvider.notifier).reset();
+                      ref.read(authProvider.notifier).logout();
                     },
                   ),
 
@@ -225,11 +235,13 @@ class AccountScreen extends ConsumerWidget {
   }
 
   void _showComingSoon(BuildContext context, String name) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('$name — قريباً'),
-      duration: const Duration(seconds: 1),
-      behavior: SnackBarBehavior.floating,
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$name — قريباً'),
+        duration: const Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 }
 
@@ -257,44 +269,117 @@ class _GuestSection extends StatelessWidget {
           Text(
             'سجّل دخولك للوصول إلى إعلاناتك وصفقاتك وحجوزاتك',
             style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight),
+              color: AppColors.textSecondaryLight,
+            ),
           ),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => context.push(AppRoutes.login),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              minimumSize:
-                  const Size(double.infinity, AppConstants.buttonHeight),
+              minimumSize: const Size(
+                double.infinity,
+                AppConstants.buttonHeight,
+              ),
               shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM)),
+                borderRadius: BorderRadius.circular(AppConstants.radiusM),
+              ),
               elevation: 0,
             ),
             child: Text(
               'تسجيل الدخول',
               style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.white, fontWeight: FontWeight.w700),
+                color: AppColors.white,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           const SizedBox(height: 12),
           OutlinedButton(
             onPressed: () => context.push('${AppRoutes.login}/phone'),
             style: OutlinedButton.styleFrom(
-              minimumSize:
-                  const Size(double.infinity, AppConstants.buttonHeight),
+              minimumSize: const Size(
+                double.infinity,
+                AppConstants.buttonHeight,
+              ),
               side: const BorderSide(color: AppColors.dividerLight),
               shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM)),
+                borderRadius: BorderRadius.circular(AppConstants.radiusM),
+              ),
             ),
             child: Text(
               'إنشاء حساب جديد',
               style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.textPrimaryLight,
-                  fontWeight: FontWeight.w600),
+                color: AppColors.textPrimaryLight,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileLoadingSection extends StatelessWidget {
+  final bool isLoading;
+  final String? error;
+  final VoidCallback onRetry;
+
+  const _ProfileLoadingSection({
+    required this.isLoading,
+    required this.error,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.backgroundLight,
+      padding: const EdgeInsets.all(AppConstants.spaceM),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'جاري تحميل بيانات الحساب',
+            style: AppTextStyles.titleLarge.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimaryLight,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            error ?? 'نحدّث بياناتك من الخادم لعرض الملف الشخصي.',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondaryLight,
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (isLoading)
+            const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
+          else
+            OutlinedButton(
+              onPressed: onRetry,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(
+                  double.infinity,
+                  AppConstants.buttonHeight,
+                ),
+                side: const BorderSide(color: AppColors.dividerLight),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                ),
+              ),
+              child: Text(
+                'إعادة تحميل البيانات',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: AppColors.textPrimaryLight,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -321,6 +406,7 @@ class _ProfileSection extends StatelessWidget {
           vertical: AppConstants.spaceM,
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Personal row ───────────────────────────────
             Row(
@@ -330,7 +416,7 @@ class _ProfileSection extends StatelessWidget {
                   children: [
                     ClipOval(
                       child: CachedNetworkImage(
-                        imageUrl: user.photoUrl,
+                        imageUrl: user.photoUrl ?? '',
                         width: _iconSize,
                         height: _iconSize,
                         fit: BoxFit.cover,
@@ -338,15 +424,21 @@ class _ProfileSection extends StatelessWidget {
                           width: _iconSize,
                           height: _iconSize,
                           color: AppColors.primaryLight,
-                          child: const Icon(Icons.person_rounded,
-                              color: AppColors.primary, size: 28),
+                          child: const Icon(
+                            Icons.person_rounded,
+                            color: AppColors.primary,
+                            size: 28,
+                          ),
                         ),
                         errorWidget: (_, __, ___) => Container(
                           width: _iconSize,
                           height: _iconSize,
                           color: AppColors.primaryLight,
-                          child: const Icon(Icons.person_rounded,
-                              color: AppColors.primary, size: 28),
+                          child: const Icon(
+                            Icons.person_rounded,
+                            color: AppColors.primary,
+                            size: 28,
+                          ),
                         ),
                       ),
                     ),
@@ -360,8 +452,11 @@ class _ProfileSection extends StatelessWidget {
                           color: AppColors.primary,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.edit_rounded,
-                            size: 11, color: AppColors.white),
+                        child: const Icon(
+                          Icons.edit_rounded,
+                          size: 11,
+                          color: AppColors.white,
+                        ),
                       ),
                     ),
                   ],
@@ -373,118 +468,95 @@ class _ProfileSection extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        user.name,
-                        style: AppTextStyles.titleLarge.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimaryLight,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'رقم المستخدم: ${user.userNumber}',
-                        style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondaryLight),
-                      ),
-                      const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.star_rounded,
-                              size: 13, color: AppColors.primary),
-                          const SizedBox(width: 3),
-                          Text(
-                            user.rating.toStringAsFixed(1),
-                            style: AppTextStyles.bodySmall.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimaryLight,
+                          Expanded(
+                            child: Text(
+                              user.name,
+                              style: AppTextStyles.titleLarge.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimaryLight,
+                              ),
                             ),
                           ),
-                          Text(
-                            '  (${user.reviewCount} تقييم)',
-                            style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textSecondaryLight),
-                          ),
+                          if (user.isVerified) ...[
+                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.verified_rounded,
+                              size: 18,
+                              color: AppColors.info,
+                            ),
+                          ],
                         ],
                       ),
+                      const SizedBox(height: 4),
+                      Text(
+                        user.phone,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondaryLight,
+                        ),
+                      ),
+                      if (user.hasEmail) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          user.email!,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondaryLight,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
 
-                const Icon(Icons.arrow_forward_ios_rounded,
-                    size: 14, color: AppColors.textHintLight),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: AppColors.textHintLight,
+                ),
               ],
             ),
 
-            // ── Establishment row (broker only) ────────────
-            if (user.isBroker && user.establishmentName != null) ...[
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _ProfileMetaBadge(
+                  icon: Icons.badge_outlined,
+                  label: user.roleLabel,
+                  iconColor: AppColors.primary,
+                ),
+                _ProfileMetaBadge(
+                  icon: user.isVerified
+                      ? Icons.verified_rounded
+                      : Icons.verified_outlined,
+                  label: user.isVerified ? 'موثّق' : 'غير موثّق',
+                  iconColor: user.isVerified
+                      ? AppColors.info
+                      : AppColors.textHintLight,
+                ),
+                _ProfileMetaBadge(
+                  icon: user.isActive
+                      ? Icons.check_circle_outline_rounded
+                      : Icons.pause_circle_outline_rounded,
+                  label: user.isActive ? 'الحساب نشط' : 'الحساب غير نشط',
+                  iconColor: user.isActive
+                      ? AppColors.success
+                      : AppColors.textHintLight,
+                ),
+              ],
+            ),
+            if (user.hasBio) ...[
               const SizedBox(height: 12),
-              const Divider(height: 1, color: AppColors.dividerLight),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: CachedNetworkImage(
-                      imageUrl: user.establishmentLogoUrl ?? '',
-                      width: _iconSize,
-                      height: _iconSize,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) => Container(
-                        width: _iconSize,
-                        height: _iconSize,
-                        color: AppColors.primaryLight,
-                        child: const Icon(Icons.business_rounded,
-                            size: 28, color: AppColors.primary),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user.establishmentName!,
-                          style: AppTextStyles.titleLarge.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimaryLight,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'وسيط عقاري موثّق',
-                          style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textSecondaryLight),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withAlpha(25),
-                      borderRadius: BorderRadius.circular(
-                          AppConstants.radiusCircle),
-                      border: Border.all(
-                          color: AppColors.success.withAlpha(80)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.verified_rounded,
-                            size: 13, color: AppColors.success),
-                        const SizedBox(width: 4),
-                        Text(
-                          'موثّق',
-                          style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.success,
-                              fontWeight: FontWeight.w700),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              Text(
+                user.bio!,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondaryLight,
+                  height: 1.5,
+                ),
               ),
             ],
           ],
@@ -494,110 +566,187 @@ class _ProfileSection extends StatelessWidget {
   }
 }
 
+class _ProfileMetaBadge extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color iconColor;
+
+  const _ProfileMetaBadge({
+    required this.icon,
+    required this.label,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: iconColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppConstants.radiusCircle),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: iconColor),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.textPrimaryLight,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Wallet card (provider-backed) ─────────────────────────────────────────────
+
+class _WalletCardFromProvider extends ConsumerWidget {
+  final VoidCallback onTopUp;
+  const _WalletCardFromProvider({required this.onTopUp});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final wallet = ref.watch(walletProvider);
+    return _WalletCard(
+      balance: wallet.balance,
+      isLoading: wallet.isLoading,
+      onTopUp: onTopUp,
+    );
+  }
+}
+
 // ── Wallet card ───────────────────────────────────────────────────────────────
 
 class _WalletCard extends StatelessWidget {
   final double balance;
+  final bool isLoading;
   final VoidCallback onTopUp;
-  const _WalletCard({required this.balance, required this.onTopUp});
+  const _WalletCard({
+    required this.balance,
+    this.isLoading = false,
+    required this.onTopUp,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTopUp,
       child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppConstants.spaceM),
-      child: Container(
-        padding: const EdgeInsets.all(AppConstants.spaceM),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-          ),
-          borderRadius: BorderRadius.circular(AppConstants.radiusL),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.black.withAlpha(50),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+        padding: const EdgeInsets.symmetric(horizontal: AppConstants.spaceM),
+        child: Container(
+          padding: const EdgeInsets.all(AppConstants.spaceM),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Wallet icon
-            Container(
-              width: 46,
-              height: 46,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withAlpha(30),
-                borderRadius:
-                    BorderRadius.circular(AppConstants.radiusM),
+            borderRadius: BorderRadius.circular(AppConstants.radiusL),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.black.withAlpha(50),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
               ),
-              child: const Icon(Icons.account_balance_wallet_rounded,
-                  color: AppColors.primary, size: 24),
-            ),
-            const SizedBox(width: 14),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Wallet icon
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(30),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                ),
+                child: const Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
 
-            // Balance
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'رصيد المحفظة',
-                    style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.white.withAlpha(160)),
+              // Balance
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'رصيد المحفظة',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.white.withAlpha(160),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    if (isLoading)
+                      const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary,
+                        ),
+                      )
+                    else
+                      RichText(
+                        text: TextSpan(
+                          children: [
+                            TextSpan(
+                              text: balance.toStringAsFixed(0),
+                              style: AppTextStyles.headlineMedium.copyWith(
+                                color: AppColors.white,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            TextSpan(
+                              text: '  ريال',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: AppColors.white.withAlpha(160),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              // Top-up button
+              ElevatedButton(
+                onPressed: onTopUp,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  minimumSize: Size.zero,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
                   ),
-                  const SizedBox(height: 2),
-                  RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: balance.toStringAsFixed(0),
-                          style: AppTextStyles.headlineMedium.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        TextSpan(
-                          text: '  ريال',
-                          style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.white.withAlpha(160)),
-                        ),
-                      ],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.radiusCircle,
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            // Top-up button
-            ElevatedButton(
-              onPressed: onTopUp,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                minimumSize: Size.zero,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusCircle),
+                  elevation: 0,
                 ),
-                elevation: 0,
-              ),
-              child: Text(
-                'شحن',
-                style: AppTextStyles.bodySmall.copyWith(
+                child: Text(
+                  'شحن',
+                  style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.white,
-                    fontWeight: FontWeight.w700),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
@@ -642,44 +791,46 @@ class _QuickAction extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const _QuickAction(
-      {required this.icon, required this.label, required this.onTap});
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(
-            color: AppColors.backgroundLight,
-            borderRadius: BorderRadius.circular(AppConstants.radiusL),
-            border: Border.all(color: AppColors.dividerLight),
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundLight,
+        borderRadius: BorderRadius.circular(AppConstants.radiusL),
+        border: Border.all(color: AppColors.dividerLight),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: const BoxDecoration(
+              color: AppColors.primaryLight,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: AppColors.primary, size: 22),
           ),
-          child: Column(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryLight,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon,
-                    color: AppColors.primary, size: 22),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textPrimaryLight,
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textPrimaryLight,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
           ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }
 
 // ── Menu section ──────────────────────────────────────────────────────────────
@@ -691,25 +842,29 @@ class _MenuSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppConstants.spaceM,
-                AppConstants.spaceS, AppConstants.spaceM, 6),
-            child: Text(
-              title,
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.textSecondaryLight,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppConstants.spaceM,
+          AppConstants.spaceS,
+          AppConstants.spaceM,
+          6,
+        ),
+        child: Text(
+          title,
+          style: AppTextStyles.labelMedium.copyWith(
+            color: AppColors.textSecondaryLight,
+            fontWeight: FontWeight.w700,
           ),
-          Container(
-            color: AppColors.backgroundLight,
-            child: Column(children: items),
-          ),
-        ],
-      );
+        ),
+      ),
+      Container(
+        color: AppColors.backgroundLight,
+        child: Column(children: items),
+      ),
+    ],
+  );
 }
 
 class _MenuItem extends StatelessWidget {
@@ -729,58 +884,64 @@ class _MenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        children: [
-          InkWell(
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.spaceM, vertical: 14),
-              child: Row(
-                children: [
-                  Icon(icon,
-                      size: 20,
-                      color: AppColors.textSecondaryLight),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textPrimaryLight),
+    children: [
+      InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppConstants.spaceM,
+            vertical: 14,
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: AppColors.textSecondaryLight),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textPrimaryLight,
+                  ),
+                ),
+              ),
+              if (badge != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.radiusCircle,
                     ),
                   ),
-                  if (badge != null) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(
-                            AppConstants.radiusCircle),
-                      ),
-                      child: Text(
-                        badge!,
-                        style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.white,
-                            fontWeight: FontWeight.w700),
-                      ),
+                  child: Text(
+                    badge!,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w700,
                     ),
-                    const SizedBox(width: 8),
-                  ],
-                  const Icon(Icons.arrow_forward_ios_rounded,
-                      size: 14,
-                      color: AppColors.textSecondaryLight),
-                ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: AppColors.textSecondaryLight,
               ),
-            ),
+            ],
           ),
-          if (!isLast)
-            const Padding(
-              padding: EdgeInsetsDirectional.only(
-                  start: AppConstants.spaceM + 34),
-              child: Divider(height: 1, color: AppColors.dividerLight),
-            ),
-        ],
-      );
+        ),
+      ),
+      if (!isLast)
+        const Padding(
+          padding: EdgeInsetsDirectional.only(start: AppConstants.spaceM + 34),
+          child: Divider(height: 1, color: AppColors.dividerLight),
+        ),
+    ],
+  );
 }
 
 // ── Logout button ─────────────────────────────────────────────────────────────
@@ -791,58 +952,74 @@ class _LogoutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        color: AppColors.backgroundLight,
-        child: InkWell(
-          onTap: () {
-            showDialog(
-              context: context,
-              builder: (_) => AlertDialog(
-                shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusL)),
-                title: Text('تسجيل الخروج',
-                    style: AppTextStyles.titleLarge
-                        .copyWith(fontWeight: FontWeight.w700)),
-                content: Text('هل تريد تسجيل الخروج من حسابك؟',
-                    style: AppTextStyles.bodyMedium),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text('إلغاء',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondaryLight)),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      onLogout();
-                    },
-                    child: Text('تسجيل الخروج',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.error,
-                            fontWeight: FontWeight.w700)),
-                  ),
-                ],
+    color: AppColors.backgroundLight,
+    child: InkWell(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppConstants.radiusL),
+            ),
+            title: Text(
+              'تسجيل الخروج',
+              style: AppTextStyles.titleLarge.copyWith(
+                fontWeight: FontWeight.w700,
               ),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppConstants.spaceM, vertical: 16),
-            child: Row(
-              children: [
-                const Icon(Icons.logout_rounded,
-                    size: 20, color: AppColors.error),
-                const SizedBox(width: 14),
-                Text(
+            ),
+            content: Text(
+              'هل تريد تسجيل الخروج من حسابك؟',
+              style: AppTextStyles.bodyMedium,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  'إلغاء',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondaryLight,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  AuthStorage.clearAll();
+                  context.go(AppRoutes.login);
+
+                  // Navigator.of(context).pop();
+                  // onLogout();
+                },
+                child: Text(
                   'تسجيل الخروج',
                   style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.error,
-                      fontWeight: FontWeight.w600),
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppConstants.spaceM,
+          vertical: 16,
         ),
-      );
+        child: Row(
+          children: [
+            const Icon(Icons.logout_rounded, size: 20, color: AppColors.error),
+            const SizedBox(width: 14),
+            Text(
+              'تسجيل الخروج',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

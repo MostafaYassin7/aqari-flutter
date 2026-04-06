@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../providers/onboarding_provider.dart';
+import '../providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -52,25 +52,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _navigate() async {
-    // Run timer and provider loads in parallel
-    final results = await Future.wait([
+    final results = await Future.wait<Object?>([
       Future.delayed(
-          const Duration(milliseconds: AppConstants.splashDurationMs)),
-      ref.read(hasSeenOnboardingProvider.future),
-      ref.read(isLoggedInProvider.future),
+        const Duration(milliseconds: AppConstants.splashDurationMs),
+      ),
+      ref.read(authProvider.notifier).loadCurrentUser(),
     ]);
 
     if (!mounted) return;
 
-    final hasSeenOnboarding = results[1] as bool;
-    final isLoggedIn = results[2] as bool;
+    final hasSession = results[1] as bool? ?? false;
 
-    if (isLoggedIn) {
+    if (hasSession) {
       context.go(AppRoutes.home);
     } else {
-      context.go(
-        hasSeenOnboarding ? AppRoutes.login : AppRoutes.onboarding,
-      );
+      context.go(AppRoutes.login);
     }
   }
 
@@ -120,11 +116,7 @@ class _SplashContent extends StatelessWidget {
               borderRadius: BorderRadius.circular(28),
             ),
             child: Center(
-              child: Icon(
-                Icons.home_rounded,
-                color: AppColors.white,
-                size: 52,
-              ),
+              child: Icon(Icons.home_rounded, color: AppColors.white, size: 52),
             ),
           ),
 

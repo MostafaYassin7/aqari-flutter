@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_enums.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 // ── User profile model ────────────────────────────────────────────────────────
@@ -8,51 +9,72 @@ class UserProfile {
   final String id;
   final String name;
   final String phone;
-  final String userNumber; // 9-digit display number
-  final String photoUrl;
-  final bool isBroker;
-  final String? establishmentName;
-  final String? establishmentLogoUrl;
-  final double rating;
-  final int reviewCount;
-  final double walletBalance;
+  final String? email;
+  final String? photoUrl;
+  final String? bio;
+  final String role;
+  final bool isVerified;
+  final bool isActive;
+  final DateTime createdAt;
+  final DateTime? lastActive;
+  final double? walletBalance;
 
   const UserProfile({
     required this.id,
     required this.name,
     required this.phone,
-    required this.userNumber,
-    required this.photoUrl,
-    required this.isBroker,
-    this.establishmentName,
-    this.establishmentLogoUrl,
-    required this.rating,
-    required this.reviewCount,
-    required this.walletBalance,
+    this.email,
+    this.photoUrl,
+    this.bio,
+    required this.role,
+    required this.isVerified,
+    required this.isActive,
+    required this.createdAt,
+    this.lastActive,
+    this.walletBalance,
   });
+
+  bool get hasEmail => email != null && email!.trim().isNotEmpty;
+  bool get hasBio => bio != null && bio!.trim().isNotEmpty;
+
+  String get roleLabel {
+    switch (role) {
+      case UserRole.owner:
+        return 'مالك';
+      case UserRole.broker:
+        return 'وسيط';
+      case UserRole.host:
+        return 'مضيف';
+      default:
+        return 'مستخدم';
+    }
+  }
 }
-
-// ── Mock user ─────────────────────────────────────────────────────────────────
-
-const _mockUser = UserProfile(
-  id: 'usr_001',
-  name: 'محمد العتيبي',
-  phone: '+966 50 123 4567',
-  userNumber: '100234567',
-  photoUrl: 'https://picsum.photos/seed/user001/200/200',
-  isBroker: true,
-  establishmentName: 'مكتب العتيبي للعقارات',
-  establishmentLogoUrl: 'https://picsum.photos/seed/logo001/200/200',
-  rating: 4.8,
-  reviewCount: 47,
-  walletBalance: 1250.0,
-);
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
 /// Returns the logged-in user's profile, or null if not authenticated.
 final userProfileProvider = Provider<UserProfile?>((ref) {
-  final auth = ref.watch(authProvider);
-  if (auth.step == AuthStep.authenticated) return _mockUser;
-  return null;
+  final user = ref.watch(authProvider.select((state) => state.user));
+  if (user == null) {
+    return null;
+  }
+
+  final name = user.name?.trim();
+  final email = user.email?.trim();
+  final bio = user.bio?.trim();
+
+  return UserProfile(
+    id: user.id,
+    name: (name == null || name.isEmpty) ? 'مستخدم عقار' : name,
+    phone: user.phone,
+    email: (email == null || email.isEmpty) ? null : email,
+    photoUrl: user.profilePhoto,
+    bio: (bio == null || bio.isEmpty) ? null : bio,
+    role: user.role,
+    isVerified: user.isVerified,
+    isActive: user.isActive,
+    createdAt: user.createdAt,
+    lastActive: user.lastActive,
+  );
 });

@@ -1,245 +1,351 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/models/listing.dart';
-import '../../../home/data/mock_listings.dart';
+import '../../../../shared/models/project.dart';
+import '../../../home/data/listings_repository.dart';
 
-// ── Search mode (0 = Filter, 1 = Ad/Phone) ────────────────────────────────────
+// ── Active tab context (0=عقارات, 1=مشاريع, 2=إيجار يومي) ─────────────────────
+
+class SearchTabNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+  void select(int v) => state = v;
+}
+
+final searchTabProvider = NotifierProvider<SearchTabNotifier, int>(
+  SearchTabNotifier.new,
+);
+
+/// Maps tab index to listing type for the API
+String? listingTypeForTab(int tab) {
+  switch (tab) {
+    case 0:
+      return 'sale';
+    case 2:
+      return 'rent_short';
+    default:
+      return null;
+  }
+}
+
+// ── Search mode (0 = filter search, 1 = search by number) ────────────────────
 
 class SearchModeNotifier extends Notifier<int> {
   @override
   int build() => 0;
-
-  void select(int idx) => state = idx;
+  void select(int v) => state = v;
 }
 
-final searchModeProvider =
-    NotifierProvider<SearchModeNotifier, int>(SearchModeNotifier.new);
+final searchModeProvider = NotifierProvider<SearchModeNotifier, int>(
+  SearchModeNotifier.new,
+);
 
-// ── Ad / Phone query ──────────────────────────────────────────────────────────
+// ── Query text ────────────────────────────────────────────────────────────────
 
-class AdQueryNotifier extends Notifier<String> {
+class SearchQueryNotifier extends Notifier<String> {
   @override
   String build() => '';
-
   void set(String v) => state = v;
 }
 
-final adQueryProvider =
-    NotifierProvider<AdQueryNotifier, String>(AdQueryNotifier.new);
+final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(
+  SearchQueryNotifier.new,
+);
 
-// ── Filter fields ─────────────────────────────────────────────────────────────
-
-class SearchCategoryNotifier extends Notifier<String?> {
-  @override
-  String? build() => null;
-
-  void select(String? v) => state = v;
-}
-
-final searchCategoryProvider =
-    NotifierProvider<SearchCategoryNotifier, String?>(
-        SearchCategoryNotifier.new);
+// ── City filter (English value) ───────────────────────────────────────────────
 
 class SearchCityNotifier extends Notifier<String?> {
   @override
   String? build() => null;
-
   void select(String? v) => state = v;
 }
 
-final searchCityProvider =
-    NotifierProvider<SearchCityNotifier, String?>(SearchCityNotifier.new);
+final searchCityProvider = NotifierProvider<SearchCityNotifier, String?>(
+  SearchCityNotifier.new,
+);
 
-class SearchDistrictNotifier extends Notifier<String?> {
+// ── Property type filter (English value) ──────────────────────────────────────
+
+class SearchPropertyTypeNotifier extends Notifier<String?> {
   @override
   String? build() => null;
-
   void select(String? v) => state = v;
 }
 
-final searchDistrictProvider =
-    NotifierProvider<SearchDistrictNotifier, String?>(
-        SearchDistrictNotifier.new);
+final searchPropertyTypeProvider =
+    NotifierProvider<SearchPropertyTypeNotifier, String?>(
+      SearchPropertyTypeNotifier.new,
+    );
 
-class MarketingOnlyNotifier extends Notifier<bool> {
+// ── Price range ───────────────────────────────────────────────────────────────
+
+class SearchPriceFromNotifier extends Notifier<double?> {
   @override
-  bool build() => false;
-
-  void toggle() => state = !state;
+  double? build() => null;
+  void set(double? v) => state = v;
 }
 
-final marketingOnlyProvider =
-    NotifierProvider<MarketingOnlyNotifier, bool>(MarketingOnlyNotifier.new);
+final searchPriceFromProvider =
+    NotifierProvider<SearchPriceFromNotifier, double?>(
+      SearchPriceFromNotifier.new,
+    );
 
-// ── Filter sheet: price range ─────────────────────────────────────────────────
-
-class PriceRangeState {
-  final double min;
-  final double max;
-
-  const PriceRangeState({required this.min, required this.max});
+class SearchPriceToNotifier extends Notifier<double?> {
+  @override
+  double? build() => null;
+  void set(double? v) => state = v;
 }
 
-class PriceRangeNotifier extends Notifier<PriceRangeState> {
-  static const double kMin = 0;
-  static const double kMax = 5000000;
+final searchPriceToProvider = NotifierProvider<SearchPriceToNotifier, double?>(
+  SearchPriceToNotifier.new,
+);
 
+// ── Area range ────────────────────────────────────────────────────────────────
+
+class SearchAreaFromNotifier extends Notifier<double?> {
   @override
-  PriceRangeState build() => const PriceRangeState(min: kMin, max: kMax);
-
-  void set(double min, double max) => state = PriceRangeState(min: min, max: max);
-
-  void reset() => state = const PriceRangeState(min: kMin, max: kMax);
+  double? build() => null;
+  void set(double? v) => state = v;
 }
 
-final priceRangeProvider =
-    NotifierProvider<PriceRangeNotifier, PriceRangeState>(
-        PriceRangeNotifier.new);
+final searchAreaFromProvider =
+    NotifierProvider<SearchAreaFromNotifier, double?>(
+      SearchAreaFromNotifier.new,
+    );
 
-// ── Filter sheet: property types ──────────────────────────────────────────────
-
-class SelectedPropertyTypesNotifier extends Notifier<Set<String>> {
+class SearchAreaToNotifier extends Notifier<double?> {
   @override
-  Set<String> build() => const {};
+  double? build() => null;
+  void set(double? v) => state = v;
+}
 
-  void toggle(String t) {
-    if (state.contains(t)) {
-      state = Set.from(state)..remove(t);
-    } else {
-      state = Set.from(state)..add(t);
-    }
+final searchAreaToProvider = NotifierProvider<SearchAreaToNotifier, double?>(
+  SearchAreaToNotifier.new,
+);
+
+// ── Bedrooms ──────────────────────────────────────────────────────────────────
+
+class SearchBedroomsNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+  void select(int? v) => state = v;
+}
+
+final searchBedroomsProvider = NotifierProvider<SearchBedroomsNotifier, int?>(
+  SearchBedroomsNotifier.new,
+);
+
+// ── Boolean filters ───────────────────────────────────────────────────────────
+
+class SearchFurnishedNotifier extends Notifier<bool?> {
+  @override
+  bool? build() => null;
+  void set(bool? v) => state = v;
+}
+
+final searchFurnishedProvider =
+    NotifierProvider<SearchFurnishedNotifier, bool?>(
+      SearchFurnishedNotifier.new,
+    );
+
+class SearchElevatorNotifier extends Notifier<bool?> {
+  @override
+  bool? build() => null;
+  void set(bool? v) => state = v;
+}
+
+final searchElevatorProvider = NotifierProvider<SearchElevatorNotifier, bool?>(
+  SearchElevatorNotifier.new,
+);
+
+// ── Project status filter (ready / off_plan) ──────────────────────────────────
+
+class SearchProjectStatusNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+  void select(String? v) => state = v;
+}
+
+final searchProjectStatusProvider =
+    NotifierProvider<SearchProjectStatusNotifier, String?>(
+      SearchProjectStatusNotifier.new,
+    );
+
+// ── Async search results (listings) with pagination ───────────────────────────
+
+class SearchResultsNotifier extends AsyncNotifier<List<Listing>> {
+  final _repo = ListingsRepository();
+  int _page = 1;
+  bool hasMore = true;
+
+  @override
+  Future<List<Listing>> build() async {
+    _page = 1;
+    hasMore = true;
+    final tab = ref.watch(searchTabProvider);
+    // Tab 1 = projects (different provider), skip listings fetch
+    if (tab == 1) return [];
+
+    final query = ref.watch(searchQueryProvider);
+    final city = ref.watch(searchCityProvider);
+    final propertyType = ref.watch(searchPropertyTypeProvider);
+    final priceFrom = ref.watch(searchPriceFromProvider);
+    final priceTo = ref.watch(searchPriceToProvider);
+    final areaFrom = ref.watch(searchAreaFromProvider);
+    final areaTo = ref.watch(searchAreaToProvider);
+    final bedrooms = ref.watch(searchBedroomsProvider);
+    final isFurnished = ref.watch(searchFurnishedProvider);
+    final hasElevator = ref.watch(searchElevatorProvider);
+
+    return _repo.getListings(
+      page: _page,
+      limit: 20,
+      listingType: listingTypeForTab(tab),
+      query: query.isEmpty ? null : query,
+      city: city,
+      propertyType: propertyType,
+      priceFrom: priceFrom,
+      priceTo: priceTo,
+      areaFrom: areaFrom,
+      areaTo: areaTo,
+      bedrooms: bedrooms,
+      isFurnished: isFurnished,
+      hasElevator: hasElevator,
+    );
   }
 
-  void clear() => state = const {};
+  Future<void> loadMore() async {
+    if (!hasMore) return;
+    final tab = ref.read(searchTabProvider);
+    if (tab == 1) return;
+    final current = state.value;
+    if (current == null) return;
+    _page++;
+    final query = ref.read(searchQueryProvider);
+    final city = ref.read(searchCityProvider);
+    final propertyType = ref.read(searchPropertyTypeProvider);
+    final priceFrom = ref.read(searchPriceFromProvider);
+    final priceTo = ref.read(searchPriceToProvider);
+    final areaFrom = ref.read(searchAreaFromProvider);
+    final areaTo = ref.read(searchAreaToProvider);
+    final bedrooms = ref.read(searchBedroomsProvider);
+    final isFurnished = ref.read(searchFurnishedProvider);
+    final hasElevator = ref.read(searchElevatorProvider);
+
+    final newItems = await _repo.getListings(
+      page: _page,
+      limit: 20,
+      listingType: listingTypeForTab(tab),
+      query: query.isEmpty ? null : query,
+      city: city,
+      propertyType: propertyType,
+      priceFrom: priceFrom,
+      priceTo: priceTo,
+      areaFrom: areaFrom,
+      areaTo: areaTo,
+      bedrooms: bedrooms,
+      isFurnished: isFurnished,
+      hasElevator: hasElevator,
+    );
+    if (newItems.length < 20) hasMore = false;
+    state = AsyncData([...current, ...newItems]);
+  }
 }
 
-final selectedPropertyTypesProvider =
-    NotifierProvider<SelectedPropertyTypesNotifier, Set<String>>(
-        SelectedPropertyTypesNotifier.new);
+final searchResultsProvider =
+    AsyncNotifierProvider<SearchResultsNotifier, List<Listing>>(
+      SearchResultsNotifier.new,
+    );
 
-// ── Filter sheet: bedrooms (-1 = any) ────────────────────────────────────────
+// ── Async project search results with pagination ──────────────────────────────
 
-class BedroomsFilterNotifier extends Notifier<int> {
+class ProjectSearchResultsNotifier extends AsyncNotifier<List<Project>> {
+  final _repo = ListingsRepository();
+  int _page = 1;
+  bool hasMore = true;
+
   @override
-  int build() => -1;
+  Future<List<Project>> build() async {
+    _page = 1;
+    hasMore = true;
+    final tab = ref.watch(searchTabProvider);
+    if (tab != 1) return [];
 
-  void select(int v) => state = v;
+    final city = ref.watch(searchCityProvider);
+    final status = ref.watch(searchProjectStatusProvider);
 
-  void reset() => state = -1;
-}
-
-final bedroomsFilterProvider =
-    NotifierProvider<BedroomsFilterNotifier, int>(BedroomsFilterNotifier.new);
-
-// ── Filter sheet: amenities ───────────────────────────────────────────────────
-
-class SelectedAmenitiesNotifier extends Notifier<Set<String>> {
-  @override
-  Set<String> build() => const {};
-
-  void toggle(String a) {
-    if (state.contains(a)) {
-      state = Set.from(state)..remove(a);
-    } else {
-      state = Set.from(state)..add(a);
-    }
+    return _repo.getProjects(
+      page: _page,
+      limit: 20,
+      city: city,
+      status: status,
+    );
   }
 
-  void clear() => state = const {};
+  Future<void> loadMore() async {
+    if (!hasMore) return;
+    final tab = ref.read(searchTabProvider);
+    if (tab != 1) return;
+    final current = state.value;
+    if (current == null) return;
+    _page++;
+    final city = ref.read(searchCityProvider);
+    final status = ref.read(searchProjectStatusProvider);
+
+    final newItems = await _repo.getProjects(
+      page: _page,
+      limit: 20,
+      city: city,
+      status: status,
+    );
+    if (newItems.length < 20) hasMore = false;
+    state = AsyncData([...current, ...newItems]);
+  }
 }
 
-final selectedAmenitiesProvider =
-    NotifierProvider<SelectedAmenitiesNotifier, Set<String>>(
-        SelectedAmenitiesNotifier.new);
+final projectSearchResultsProvider =
+    AsyncNotifierProvider<ProjectSearchResultsNotifier, List<Project>>(
+      ProjectSearchResultsNotifier.new,
+    );
 
-// ── Derived results ───────────────────────────────────────────────────────────
+// ── Reference query text (ad number / phone) ─────────────────────────────────
 
-final searchResultsProvider = Provider<List<Listing>>((ref) {
-  final category = ref.watch(searchCategoryProvider);
-  final city = ref.watch(searchCityProvider);
-  final district = ref.watch(searchDistrictProvider);
-  final priceRange = ref.watch(priceRangeProvider);
-  final types = ref.watch(selectedPropertyTypesProvider);
-  final bedrooms = ref.watch(bedroomsFilterProvider);
+class ReferenceQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+  void set(String v) => state = v;
+}
 
-  return mockListings.where((l) {
-    if (category != null && l.category != category) return false;
-    if (city != null && l.city != city) return false;
-    if (district != null && l.district != district) return false;
-    if (l.price < priceRange.min || l.price > priceRange.max) return false;
-    if (types.isNotEmpty && !types.contains(l.category)) return false;
-    if (bedrooms >= 0 && l.bedrooms != bedrooms) return false;
-    return true;
-  }).toList();
+final referenceQueryProvider = NotifierProvider<ReferenceQueryNotifier, String>(
+  ReferenceQueryNotifier.new,
+);
+
+// ── Async search by reference results ─────────────────────────────────────────
+
+class ReferenceSearchNotifier extends AsyncNotifier<List<Listing>> {
+  final _repo = ListingsRepository();
+
+  @override
+  Future<List<Listing>> build() async {
+    final q = ref.watch(referenceQueryProvider);
+    if (q.trim().isEmpty) return [];
+    return _repo.searchByReference(q.trim());
+  }
+}
+
+final referenceSearchProvider =
+    AsyncNotifierProvider<ReferenceSearchNotifier, List<Listing>>(
+      ReferenceSearchNotifier.new,
+    );
+
+// ── Helper: whether any advanced filter is active ─────────────────────────────
+
+final hasActiveFiltersProvider = Provider<bool>((ref) {
+  return ref.watch(searchPriceFromProvider) != null ||
+      ref.watch(searchPriceToProvider) != null ||
+      ref.watch(searchAreaFromProvider) != null ||
+      ref.watch(searchAreaToProvider) != null ||
+      ref.watch(searchBedroomsProvider) != null ||
+      ref.watch(searchFurnishedProvider) != null ||
+      ref.watch(searchElevatorProvider) != null;
 });
-
-// ── Static reference data ─────────────────────────────────────────────────────
-
-const searchCities = [
-  'الرياض',
-  'جدة',
-  'مكة المكرمة',
-  'المدينة المنورة',
-  'الدمام',
-  'الخبر',
-  'أبها',
-  'الطائف',
-  'تبوك',
-  'نيوم',
-  'الجبيل',
-  'ينبع',
-];
-
-const searchPropertyTypes = [
-  'شقة',
-  'فيلا',
-  'أرض',
-  'تجاري',
-  'دوبلكس',
-  'استراحة',
-  'عمارة',
-];
-
-const searchAmenities = [
-  'مسبح',
-  'مصعد',
-  'موقف سيارة',
-  'حديقة',
-  'أمن 24 ساعة',
-  'مطبخ راكب',
-  'واي فاي',
-  'صالة رياضية',
-];
-
-const _riyadhDistricts = [
-  'حي العليا',
-  'حي النزهة',
-  'حي التلال',
-  'حي الملقا',
-  'حي الربيع',
-  'حي الورود',
-  'حي السليمانية',
-];
-
-const _jeddahDistricts = [
-  'حي الشاطئ',
-  'حي الروضة',
-  'شمال جدة',
-  'حي الزهراء',
-  'حي الحمراء',
-];
-
-const _genericDistricts = [
-  'حي المركز',
-  'حي الشرق',
-  'حي الغرب',
-  'حي الشمال',
-  'حي الجنوب',
-];
-
-List<String> getDistrictsForCity(String? city) {
-  if (city == 'الرياض') return _riyadhDistricts;
-  if (city == 'جدة') return _jeddahDistricts;
-  if (city != null) return _genericDistricts;
-  return [];
-}

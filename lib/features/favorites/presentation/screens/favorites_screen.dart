@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/listing.dart';
 import '../../../home/presentation/providers/home_provider.dart';
+import '../providers/favorites_provider.dart';
 import '../../../../shared/widgets/app_bottom_nav.dart';
 
 // ── View mode toggle provider ─────────────────────────────────────────────────
@@ -18,8 +19,9 @@ class _ViewModeNotifier extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
-final _viewModeProvider =
-    NotifierProvider<_ViewModeNotifier, bool>(_ViewModeNotifier.new);
+final _viewModeProvider = NotifierProvider<_ViewModeNotifier, bool>(
+  _ViewModeNotifier.new,
+);
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -28,7 +30,8 @@ class FavoritesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final listings = ref.watch(favoritedListingsProvider);
+    final asyncFavorites = ref.watch(apiFavoritesProvider);
+    final listings = asyncFavorites.value ?? <Listing>[];
     final isGrid = ref.watch(_viewModeProvider);
 
     return Scaffold(
@@ -38,8 +41,11 @@ class FavoritesScreen extends ConsumerWidget {
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: AppColors.textPrimaryLight),
+          icon: const Icon(
+            Icons.arrow_back_ios_rounded,
+            size: 20,
+            color: AppColors.textPrimaryLight,
+          ),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
@@ -54,14 +60,11 @@ class FavoritesScreen extends ConsumerWidget {
           if (listings.isNotEmpty)
             IconButton(
               icon: Icon(
-                isGrid
-                    ? Icons.view_list_rounded
-                    : Icons.grid_view_rounded,
+                isGrid ? Icons.view_list_rounded : Icons.grid_view_rounded,
                 color: AppColors.textPrimaryLight,
                 size: 22,
               ),
-              onPressed: () =>
-                  ref.read(_viewModeProvider.notifier).toggle(),
+              onPressed: () => ref.read(_viewModeProvider.notifier).toggle(),
             ),
         ],
         bottom: const PreferredSize(
@@ -69,11 +72,17 @@ class FavoritesScreen extends ConsumerWidget {
           child: Divider(height: 1, color: AppColors.dividerLight),
         ),
       ),
-      body: listings.isEmpty
-          ? const _EmptyState()
-          : isGrid
-              ? _GridView(listings: listings)
-              : _ListView(listings: listings),
+      body: asyncFavorites.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+        error: (_, __) => const _EmptyState(),
+        data: (data) => data.isEmpty
+            ? const _EmptyState()
+            : isGrid
+            ? _GridView(listings: data)
+            : _ListView(listings: data),
+      ),
       bottomNavigationBar: const AppBottomNav(currentIndex: -1),
     );
   }
@@ -117,8 +126,7 @@ class _GridCard extends ConsumerWidget {
             child: Stack(
               children: [
                 ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
                   child: CachedNetworkImage(
                     imageUrl: listing.imageUrls.first,
                     width: double.infinity,
@@ -136,8 +144,11 @@ class _GridCard extends ConsumerWidget {
                     errorWidget: (_, __, ___) => Container(
                       color: AppColors.surfaceLight,
                       child: const Center(
-                        child: Icon(Icons.home_rounded,
-                            size: 36, color: AppColors.primary),
+                        child: Icon(
+                          Icons.home_rounded,
+                          size: 36,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   ),
@@ -147,9 +158,15 @@ class _GridCard extends ConsumerWidget {
                   top: 8,
                   end: 8,
                   child: GestureDetector(
-                    onTap: () => ref
-                        .read(favoritedIdsProvider.notifier)
-                        .toggle(listing.id),
+                    onTap: () {
+                      ref
+                          .read(favoritedIdsProvider.notifier)
+                          .toggle(listing.id);
+                      // Refresh favorites list after a short delay
+                      Future.delayed(const Duration(milliseconds: 500), () {
+                        ref.invalidate(apiFavoritesProvider);
+                      });
+                    },
                     child: Container(
                       width: 32,
                       height: 32,
@@ -242,8 +259,7 @@ class _ListCard extends ConsumerWidget {
           Stack(
             children: [
               ClipRRect(
-                borderRadius:
-                    BorderRadius.circular(AppConstants.radiusM),
+                borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 child: CachedNetworkImage(
                   imageUrl: listing.imageUrls.first,
                   width: 120,
@@ -265,8 +281,11 @@ class _ListCard extends ConsumerWidget {
                     height: 110,
                     color: AppColors.surfaceLight,
                     child: const Center(
-                      child: Icon(Icons.home_rounded,
-                          size: 36, color: AppColors.primary),
+                      child: Icon(
+                        Icons.home_rounded,
+                        size: 36,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -276,9 +295,12 @@ class _ListCard extends ConsumerWidget {
                 top: 8,
                 end: 8,
                 child: GestureDetector(
-                  onTap: () => ref
-                      .read(favoritedIdsProvider.notifier)
-                      .toggle(listing.id),
+                  onTap: () {
+                    ref.read(favoritedIdsProvider.notifier).toggle(listing.id);
+                    Future.delayed(const Duration(milliseconds: 500), () {
+                      ref.invalidate(apiFavoritesProvider);
+                    });
+                  },
                   child: Container(
                     width: 28,
                     height: 28,
@@ -438,11 +460,9 @@ class _EmptyState extends StatelessWidget {
               onPressed: () => context.go(AppRoutes.home),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                minimumSize:
-                    const Size(200, AppConstants.buttonHeight),
+                minimumSize: const Size(200, AppConstants.buttonHeight),
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 ),
                 elevation: 0,
               ),
