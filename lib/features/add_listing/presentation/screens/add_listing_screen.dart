@@ -1,11 +1,17 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/network/api_endpoints.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../providers/add_listing_provider.dart';
+import '../steps/step0_role_service.dart';
 import '../steps/step1_category.dart';
 import '../steps/step2_media.dart';
 import '../steps/step3_info.dart';
@@ -25,10 +31,12 @@ class AddListingScreen extends ConsumerStatefulWidget {
 class _AddListingScreenState extends ConsumerState<AddListingScreen> {
   final _pageController = PageController();
   int _currentStep = 0;
+  bool _isPublishing = false;
 
-  static const int _totalSteps = 7;
+  static const int _totalSteps = 8;
 
   static const _stepLabels = [
+    'إضافة إعلان',
     'النوع',
     'الصور',
     'المعلومات',
@@ -53,6 +61,25 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
   }
 
   void _next() {
+    if (_currentStep == 0) {
+      final service = ref.read(addListingProvider).selectedService;
+      if (service == 'marketing_request') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'ميزة طلب التسويق قادمة قريباً',
+              style: AppTextStyles.bodyMedium.copyWith(color: AppColors.white),
+            ),
+            backgroundColor: AppColors.textPrimaryLight,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppConstants.radiusM),
+            ),
+          ),
+        );
+        return;
+      }
+    }
     if (_currentStep < _totalSteps - 1) {
       _goToStep(_currentStep + 1);
     } else {
@@ -71,29 +98,107 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
   bool _canProceed(AddListingState s) {
     switch (_currentStep) {
       case 0:
-        return s.category != null;
+        return true; // role & service always have defaults
       case 1:
-        return s.photos.isNotEmpty;
+        return s.category != null;
       case 2:
+        return s.photos.isNotEmpty;
+      case 3:
         return s.price.isNotEmpty &&
             s.area.isNotEmpty &&
             s.description.isNotEmpty;
-      case 3:
-        return s.features.isNotEmpty;
       case 4:
-        return true;
+        return s.features.isNotEmpty;
       case 5:
-        return s.address.isNotEmpty;
+        return true;
       case 6:
+        return s.address.isNotEmpty;
+      case 7:
         return true;
       default:
         return true;
     }
   }
 
-  void _publish() {
+  Future<void> _publish() async {
+    if (_isPublishing) return;
+    setState(() => _isPublishing = true);
+
+    final s = ref.read(addListingProvider);
+
+    try {
+      // 1. Upload local photos → get back server URLs
+      final List<String> uploadedUrls = [];
+      final localPaths = s.photos.where((p) => p.startsWith('/')).toList();
+      final existingUrls = s.photos.where((p) => !p.startsWith('/')).toList();
+
+      if (localPaths.isNotEmpty) {
+        final formData = FormData.fromMap({
+          'files': await Future.wait(
+            localPaths.map((path) async => await MultipartFile.fromFile(
+                  path,
+                  filename: path.split('/').last,
+                )),
+          ),
+        });
+        final uploadRes = await apiClient.post(
+          ApiEndpoints.mediaUpload,
+          data: formData,
+        );
+        final urls = (uploadRes.data as List).map((e) => e.toString()).toList();
+        uploadedUrls.addAll(urls);
+      }
+
+      final allPhotoUrls = [...existingUrls, ...uploadedUrls];
+
+      // 2. Create the listing
+      await apiClient.post(ApiEndpoints.listings, data: {
+        'categoryId': s.category,
+        'photos': allPhotoUrls,
+        'price': double.tryParse(s.price) ?? 0,
+        'area': double.tryParse(s.area) ?? 0,
+        'isResidential': s.isResidential,
+        'hasCommission': s.hasCommission,
+        'commissionPercent': double.tryParse(s.commissionPercent) ?? 0,
+        'description': s.description,
+        'features': s.features.toList(),
+        'bedrooms': s.bedrooms,
+        'livingRooms': s.livingRooms,
+        'bathrooms': s.bathrooms,
+        if (s.facade != null) 'facade': s.facade,
+        if (s.streetWidth.isNotEmpty) 'streetWidth': double.tryParse(s.streetWidth),
+        if (s.floorNumber.isNotEmpty) 'floorNumber': int.tryParse(s.floorNumber),
+        if (s.propertyAge.isNotEmpty) 'propertyAge': int.tryParse(s.propertyAge),
+        'isFurnished': s.isFurnished,
+        'hasKitchen': s.hasKitchen,
+        'hasExtraUnit': s.hasExtraUnit,
+        'hasCarEntrance': s.hasCarEntrance,
+        'hasElevator': s.hasElevator,
+        'address': s.address,
+        'location': {'lat': s.lat, 'lng': s.lng},
+        'role': s.selectedRole,
+      });
+
+      if (!mounted) return;
+      _showSuccessDialog();
+    } on DioException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message ?? 'حدث خطأ، يرجى المحاولة مجدداً'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isPublishing = false);
+    }
+  }
+
+  void _showSuccessDialog() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppConstants.radiusL)),
@@ -166,6 +271,7 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
               totalSteps: _totalSteps,
               stepLabels: _stepLabels,
               onBack: _back,
+              onForward: _currentStep == 0 ? _next : null,
             ),
 
             // ── Step pages ───────────────────────────────────
@@ -175,6 +281,7 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (i) => setState(() => _currentStep = i),
                 children: [
+                  const Step0RoleService(),
                   const Step1Category(),
                   const Step2Media(),
                   const Step3Info(),
@@ -190,7 +297,8 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
             _BottomBar(
               currentStep: _currentStep,
               totalSteps: _totalSteps,
-              canProceed: _canProceed(formState),
+              canProceed: _canProceed(formState) && !_isPublishing,
+              isPublishing: _isPublishing,
               onNext: _next,
             ),
           ],
@@ -207,12 +315,14 @@ class _TopBar extends StatelessWidget {
   final int totalSteps;
   final List<String> stepLabels;
   final VoidCallback onBack;
+  final VoidCallback? onForward;
 
   const _TopBar({
     required this.currentStep,
     required this.totalSteps,
     required this.stepLabels,
     required this.onBack,
+    this.onForward,
   });
 
   @override
@@ -240,11 +350,18 @@ class _TopBar extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                '${currentStep + 1} / $totalSteps',
-                style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondaryLight),
-              ),
+              if (onForward != null)
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward_ios_rounded,
+                      size: 20, color: AppColors.textPrimaryLight),
+                  onPressed: onForward,
+                )
+              else
+                Text(
+                  '${currentStep + 1} / $totalSteps',
+                  style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondaryLight),
+                ),
             ],
           ),
         ),
@@ -271,7 +388,7 @@ class _TopBar extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
-            7,
+            totalSteps,
             (i) => AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               margin: const EdgeInsets.symmetric(horizontal: 3),
@@ -300,12 +417,14 @@ class _BottomBar extends StatelessWidget {
   final int currentStep;
   final int totalSteps;
   final bool canProceed;
+  final bool isPublishing;
   final VoidCallback onNext;
 
   const _BottomBar({
     required this.currentStep,
     required this.totalSteps,
     required this.canProceed,
+    required this.isPublishing,
     required this.onNext,
   });
 
@@ -337,15 +456,24 @@ class _BottomBar extends StatelessWidget {
           ),
           elevation: 0,
         ),
-        child: Text(
-          isLastStep ? 'نشر الإعلان' : 'التالي',
-          style: AppTextStyles.bodyLarge.copyWith(
-            color: canProceed
-                ? AppColors.white
-                : AppColors.textSecondaryLight,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        child: isPublishing
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: AppColors.white,
+                ),
+              )
+            : Text(
+                isLastStep ? 'نشر الإعلان' : 'التالي',
+                style: AppTextStyles.bodyLarge.copyWith(
+                  color: canProceed
+                      ? AppColors.white
+                      : AppColors.textSecondaryLight,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
       ),
     );
   }
