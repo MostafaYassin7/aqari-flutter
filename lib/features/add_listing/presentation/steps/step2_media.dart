@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -10,9 +13,57 @@ import '../providers/add_listing_provider.dart';
 class Step2Media extends ConsumerWidget {
   const Step2Media({super.key});
 
-  // Generates a new mock photo URL using a random seed
-  String _mockPhotoUrl(int index) =>
-      'https://picsum.photos/seed/listing_upload_$index/600/400';
+  Future<void> _showPickerSheet(BuildContext context, WidgetRef ref) async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: AppColors.backgroundLight,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.dividerLight,
+                borderRadius: BorderRadius.circular(AppConstants.radiusCircle),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
+              title: const Text('اختر من المعرض'),
+              onTap: () => Navigator.pop(_, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
+              title: const Text('التقط صورة'),
+              onTap: () => Navigator.pop(_, ImageSource.camera),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (source == null) return;
+
+    final picker = ImagePicker();
+    if (source == ImageSource.gallery) {
+      final files = await picker.pickMultiImage(imageQuality: 85);
+      for (final f in files) {
+        ref.read(addListingProvider.notifier).addPhoto(f.path);
+      }
+    } else {
+      final file = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
+      if (file != null) {
+        ref.read(addListingProvider.notifier).addPhoto(file.path);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,12 +91,7 @@ class Step2Media extends ConsumerWidget {
 
           // ── Upload area ──────────────────────────────────
           GestureDetector(
-            onTap: () {
-              // Simulate picking a photo
-              ref
-                  .read(addListingProvider.notifier)
-                  .addPhoto(_mockPhotoUrl(photos.length + 1));
-            },
+            onTap: () => _showPickerSheet(context, ref),
             child: Container(
               width: double.infinity,
               height: 160,
@@ -213,6 +259,8 @@ class _PhotoTile extends StatelessWidget {
       required this.isCover,
       required this.onDelete});
 
+  bool _isLocalPath(String s) => s.startsWith('/') || s.startsWith('file://');
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -230,20 +278,22 @@ class _PhotoTile extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            CachedNetworkImage(
-              imageUrl: url,
-              fit: BoxFit.cover,
-              placeholder: (_, __) => Container(
-                  color: AppColors.surfaceLight,
-                  child: const Center(
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.primary))),
-              errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surfaceLight,
-                  child: const Icon(Icons.image_rounded,
-                      color: AppColors.textHintLight, size: 36)),
-            ),
+            _isLocalPath(url)
+                ? Image.file(File(url), fit: BoxFit.cover)
+                : CachedNetworkImage(
+                    imageUrl: url,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(
+                        color: AppColors.surfaceLight,
+                        child: const Center(
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary))),
+                    errorWidget: (_, __, ___) => Container(
+                        color: AppColors.surfaceLight,
+                        child: const Icon(Icons.image_rounded,
+                            color: AppColors.textHintLight, size: 36)),
+                  ),
             // Cover badge
             if (isCover)
               PositionedDirectional(
