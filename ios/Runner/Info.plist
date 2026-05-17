@@ -41,6 +41,14 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>نحتاج إلى الوصول إلى مكتبة الصور لرفع صور العقارات</string>
+	<key>NSCameraUsageDescription</key>
+	<string>نحتاج إلى الكاميرا لالتقاط صور العقارات</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>نحتاج إلى موقعك لعرض العقارات القريبة على الخريطة</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>نحتاج إلى موقعك لعرض العقارات القريبة على الخريطة</string>
 	<key>GMSApiKey</key>
 	<string>AIzaSyB1-T6Ki8HY6noVOgxsO-d5TNSG8u_u5to</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>

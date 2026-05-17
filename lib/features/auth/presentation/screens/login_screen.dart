@@ -87,47 +87,6 @@ class LoginScreen extends ConsumerWidget {
                           label: const Text('متابعة برقم الهاتف'),
                         ),
 
-                        const SizedBox(height: 20),
-
-                        // ── Divider "أو" ──────────────────
-                        const _OrDivider(),
-
-                        const SizedBox(height: 20),
-
-                        // ── Google button ─────────────────
-                        OutlinedButton(
-                          onPressed: auth.isLoading
-                              ? null
-                              : () =>
-                                  ref.read(authProvider.notifier).socialSignIn(),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _GoogleIcon(),
-                              const SizedBox(width: 10),
-                              const Text('متابعة بـ Google'),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // ── Apple button ──────────────────
-                        OutlinedButton(
-                          onPressed: auth.isLoading
-                              ? null
-                              : () =>
-                                  ref.read(authProvider.notifier).socialSignIn(),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.apple, size: 22),
-                              SizedBox(width: 10),
-                              Text('متابعة بـ Apple'),
-                            ],
-                          ),
-                        ),
-
                         const SizedBox(height: 32),
                       ],
                     ),
@@ -235,6 +194,51 @@ class _GoogleIcon extends StatelessWidget {
 class _TermsText extends StatelessWidget {
   const _TermsText();
 
+  void _showTerms(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('شروط الخدمة'),
+        content: const SingleChildScrollView(
+          child: Text(
+            'باستخدامك لتطبيق عقار، فإنك توافق على شروط وأحكام الاستخدام. '
+            'يُتيح التطبيق للمستخدمين نشر وتصفح إعلانات العقارات. '
+            'يُحظر نشر محتوى مضلل أو مخالف للأنظمة. '
+            'تحتفظ المنصة بحق إيقاف أي حساب مخالف.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('حسناً'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacy(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('سياسة الخصوصية'),
+        content: const SingleChildScrollView(
+          child: Text(
+            'نحن نحترم خصوصيتك. نقوم بجمع بيانات الموقع والصور ومعلومات الحساب '
+            'لتوفير خدمات التطبيق فقط. لا نشارك بياناتك مع أطراف ثالثة دون موافقتك. '
+            'يمكنك طلب حذف حسابك وبياناتك في أي وقت عبر التواصل معنا.',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('حسناً'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -246,19 +250,29 @@ class _TermsText extends StatelessWidget {
             color: AppColors.textSecondaryLight,
           ),
           children: [
-            TextSpan(
-              text: 'شروط الخدمة',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textPrimaryLight,
-                decoration: TextDecoration.underline,
+            WidgetSpan(
+              child: GestureDetector(
+                onTap: () => _showTerms(context),
+                child: Text(
+                  'شروط الخدمة',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textPrimaryLight,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
               ),
             ),
             const TextSpan(text: ' و'),
-            TextSpan(
-              text: ' سياسة الخصوصية',
-              style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textPrimaryLight,
-                decoration: TextDecoration.underline,
+            WidgetSpan(
+              child: GestureDetector(
+                onTap: () => _showPrivacy(context),
+                child: Text(
+                  ' سياسة الخصوصية',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textPrimaryLight,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
               ),
             ),
           ],

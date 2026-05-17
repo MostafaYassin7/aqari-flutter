@@ -85,7 +85,6 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
               ),
               child: _BalanceCard(
                 balance: wallet.balance,
-                onTopUp: () => _showTopUpSheet(context, ref),
               ),
             ),
           ),
@@ -211,9 +210,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
 
 class _BalanceCard extends StatelessWidget {
   final double balance;
-  final VoidCallback onTopUp;
+  final VoidCallback? onTopUp;
 
-  const _BalanceCard({required this.balance, required this.onTopUp});
+  const _BalanceCard({required this.balance, this.onTopUp});
 
   @override
   Widget build(BuildContext context) {
