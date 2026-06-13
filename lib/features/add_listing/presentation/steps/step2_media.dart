@@ -20,7 +20,7 @@ class Step2Media extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (_) => SafeArea(
+      builder: (sheetContext) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -36,12 +36,12 @@ class Step2Media extends ConsumerWidget {
             ListTile(
               leading: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
               title: const Text('اختر من المعرض'),
-              onTap: () => Navigator.pop(_, ImageSource.gallery),
+              onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
               title: const Text('التقط صورة'),
-              onTap: () => Navigator.pop(_, ImageSource.camera),
+              onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
             ),
             const SizedBox(height: 8),
           ],
