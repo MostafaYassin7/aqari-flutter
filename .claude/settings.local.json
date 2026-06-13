@@ -5,7 +5,9 @@
       "Bash(flutter analyze:*)",
       "WebFetch(domain:136.111.230.89)",
       "Bash(curl -s http://136.111.230.89:3000/api/docs-json)",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(Test-Path *)",
+      "Bash(grep -v '^$')"
     ]
   }
 }

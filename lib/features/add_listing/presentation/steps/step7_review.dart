@@ -36,7 +36,7 @@ class Step7Review extends ConsumerWidget {
           // ── Section 1: Category ──────────────────────────
           _ReviewSection(
             title: 'نوع العقار',
-            onEdit: () => onEdit(0),
+            onEdit: () => onEdit(1),
             child: _ReviewRow(
               label: 'الفئة',
               value: s.category ?? '—',
@@ -46,7 +46,7 @@ class Step7Review extends ConsumerWidget {
           // ── Section 2: Media ─────────────────────────────
           _ReviewSection(
             title: 'الصور',
-            onEdit: () => onEdit(1),
+            onEdit: () => onEdit(2),
             child: Text(
               '${s.photos.length} صورة مضافة'
               '${s.photos.length < 3 ? '  ⚠️ أقل من 3 صور' : ''}',
@@ -61,7 +61,7 @@ class Step7Review extends ConsumerWidget {
           // ── Section 3: Info ──────────────────────────────
           _ReviewSection(
             title: 'المعلومات الأساسية',
-            onEdit: () => onEdit(2),
+            onEdit: () => onEdit(3),
             child: Column(
               children: [
                 _ReviewRow(
@@ -92,7 +92,7 @@ class Step7Review extends ConsumerWidget {
           // ── Section 4: Features ──────────────────────────
           _ReviewSection(
             title: 'المميزات',
-            onEdit: () => onEdit(3),
+            onEdit: () => onEdit(4),
             child: s.features.isEmpty
                 ? Text('لم يتم الاختيار',
                     style: AppTextStyles.bodyMedium.copyWith(
@@ -109,7 +109,7 @@ class Step7Review extends ConsumerWidget {
           // ── Section 5: Details ───────────────────────────
           _ReviewSection(
             title: 'التفاصيل',
-            onEdit: () => onEdit(4),
+            onEdit: () => onEdit(5),
             child: Column(
               children: [
                 _ReviewRow(label: 'غرف النوم', value: '${s.bedrooms}'),
@@ -137,7 +137,7 @@ class Step7Review extends ConsumerWidget {
           // ── Section 6: Location ──────────────────────────
           _ReviewSection(
             title: 'الموقع',
-            onEdit: () => onEdit(5),
+            onEdit: () => onEdit(6),
             child: _ReviewRow(
               label: 'العنوان',
               value: s.address.isEmpty ? '—' : s.address,

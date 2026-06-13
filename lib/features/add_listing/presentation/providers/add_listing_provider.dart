@@ -10,6 +10,10 @@ const _kUnset = _Unset();
 // ── State ─────────────────────────────────────────────────────────────────────
 
 class AddListingState {
+  // Step 0 — Role & Service
+  final String selectedRole; // 'owner' | 'marketer' | 'host'
+  final String selectedService; // 'listing' | 'marketing_request'
+
   // Step 1 — Category
   final String? category;
 
@@ -47,6 +51,8 @@ class AddListingState {
   final double lng;
 
   const AddListingState({
+    this.selectedRole = 'owner',
+    this.selectedService = 'listing',
     this.category,
     this.photos = const <String>[],
     this.price = '',
@@ -74,6 +80,8 @@ class AddListingState {
   });
 
   AddListingState copyWith({
+    String? selectedRole,
+    String? selectedService,
     Object? category = _kUnset,
     List<String>? photos,
     String? price,
@@ -100,6 +108,8 @@ class AddListingState {
     double? lng,
   }) {
     return AddListingState(
+      selectedRole: selectedRole ?? this.selectedRole,
+      selectedService: selectedService ?? this.selectedService,
       category: identical(category, _kUnset) ? this.category : category as String?,
       photos: photos ?? this.photos,
       price: price ?? this.price,
@@ -133,6 +143,10 @@ class AddListingState {
 class AddListingNotifier extends Notifier<AddListingState> {
   @override
   AddListingState build() => const AddListingState();
+
+  // Step 0
+  void setRole(String v) => state = state.copyWith(selectedRole: v);
+  void setService(String v) => state = state.copyWith(selectedService: v);
 
   // Step 1
   void setCategory(String v) => state = state.copyWith(category: v);
