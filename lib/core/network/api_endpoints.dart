@@ -36,6 +36,7 @@ class ApiEndpoints {
   // Notifications
   static const notifications            = '/notifications';
   static const notificationsUnreadCount = '/notifications/unread-count';
+  static const pushToken                = '/notifications/push-token';
 
   // Engagement
   static const favorites        = '/engagement/favorites';

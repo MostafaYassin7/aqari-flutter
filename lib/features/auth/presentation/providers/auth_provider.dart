@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_enums.dart';
 import '../../../../core/network/auth_storage.dart';
 import '../../../../core/network/socket_service.dart';
+import '../../../../core/services/fcm_service.dart';
 import '../../data/auth_repository.dart';
 import '../../domain/models/auth_state.dart';
 
@@ -43,6 +44,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
       await AuthStorage.saveToken(result.token);
       SocketService().connectAll(result.token);
+      if (!result.isNewUser) FcmService().registerToken();
 
       state = state.copyWith(
         isLoading: false,
@@ -72,6 +74,7 @@ class AuthNotifier extends Notifier<AuthState> {
         role: role,
       );
       await AuthStorage.saveToken(result.token);
+      FcmService().registerToken();
       state = state.copyWith(
         isLoading: false,
         user: result.user,
@@ -93,6 +96,7 @@ class AuthNotifier extends Notifier<AuthState> {
     try {
       final user = await _repo.getMe();
       SocketService().connectAll(token);
+      FcmService().registerToken();
       state = state.copyWith(
         isLoading: false,
         user: user,
@@ -127,6 +131,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> logout() async {
     SocketService().disconnectAll();
+    await FcmService().deregisterToken();
     await AuthStorage.clearAll();
     state = const AuthState.initial();
   }
