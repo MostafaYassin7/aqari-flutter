@@ -253,37 +253,41 @@ class _CountryPickerSheet extends StatelessWidget {
           ),
         ),
         const Divider(height: 1, color: AppColors.dividerLight),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _kCountries.length,
-          separatorBuilder: (_, __) =>
-              const Divider(height: 1, color: AppColors.dividerLight),
-          itemBuilder: (_, i) {
-            final c = _kCountries[i];
-            final isSelected = c.code == selected.code;
-            return ListTile(
-              onTap: () => onPick(c),
-              leading: Text(c.flag, style: const TextStyle(fontSize: 24)),
-              title: Text(c.name, style: AppTextStyles.titleMedium),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    c.code,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondaryLight,
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.5,
+          ),
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: _kCountries.length,
+            separatorBuilder: (_, __) =>
+                const Divider(height: 1, color: AppColors.dividerLight),
+            itemBuilder: (_, i) {
+              final c = _kCountries[i];
+              final isSelected = c.code == selected.code;
+              return ListTile(
+                onTap: () => onPick(c),
+                leading: Text(c.flag, style: const TextStyle(fontSize: 24)),
+                title: Text(c.name, style: AppTextStyles.titleMedium),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      c.code,
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textSecondaryLight,
+                      ),
                     ),
-                  ),
-                  if (isSelected) ...[
-                    const SizedBox(width: 8),
-                    const Icon(Icons.check_rounded,
-                        color: AppColors.primary, size: 20),
+                    if (isSelected) ...[
+                      const SizedBox(width: 8),
+                      const Icon(Icons.check_rounded,
+                          color: AppColors.primary, size: 20),
+                    ],
                   ],
-                ],
-              ),
-            );
-          },
+                ),
+              );
+            },
+          ),
         ),
         const SizedBox(height: 16),
       ],
