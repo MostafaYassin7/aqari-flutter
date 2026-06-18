@@ -105,27 +105,19 @@ class AuthNotifier extends Notifier<AuthState> {
       );
       return true;
     } on DioException catch (e) {
-      final hasToken = await AuthStorage.isLoggedIn();
-      if (!hasToken) {
+      if (e.response?.statusCode == 401) {
+        // Token rejected by server — clear it
+        await AuthStorage.clearAll();
         state = const AuthState.initial();
         return false;
       }
-
-      state = state.copyWith(
-        isLoading: false,
-        step: AuthStep.authenticated,
-        error: e.message,
-      );
-      return true;
+      // Network or server error — let user retry, but don't authenticate without user data
+      state = state.copyWith(isLoading: false, error: e.message);
+      return false;
     } catch (_) {
-      final hasToken = await AuthStorage.isLoggedIn();
-      if (!hasToken) {
-        state = const AuthState.initial();
-        return false;
-      }
-
-      state = state.copyWith(isLoading: false, step: AuthStep.authenticated);
-      return true;
+      await AuthStorage.clearAll();
+      state = const AuthState.initial();
+      return false;
     }
   }
 

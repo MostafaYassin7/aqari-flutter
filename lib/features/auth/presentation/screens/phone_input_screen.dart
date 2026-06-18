@@ -58,7 +58,9 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
           phone: _phoneController.text.trim(),
           countryCode: _selected.code,
         );
-    if (mounted) context.go(AppRoutes.otp);
+    if (mounted && ref.read(authProvider).step == AuthStep.otpPending) {
+      context.go(AppRoutes.otp);
+    }
   }
 
   void _showCountryPicker() {

@@ -983,11 +983,9 @@ class _LogoutButton extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  AuthStorage.clearAll();
+                  Navigator.of(context).pop();
+                  onLogout();
                   context.go(AppRoutes.login);
-
-                  // Navigator.of(context).pop();
-                  // onLogout();
                 },
                 child: Text(
                   'تسجيل الخروج',

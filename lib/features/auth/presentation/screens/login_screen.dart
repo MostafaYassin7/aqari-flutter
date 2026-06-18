@@ -14,9 +14,10 @@ class LoginScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
 
-    // Navigate to home when social sign-in completes
-    ref.listen<AuthState>(authProvider, (_, next) {
-      if (next.step == AuthStep.authenticated) {
+    // Navigate to home when social sign-in completes (only on transition)
+    ref.listen<AuthState>(authProvider, (prev, next) {
+      if (prev?.step != AuthStep.authenticated &&
+          next.step == AuthStep.authenticated) {
         context.go(AppRoutes.home);
       }
     });
