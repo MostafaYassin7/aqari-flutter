@@ -2,33 +2,60 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/constants/app_constants.dart';
+import '../../../../../core/network/api_client.dart';
+import '../../../../../core/network/api_endpoints.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../providers/add_listing_provider.dart';
 
-class _ListingCategory {
-  final String name;
-  final IconData icon;
-  const _ListingCategory(this.name, this.icon);
+// ── Provider ──────────────────────────────────────────────────────────────────
+
+final _listingCategoriesProvider =
+    FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
+  final res = await apiClient.get(ApiEndpoints.listingCategories);
+  return List<Map<String, dynamic>>.from(res.data as List);
+});
+
+// ── Icon map (propertyType → Flutter icon) ────────────────────────────────────
+
+IconData _iconFor(String? propertyType) {
+  switch (propertyType) {
+    case 'apartment':
+      return Icons.apartment_rounded;
+    case 'villa':
+      return Icons.house_rounded;
+    case 'floor':
+      return Icons.layers_rounded;
+    case 'land':
+      return Icons.landscape_rounded;
+    case 'building':
+      return Icons.domain_rounded;
+    case 'shop':
+    case 'commercial_office':
+      return Icons.business_center_rounded;
+    case 'rest_house':
+    case 'chalet':
+      return Icons.holiday_village_rounded;
+    case 'farm':
+      return Icons.grass_rounded;
+    case 'warehouse':
+      return Icons.warehouse_rounded;
+    case 'camp':
+      return Icons.festival_rounded;
+    default:
+      return Icons.home_rounded;
+  }
 }
 
-const _categories = [
-  _ListingCategory('شقة للبيع', Icons.apartment_rounded),
-  _ListingCategory('شقة للإيجار', Icons.home_work_rounded),
-  _ListingCategory('فيلا', Icons.house_rounded),
-  _ListingCategory('أرض', Icons.landscape_rounded),
-  _ListingCategory('تجاري', Icons.business_center_rounded),
-  _ListingCategory('دوبلكس', Icons.villa_rounded),
-  _ListingCategory('استراحة', Icons.holiday_village_rounded),
-  _ListingCategory('عمارة', Icons.domain_rounded),
-];
+// ── Step ──────────────────────────────────────────────────────────────────────
 
 class Step1Category extends ConsumerWidget {
   const Step1Category({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(addListingProvider).category;
+    final selectedId = ref.watch(addListingProvider).categoryId;
+    final categoriesAsync = ref.watch(_listingCategoriesProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppConstants.spaceM),
@@ -45,70 +72,110 @@ class Step1Category extends ConsumerWidget {
           const SizedBox(height: 6),
           Text(
             'اختر نوع العقار الذي تريد إضافته',
-            style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight),
+            style: AppTextStyles.bodyMedium
+                .copyWith(color: AppColors.textSecondaryLight),
           ),
           const SizedBox(height: 24),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.4,
+
+          categoriesAsync.when(
+            loading: () => const Center(
+              child: Padding(
+                padding: EdgeInsets.all(40),
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
             ),
-            itemCount: _categories.length,
-            itemBuilder: (_, i) {
-              final cat = _categories[i];
-              final isSelected = selected == cat.name;
-              return GestureDetector(
-                onTap: () => ref
-                    .read(addListingProvider.notifier)
-                    .setCategory(cat.name),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primaryLight
-                        : AppColors.surfaceLight,
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusL),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.dividerLight,
-                      width: isSelected ? 2 : 1,
-                    ),
+            error: (_, __) => Center(
+              child: Column(
+                children: [
+                  const SizedBox(height: 32),
+                  const Icon(Icons.wifi_off_rounded,
+                      size: 48, color: AppColors.textSecondaryLight),
+                  const SizedBox(height: 12),
+                  Text('تعذّر تحميل الفئات',
+                      style: AppTextStyles.bodyMedium
+                          .copyWith(color: AppColors.textSecondaryLight)),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () =>
+                        ref.invalidate(_listingCategoriesProvider),
+                    child: const Text('إعادة المحاولة'),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        cat.icon,
-                        size: 32,
+                ],
+              ),
+            ),
+            data: (categories) => GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+                childAspectRatio: 1.4,
+              ),
+              itemCount: categories.length,
+              itemBuilder: (_, i) {
+                final cat = categories[i];
+                final id = cat['id'] as String;
+                final nameAr = (cat['nameAr'] ?? cat['name'] ?? '') as String;
+                final propertyType = (cat['propertyType'] ?? '') as String;
+                final listingType = (cat['listingType'] ?? 'sale') as String;
+                final isSelected = selectedId == id;
+
+                return GestureDetector(
+                  onTap: () => ref
+                      .read(addListingProvider.notifier)
+                      .setCategory(
+                        id: id,
+                        nameAr: nameAr,
+                        propertyType: propertyType,
+                        listingType: listingType,
+                      ),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? AppColors.primaryLight
+                          : AppColors.surfaceLight,
+                      borderRadius:
+                          BorderRadius.circular(AppConstants.radiusL),
+                      border: Border.all(
                         color: isSelected
                             ? AppColors.primary
-                            : AppColors.textSecondaryLight,
+                            : AppColors.dividerLight,
+                        width: isSelected ? 2 : 1,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        cat.name,
-                        style: AppTextStyles.titleSmall.copyWith(
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _iconFor(propertyType),
+                          size: 32,
                           color: isSelected
                               ? AppColors.primary
-                              : AppColors.textPrimaryLight,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+                              : AppColors.textSecondaryLight,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          nameAr,
+                          style: AppTextStyles.titleSmall.copyWith(
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.textPrimaryLight,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ],
       ),

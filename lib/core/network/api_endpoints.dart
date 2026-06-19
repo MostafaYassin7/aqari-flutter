@@ -68,6 +68,10 @@ class ApiEndpoints {
   static const mediaUpload       = '/media/upload';
   static const mediaUploadSingle = '/media/upload-single';
 
+  // Property Advertisement Licenses (ترخيص إعلان عقاري)
+  // Required by General Real Estate Authority (الهيئة العامة للعقار)
+  static const propertyAdvertisementLicenses = '/property-advertisement-licenses';
+
   // Marketing
   static const marketingRequests = '/marketing/requests';
 

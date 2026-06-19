@@ -15,6 +15,7 @@ class Step3Info extends ConsumerStatefulWidget {
 }
 
 class _Step3InfoState extends ConsumerState<Step3Info> {
+  late TextEditingController _titleCtrl;
   late TextEditingController _priceCtrl;
   late TextEditingController _areaCtrl;
   late TextEditingController _commissionCtrl;
@@ -24,6 +25,7 @@ class _Step3InfoState extends ConsumerState<Step3Info> {
   void initState() {
     super.initState();
     final s = ref.read(addListingProvider);
+    _titleCtrl = TextEditingController(text: s.title);
     _priceCtrl = TextEditingController(text: s.price);
     _areaCtrl = TextEditingController(text: s.area);
     _commissionCtrl = TextEditingController(text: s.commissionPercent);
@@ -32,6 +34,7 @@ class _Step3InfoState extends ConsumerState<Step3Info> {
 
   @override
   void dispose() {
+    _titleCtrl.dispose();
     _priceCtrl.dispose();
     _areaCtrl.dispose();
     _commissionCtrl.dispose();
@@ -62,6 +65,41 @@ class _Step3InfoState extends ConsumerState<Step3Info> {
                 color: AppColors.textSecondaryLight),
           ),
           const SizedBox(height: 24),
+
+          // ── Title ────────────────────────────────────────
+          _FieldLabel('عنوان الإعلان'),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _titleCtrl,
+            onChanged: (v) =>
+                ref.read(addListingProvider.notifier).setTitle(v),
+            style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textPrimaryLight),
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: 'مثال: شقة للبيع في حي العليا',
+              hintStyle: AppTextStyles.bodyMedium
+                  .copyWith(color: AppColors.textHintLight),
+              filled: true,
+              fillColor: AppColors.surfaceLight,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                borderSide: const BorderSide(color: AppColors.dividerLight),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                borderSide: const BorderSide(color: AppColors.dividerLight),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                borderSide: const BorderSide(
+                    color: AppColors.primary, width: 1.5),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 14),
+            ),
+          ),
+          const SizedBox(height: 16),
 
           // ── Price ────────────────────────────────────────
           _FieldLabel('السعر الإجمالي'),

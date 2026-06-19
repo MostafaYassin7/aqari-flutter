@@ -14,17 +14,23 @@ class Step6Location extends ConsumerStatefulWidget {
 }
 
 class _Step6LocationState extends ConsumerState<Step6Location> {
+  late TextEditingController _cityCtrl;
+  late TextEditingController _districtCtrl;
   late TextEditingController _addressCtrl;
 
   @override
   void initState() {
     super.initState();
-    _addressCtrl =
-        TextEditingController(text: ref.read(addListingProvider).address);
+    final s = ref.read(addListingProvider);
+    _cityCtrl = TextEditingController(text: s.city);
+    _districtCtrl = TextEditingController(text: s.district);
+    _addressCtrl = TextEditingController(text: s.address);
   }
 
   @override
   void dispose() {
+    _cityCtrl.dispose();
+    _districtCtrl.dispose();
     _addressCtrl.dispose();
     super.dispose();
   }
@@ -135,8 +141,91 @@ class _Step6LocationState extends ConsumerState<Step6Location> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              // ── City ──────────────────────────────────────
               Text(
-                'العنوان',
+                'المدينة *',
+                style: AppTextStyles.titleSmall.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimaryLight),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _cityCtrl,
+                onChanged: (v) =>
+                    ref.read(addListingProvider.notifier).setCity(v),
+                style: AppTextStyles.bodyMedium
+                    .copyWith(color: AppColors.textPrimaryLight),
+                decoration: InputDecoration(
+                  hintText: 'مثال: الرياض',
+                  hintStyle: AppTextStyles.bodyMedium
+                      .copyWith(color: AppColors.textHintLight),
+                  prefixIcon: const Icon(Icons.location_city_rounded,
+                      color: AppColors.primary, size: 20),
+                  filled: true,
+                  fillColor: AppColors.surfaceLight,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                    borderSide: const BorderSide(color: AppColors.dividerLight),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                    borderSide: const BorderSide(color: AppColors.dividerLight),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                    borderSide: const BorderSide(
+                        color: AppColors.primary, width: 1.5),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 14),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // ── District ───────────────────────────────────
+              Text(
+                'الحي (اختياري)',
+                style: AppTextStyles.titleSmall.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimaryLight),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _districtCtrl,
+                onChanged: (v) =>
+                    ref.read(addListingProvider.notifier).setDistrict(v),
+                style: AppTextStyles.bodyMedium
+                    .copyWith(color: AppColors.textPrimaryLight),
+                decoration: InputDecoration(
+                  hintText: 'مثال: حي العليا',
+                  hintStyle: AppTextStyles.bodyMedium
+                      .copyWith(color: AppColors.textHintLight),
+                  prefixIcon: const Icon(Icons.map_rounded,
+                      color: AppColors.primary, size: 20),
+                  filled: true,
+                  fillColor: AppColors.surfaceLight,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                    borderSide: const BorderSide(color: AppColors.dividerLight),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                    borderSide: const BorderSide(color: AppColors.dividerLight),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                    borderSide: const BorderSide(
+                        color: AppColors.primary, width: 1.5),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 14),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // ── Address ────────────────────────────────────
+              Text(
+                'العنوان التفصيلي (اختياري)',
                 style: AppTextStyles.titleSmall.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimaryLight),
@@ -149,31 +238,23 @@ class _Step6LocationState extends ConsumerState<Step6Location> {
                 style: AppTextStyles.bodyMedium
                     .copyWith(color: AppColors.textPrimaryLight),
                 decoration: InputDecoration(
-                  hintText: 'مثال: حي العليا، شارع الملك فهد، الرياض',
+                  hintText: 'مثال: شارع الملك فهد، بجانب المول',
                   hintStyle: AppTextStyles.bodyMedium
                       .copyWith(color: AppColors.textHintLight),
-                  prefixIcon: const Icon(
-                    Icons.location_on_rounded,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
+                  prefixIcon: const Icon(Icons.location_on_rounded,
+                      color: AppColors.primary, size: 20),
                   filled: true,
                   fillColor: AppColors.surfaceLight,
                   border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
-                    borderSide:
-                        const BorderSide(color: AppColors.dividerLight),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                    borderSide: const BorderSide(color: AppColors.dividerLight),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
-                    borderSide:
-                        const BorderSide(color: AppColors.dividerLight),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                    borderSide: const BorderSide(color: AppColors.dividerLight),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     borderSide: const BorderSide(
                         color: AppColors.primary, width: 1.5),
                   ),

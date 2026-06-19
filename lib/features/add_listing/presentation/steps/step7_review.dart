@@ -65,10 +65,11 @@ class Step7Review extends ConsumerWidget {
             child: Column(
               children: [
                 _ReviewRow(
+                    label: 'العنوان',
+                    value: s.title.isEmpty ? '—' : s.title),
+                _ReviewRow(
                     label: 'السعر',
-                    value: s.price.isEmpty
-                        ? '—'
-                        : '${s.price} ريال'),
+                    value: s.price.isEmpty ? '—' : '${s.price} ريال'),
                 _ReviewRow(
                     label: 'المساحة',
                     value: s.area.isEmpty ? '—' : '${s.area} م²'),
@@ -138,9 +139,16 @@ class Step7Review extends ConsumerWidget {
           _ReviewSection(
             title: 'الموقع',
             onEdit: () => onEdit(6),
-            child: _ReviewRow(
-              label: 'العنوان',
-              value: s.address.isEmpty ? '—' : s.address,
+            child: Column(
+              children: [
+                _ReviewRow(
+                    label: 'المدينة',
+                    value: s.city.isEmpty ? '—' : s.city),
+                if (s.district.isNotEmpty)
+                  _ReviewRow(label: 'الحي', value: s.district),
+                if (s.address.isNotEmpty)
+                  _ReviewRow(label: 'العنوان', value: s.address),
+              ],
             ),
           ),
 
