@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-
 import 'auth_storage.dart';
 
 const String kBaseUrl = 'https://api.aqora.sa/api/v1';
@@ -74,8 +73,6 @@ Dio _createDio() {
               message = 'Not found.';
             case 429:
               message = 'Too many requests. Please wait a moment.';
-            case 500:
-              message = 'Server error. Please try again later.';
             default:
               break;
           }
