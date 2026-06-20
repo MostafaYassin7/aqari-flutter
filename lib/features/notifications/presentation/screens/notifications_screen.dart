@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../providers/notifications_provider.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
@@ -86,7 +87,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         ),
       ),
       body: state.isLoading && notifications.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppLoadingIndicator())
           : state.error != null && notifications.isEmpty
           ? Center(
               child: Column(
@@ -122,7 +123,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     return const Padding(
                       padding: EdgeInsets.all(16),
                       child: Center(
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: AppLoadingIndicator(),
                       ),
                     );
                   }

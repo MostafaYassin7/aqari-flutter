@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../features/home/data/mock_rentals.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../../../../features/home/presentation/providers/rentals_provider.dart';
 import '../../../../features/home/presentation/widgets/rental_calendar_modal.dart';
 import '../../../../features/property_details/presentation/widgets/photo_gallery_viewer.dart';
@@ -118,8 +119,7 @@ class _PhotoSectionState extends State<_PhotoSection> {
                 placeholder: (_, __) => Container(
                   color: AppColors.surfaceLight,
                   child: const Center(
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2, color: AppColors.primary),
+                    child: AppLoadingIndicator(color: AppColors.primary),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
@@ -927,9 +927,7 @@ class _SmallRentalCard extends StatelessWidget {
                 placeholder: (_, __) => Container(
                     color: AppColors.surfaceLight,
                     child: const Center(
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary))),
+                        child: AppLoadingIndicator(color: AppColors.primary))),
                 errorWidget: (_, __, ___) => Container(
                     color: AppColors.surfaceLight,
                     child: const Icon(Icons.home_rounded,

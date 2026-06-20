@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../providers/rentals_provider.dart';
 import 'category_chips_row.dart';
 import 'country_chips_row.dart';
@@ -64,7 +65,7 @@ class DailyRentTab extends ConsumerWidget {
             const SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+                child: AppLoadingIndicator(color: AppColors.primary),
               ),
             )
           else if (rentals.isEmpty)
@@ -103,10 +104,7 @@ class DailyRentTab extends ConsumerWidget {
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.primary,
-                  ),
+                  child: AppLoadingIndicator(color: AppColors.primary),
                 ),
               ),
             ),

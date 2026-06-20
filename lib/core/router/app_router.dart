@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/network/auth_storage.dart';
@@ -24,6 +28,13 @@ import '../../features/wallet/presentation/screens/wallet_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../constants/app_constants.dart';
 
+Page<dynamic> _page(GoRouterState state, Widget child) {
+  if (Platform.isIOS) {
+    return CupertinoPage(key: state.pageKey, child: child);
+  }
+  return MaterialPage(key: state.pageKey, child: child);
+}
+
 // Routes that do not require authentication
 const _publicRoutes = {
   AppRoutes.splash,
@@ -48,94 +59,104 @@ final appRouter = GoRouter(
   routes: [
     GoRoute(
       path: AppRoutes.splash,
-      builder: (context, state) => const SplashScreen(),
+      pageBuilder: (context, state) => _page(state, const SplashScreen()),
     ),
     GoRoute(
       path: AppRoutes.onboarding,
-      builder: (context, state) => const OnboardingScreen(),
+      pageBuilder: (context, state) => _page(state, const OnboardingScreen()),
     ),
     GoRoute(
       path: AppRoutes.login,
-      builder: (context, state) => const LoginScreen(),
+      pageBuilder: (context, state) => _page(state, const LoginScreen()),
       routes: [
         GoRoute(
-          path: 'phone', // full path: /login/phone
-          builder: (context, state) => const PhoneInputScreen(),
+          path: 'phone',
+          pageBuilder: (context, state) => _page(state, const PhoneInputScreen()),
         ),
         GoRoute(
-          path: 'otp', // full path: /login/otp
-          builder: (context, state) => const OtpScreen(),
+          path: 'otp',
+          pageBuilder: (context, state) => _page(state, const OtpScreen()),
         ),
         GoRoute(
-          path: 'register', // full path: /login/register
-          builder: (context, state) => const RegisterScreen(),
+          path: 'register',
+          pageBuilder: (context, state) => _page(state, const RegisterScreen()),
         ),
       ],
     ),
     GoRoute(
       path: AppRoutes.home,
-      builder: (context, state) => const HomeScreen(),
+      pageBuilder: (context, state) => _page(state, const HomeScreen()),
     ),
     GoRoute(
       path: '/property/:id',
-      builder: (context, state) =>
-          PropertyDetailsScreen(listingId: state.pathParameters['id']!),
+      pageBuilder: (context, state) => _page(
+        state,
+        PropertyDetailsScreen(listingId: state.pathParameters['id']!),
+      ),
     ),
     GoRoute(
       path: '/project/:id',
-      builder: (context, state) =>
-          ProjectDetailsScreen(projectId: state.pathParameters['id']!),
+      pageBuilder: (context, state) => _page(
+        state,
+        ProjectDetailsScreen(projectId: state.pathParameters['id']!),
+      ),
     ),
     GoRoute(
       path: '/rental/:id',
-      builder: (context, state) =>
-          RentalDetailsScreen(rentalId: state.pathParameters['id']!),
+      pageBuilder: (context, state) => _page(
+        state,
+        RentalDetailsScreen(rentalId: state.pathParameters['id']!),
+      ),
     ),
     GoRoute(
       path: AppRoutes.search,
-      builder: (context, state) => const SearchScreen(),
+      pageBuilder: (context, state) => _page(state, const SearchScreen()),
     ),
     GoRoute(
       path: AppRoutes.addListing,
-      builder: (context, state) => const AddListingScreen(),
+      pageBuilder: (context, state) => _page(state, const AddListingScreen()),
     ),
     GoRoute(
       path: AppRoutes.account,
-      builder: (context, state) => const AccountScreen(),
+      pageBuilder: (context, state) => _page(state, const AccountScreen()),
     ),
     GoRoute(
       path: AppRoutes.myListings,
-      builder: (context, state) => const MyListingsScreen(),
+      pageBuilder: (context, state) => _page(state, const MyListingsScreen()),
     ),
     GoRoute(
       path: AppRoutes.chat,
-      builder: (context, state) => const ChatsScreen(),
+      pageBuilder: (context, state) => _page(state, const ChatsScreen()),
     ),
     GoRoute(
       path: AppRoutes.chatDetail,
-      builder: (context, state) =>
-          ChatDetailScreen(chatId: state.pathParameters['id']!),
+      pageBuilder: (context, state) => _page(
+        state,
+        ChatDetailScreen(chatId: state.pathParameters['id']!),
+      ),
     ),
     GoRoute(
       path: AppRoutes.notifications,
-      builder: (context, state) => const NotificationsScreen(),
+      pageBuilder: (context, state) => _page(state, const NotificationsScreen()),
     ),
     GoRoute(
       path: AppRoutes.favorites,
-      builder: (context, state) => const FavoritesScreen(),
+      pageBuilder: (context, state) => _page(state, const FavoritesScreen()),
     ),
     GoRoute(
       path: AppRoutes.wallet,
-      builder: (context, state) => const WalletScreen(),
+      pageBuilder: (context, state) => _page(state, const WalletScreen()),
     ),
     GoRoute(
       path: '/profile/:id',
-      builder: (context, state) =>
-          ProfileScreen(profileId: state.pathParameters['id']!),
+      pageBuilder: (context, state) => _page(
+        state,
+        ProfileScreen(profileId: state.pathParameters['id']!),
+      ),
     ),
     GoRoute(
       path: AppRoutes.settings,
-      builder: (context, state) => const SettingsScreen(),
+      pageBuilder: (context, state) => _page(state, const SettingsScreen()),
     ),
   ],
 );

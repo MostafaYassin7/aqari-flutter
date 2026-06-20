@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../../../../shared/models/listing.dart' show formatPrice;
 import '../../../../shared/models/listing_category.dart';
 import '../providers/my_listings_provider.dart';
@@ -91,7 +92,7 @@ class MyListingsScreen extends ConsumerWidget {
               const SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
+                  child: AppLoadingIndicator(color: AppColors.primary),
                 ),
               )
             else if (!asyncListings.isLoading && listings.isEmpty)
@@ -117,10 +118,7 @@ class MyListingsScreen extends ConsumerWidget {
                 child: Padding(
                   padding: EdgeInsets.all(16),
                   child: Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.primary,
-                    ),
+                    child: AppLoadingIndicator(color: AppColors.primary),
                   ),
                 ),
               ),

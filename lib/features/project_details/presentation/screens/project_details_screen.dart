@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/listing.dart' show formatPrice;
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../../../../shared/models/project.dart';
 import '../../../property_details/presentation/widgets/photo_gallery_viewer.dart';
 import '../providers/project_details_provider.dart';
@@ -36,7 +37,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       loading: () => const Scaffold(
         backgroundColor: AppColors.backgroundLight,
         body: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+          child: AppLoadingIndicator(color: AppColors.primary),
         ),
       ),
       error: (err, _) => Scaffold(
@@ -167,10 +168,7 @@ class _PhotoSectionState extends State<_PhotoSection> {
                 placeholder: (_, __) => Container(
                   color: AppColors.surfaceLight,
                   child: const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.primary,
-                    ),
+                    child: AppLoadingIndicator(color: AppColors.primary),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(

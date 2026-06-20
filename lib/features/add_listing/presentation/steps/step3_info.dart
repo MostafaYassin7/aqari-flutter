@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -173,14 +176,23 @@ class _Step3InfoState extends ConsumerState<Step3Info> {
                         color: AppColors.textPrimaryLight),
                   ),
                 ),
-                Switch(
-                  value: s.hasCommission,
-                  onChanged: (v) => ref
-                      .read(addListingProvider.notifier)
-                      .setHasCommission(v),
-                  activeColor: AppColors.primary,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
+                if (Platform.isIOS)
+                  CupertinoSwitch(
+                    value: s.hasCommission,
+                    onChanged: (v) => ref
+                        .read(addListingProvider.notifier)
+                        .setHasCommission(v),
+                    activeTrackColor: AppColors.primary,
+                  )
+                else
+                  Switch(
+                    value: s.hasCommission,
+                    onChanged: (v) => ref
+                        .read(addListingProvider.notifier)
+                        .setHasCommission(v),
+                    activeColor: AppColors.primary,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
               ],
             ),
           ),

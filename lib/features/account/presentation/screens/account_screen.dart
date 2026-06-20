@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/app_dialog.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../wallet/presentation/providers/wallet_provider.dart';
@@ -373,7 +375,7 @@ class _ProfileLoadingSection extends StatelessWidget {
           const SizedBox(height: 16),
           if (isLoading)
             const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+              child: AppLoadingIndicator(color: AppColors.primary),
             )
           else
             OutlinedButton(
@@ -702,13 +704,9 @@ class _WalletCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     if (isLoading)
-                      const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.primary,
-                        ),
+                      const AppLoadingIndicator(
+                        size: 20,
+                        color: AppColors.primary,
                       )
                     else
                       RichText(
@@ -970,50 +968,19 @@ class _LogoutButton extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     color: AppColors.backgroundLight,
     child: InkWell(
-      onTap: () {
-        showDialog(
+      onTap: () async {
+        final confirmed = await AppDialog.showConfirm(
           context: context,
-          builder: (_) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppConstants.radiusL),
-            ),
-            title: Text(
-              'تسجيل الخروج',
-              style: AppTextStyles.titleLarge.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            content: Text(
-              'هل تريد تسجيل الخروج من حسابك؟',
-              style: AppTextStyles.bodyMedium,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  'إلغاء',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondaryLight,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  onLogout();
-                  context.go(AppRoutes.login);
-                },
-                child: Text(
-                  'تسجيل الخروج',
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.error,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
+          title: 'تسجيل الخروج',
+          message: 'هل تريد تسجيل الخروج من حسابك؟',
+          confirmText: 'تسجيل الخروج',
+          cancelText: 'إلغاء',
+          isDestructive: true,
         );
+        if (confirmed == true) {
+          onLogout();
+          context.go(AppRoutes.login);
+        }
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_bottom_nav.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../../../map/presentation/providers/map_provider.dart';
 import '../../../map/presentation/widgets/map_toggle_button.dart';
 import '../../../map/presentation/widgets/map_view.dart';
@@ -182,7 +183,7 @@ class _ListContent extends ConsumerWidget {
             const SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+                child: AppLoadingIndicator(color: AppColors.primary),
               ),
             )
           else if (listings.isEmpty)
@@ -221,10 +222,7 @@ class _ListContent extends ConsumerWidget {
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.primary,
-                  ),
+                  child: AppLoadingIndicator(color: AppColors.primary),
                 ),
               ),
             ),

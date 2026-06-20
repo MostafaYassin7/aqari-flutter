@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -187,14 +188,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         : AppColors.textHintLight,
                   ),
                   child: auth.isLoading
-                      ? const SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColors.white),
-                          ),
+                      ? const AppLoadingIndicator(
+                          size: 22,
+                          color: AppColors.white,
                         )
                       : const Text('إنشاء الحساب'),
                 ),

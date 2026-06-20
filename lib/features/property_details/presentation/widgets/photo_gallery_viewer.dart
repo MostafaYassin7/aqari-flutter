@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 
 /// Full-screen swipeable gallery. Push via [showPhotoGallery].
 void showPhotoGallery({
@@ -67,7 +68,7 @@ class _GalleryScreenState extends State<_GalleryScreen> {
                 imageUrl: widget.imageUrls[i],
                 fit: BoxFit.contain,
                 placeholder: (_, __) => const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
+                  child: AppLoadingIndicator(color: AppColors.primary),
                 ),
                 errorWidget: (_, __, ___) => const Icon(
                   Icons.broken_image_rounded,

@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/app_dialog.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerWidget {
@@ -106,10 +108,7 @@ class LoginScreen extends ConsumerWidget {
                 child: ColoredBox(
                   color: AppColors.overlay,
                   child: Center(
-                    child: CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.white),
-                    ),
+                    child: const AppLoadingIndicator(color: AppColors.white),
                   ),
                 ),
               ),
@@ -196,47 +195,23 @@ class _TermsText extends StatelessWidget {
   const _TermsText();
 
   void _showTerms(BuildContext context) {
-    showDialog(
+    AppDialog.showInfo(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('شروط الخدمة'),
-        content: const SingleChildScrollView(
-          child: Text(
-            'باستخدامك لتطبيق عقار، فإنك توافق على شروط وأحكام الاستخدام. '
-            'يُتيح التطبيق للمستخدمين نشر وتصفح إعلانات العقارات. '
-            'يُحظر نشر محتوى مضلل أو مخالف للأنظمة. '
-            'تحتفظ المنصة بحق إيقاف أي حساب مخالف.',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('حسناً'),
-          ),
-        ],
-      ),
+      title: 'شروط الخدمة',
+      message: 'باستخدامك لتطبيق عقار، فإنك توافق على شروط وأحكام الاستخدام. '
+          'يُتيح التطبيق للمستخدمين نشر وتصفح إعلانات العقارات. '
+          'يُحظر نشر محتوى مضلل أو مخالف للأنظمة. '
+          'تحتفظ المنصة بحق إيقاف أي حساب مخالف.',
     );
   }
 
   void _showPrivacy(BuildContext context) {
-    showDialog(
+    AppDialog.showInfo(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('سياسة الخصوصية'),
-        content: const SingleChildScrollView(
-          child: Text(
-            'نحن نحترم خصوصيتك. نقوم بجمع بيانات الموقع والصور ومعلومات الحساب '
-            'لتوفير خدمات التطبيق فقط. لا نشارك بياناتك مع أطراف ثالثة دون موافقتك. '
-            'يمكنك طلب حذف حسابك وبياناتك في أي وقت عبر التواصل معنا.',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('حسناً'),
-          ),
-        ],
-      ),
+      title: 'سياسة الخصوصية',
+      message: 'نحن نحترم خصوصيتك. نقوم بجمع بيانات الموقع والصور ومعلومات الحساب '
+          'لتوفير خدمات التطبيق فقط. لا نشارك بياناتك مع أطراف ثالثة دون موافقتك. '
+          'يمكنك طلب حذف حسابك وبياناتك في أي وقت عبر التواصل معنا.',
     );
   }
 

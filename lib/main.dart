@@ -48,6 +48,11 @@ class AqarApp extends StatelessWidget {
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.system,
 
+      // ── iOS-style bouncy scroll everywhere ────────────
+      scrollBehavior: const ScrollBehavior().copyWith(
+        physics: const BouncingScrollPhysics(),
+      ),
+
       // ── Navigation ────────────────────────────────────
       routerConfig: appRouter,
 

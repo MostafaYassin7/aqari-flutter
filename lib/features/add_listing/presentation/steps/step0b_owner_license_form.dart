@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -693,9 +696,8 @@ class _ReadOnlyPhoneField extends StatelessWidget {
       );
 }
 
-// Birth date input with Hijri/Gregorian checkbox toggle
-// Date format: DD/MM/YYYY entered as text
-class _BirthDateField extends StatelessWidget {
+// Birth date input — iOS: CupertinoDatePicker popup; Android: DD/MM/YYYY text input
+class _BirthDateField extends StatefulWidget {
   final String label;
   final TextEditingController controller;
   final bool isHijri;
@@ -714,137 +716,249 @@ class _BirthDateField extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Label row: field label (right) + هجري checkbox (left)
-          Row(
-            children: [
-              // هجري checkbox — Hijri calendar is the Saudi standard
-              GestureDetector(
-                onTap: () => onHijriChanged(!isHijri),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'هجري',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textPrimaryLight,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        color: isHijri
-                            ? AppColors.primary
-                            : AppColors.white,
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.radiusS / 2),
-                        border: Border.all(
-                          color: isHijri
-                              ? AppColors.primary
-                              : AppColors.dividerLight,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: isHijri
-                          ? const Icon(Icons.check,
-                              size: 14, color: AppColors.white)
-                          : null,
-                    ),
-                  ],
-                ),
-              ),
+  State<_BirthDateField> createState() => _BirthDateFieldState();
+}
 
-              const Spacer(),
+class _BirthDateFieldState extends State<_BirthDateField> {
+  DateTime _pickerDate = DateTime(1990, 1, 1);
 
-              // Field label
-              Row(
-                mainAxisSize: MainAxisSize.min,
+  void _showDatePicker() {
+    DateTime tempDate = _pickerDate;
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (ctx) => Container(
+        height: 300,
+        decoration: const BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    ' *',
-                    style: AppTextStyles.bodySmall
-                        .copyWith(color: AppColors.error),
+                  CupertinoButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text(
+                      'إلغاء',
+                      style: TextStyle(color: CupertinoColors.systemGrey),
+                    ),
                   ),
-                  Text(
-                    label,
-                    style: AppTextStyles.bodySmall.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimaryLight,
+                  CupertinoButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      final formatted =
+                          '${tempDate.day.toString().padLeft(2, '0')}/'
+                          '${tempDate.month.toString().padLeft(2, '0')}/'
+                          '${tempDate.year}';
+                      widget.controller.text = formatted;
+                      widget.onDateChanged(formatted);
+                      setState(() => _pickerDate = tempDate);
+                    },
+                    child: const Text(
+                      'تم',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
               ),
+            ),
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.date,
+                initialDateTime: _pickerDate,
+                maximumDate: DateTime.now(),
+                minimumDate: DateTime(1900),
+                onDateTimeChanged: (date) {
+                  tempDate = date;
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabelRow() => Row(
+        children: [
+          GestureDetector(
+            onTap: () => widget.onHijriChanged(!widget.isHijri),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'هجري',
+                  style: AppTextStyles.bodySmall
+                      .copyWith(color: AppColors.textPrimaryLight),
+                ),
+                const SizedBox(width: 4),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: widget.isHijri ? AppColors.primary : AppColors.white,
+                    borderRadius:
+                        BorderRadius.circular(AppConstants.radiusS / 2),
+                    border: Border.all(
+                      color: widget.isHijri
+                          ? AppColors.primary
+                          : AppColors.dividerLight,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: widget.isHijri
+                      ? const Icon(Icons.check, size: 14, color: AppColors.white)
+                      : null,
+                ),
+              ],
+            ),
+          ),
+          const Spacer(),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                ' *',
+                style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+              ),
+              Text(
+                widget.label,
+                style: AppTextStyles.bodySmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimaryLight,
+                ),
+              ),
             ],
           ),
+        ],
+      );
 
+  @override
+  Widget build(BuildContext context) {
+    if (Platform.isIOS) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildLabelRow(),
           const SizedBox(height: 6),
-
-          // Date text input — format: DD/MM/YYYY
-          TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              _DateInputFormatter(),
-            ],
-            textAlign: TextAlign.right,
-            textDirection: TextDirection.rtl,
-            style: AppTextStyles.bodySmall
-                .copyWith(color: AppColors.textPrimaryLight),
-            decoration: InputDecoration(
-              hintText: isHijri ? 'يوم/شهر/سنة (هجري)' : 'يوم/شهر/سنة (ميلادي)',
-              hintStyle: AppTextStyles.bodySmall
-                  .copyWith(color: AppColors.textHintLight),
-              filled: true,
-              fillColor: AppColors.surfaceLight,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 14,
-              ),
-              border: OutlineInputBorder(
-                borderRadius:
-                    BorderRadius.circular(AppConstants.radiusM),
-                borderSide:
-                    const BorderSide(color: AppColors.dividerLight),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius:
-                    BorderRadius.circular(AppConstants.radiusM),
-                borderSide: BorderSide(
-                  color: error != null
+          GestureDetector(
+            onTap: _showDatePicker,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                border: Border.all(
+                  color: widget.error != null
                       ? AppColors.error
                       : AppColors.dividerLight,
                 ),
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius:
-                    BorderRadius.circular(AppConstants.radiusM),
-                borderSide: BorderSide(
-                  color: error != null
-                      ? AppColors.error
-                      : AppColors.primary,
-                  width: 1.5,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Icon(CupertinoIcons.calendar,
+                      size: 18, color: AppColors.textHintLight),
+                  Expanded(
+                    child: Text(
+                      widget.controller.text.isEmpty
+                          ? (widget.isHijri
+                              ? 'يوم/شهر/سنة (هجري)'
+                              : 'يوم/شهر/سنة (ميلادي)')
+                          : widget.controller.text,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: widget.controller.text.isEmpty
+                            ? AppColors.textHintLight
+                            : AppColors.textPrimaryLight,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
+                  ),
+                ],
               ),
             ),
-            onChanged: onDateChanged,
           ),
-
-          if (error != null) ...[
+          if (widget.error != null) ...[
             const SizedBox(height: 4),
             Text(
-              error!,
+              widget.error!,
               style: AppTextStyles.labelSmall.copyWith(color: AppColors.error),
               textAlign: TextAlign.right,
             ),
           ],
         ],
       );
+    }
+
+    // Android: text input with DD/MM/YYYY auto-formatter
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildLabelRow(),
+        const SizedBox(height: 6),
+        TextField(
+          controller: widget.controller,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            _DateInputFormatter(),
+          ],
+          textAlign: TextAlign.right,
+          textDirection: TextDirection.rtl,
+          style: AppTextStyles.bodySmall
+              .copyWith(color: AppColors.textPrimaryLight),
+          decoration: InputDecoration(
+            hintText: widget.isHijri
+                ? 'يوم/شهر/سنة (هجري)'
+                : 'يوم/شهر/سنة (ميلادي)',
+            hintStyle:
+                AppTextStyles.bodySmall.copyWith(color: AppColors.textHintLight),
+            filled: true,
+            fillColor: AppColors.surfaceLight,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 14,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppConstants.radiusM),
+              borderSide: const BorderSide(color: AppColors.dividerLight),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppConstants.radiusM),
+              borderSide: BorderSide(
+                color: widget.error != null
+                    ? AppColors.error
+                    : AppColors.dividerLight,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppConstants.radiusM),
+              borderSide: BorderSide(
+                color: widget.error != null ? AppColors.error : AppColors.primary,
+                width: 1.5,
+              ),
+            ),
+          ),
+          onChanged: widget.onDateChanged,
+        ),
+        if (widget.error != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            widget.error!,
+            style: AppTextStyles.labelSmall.copyWith(color: AppColors.error),
+            textAlign: TextAlign.right,
+          ),
+        ],
+      ],
+    );
+  }
 }
 
 // Auto-formats date input as DD/MM/YYYY while typing

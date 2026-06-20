@@ -6,6 +6,7 @@ import '../../../../../core/network/api_client.dart';
 import '../../../../../core/network/api_endpoints.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../../shared/widgets/app_loading_indicator.dart';
 import '../providers/add_listing_provider.dart';
 
 // ── Provider ──────────────────────────────────────────────────────────────────
@@ -81,7 +82,7 @@ class Step1Category extends ConsumerWidget {
             loading: () => const Center(
               child: Padding(
                 padding: EdgeInsets.all(40),
-                child: CircularProgressIndicator(color: AppColors.primary),
+                child: AppLoadingIndicator(color: AppColors.primary),
               ),
             ),
             error: (_, __) => Center(

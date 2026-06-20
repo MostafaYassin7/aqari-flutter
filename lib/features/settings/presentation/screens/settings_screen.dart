@@ -1,9 +1,13 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/app_dialog.dart';
 import '../providers/settings_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -276,100 +280,14 @@ class SettingsScreen extends ConsumerWidget {
   // ── Delete account dialog ─────────────────────────────────────────────────
 
   void _showDeleteDialog(BuildContext context) {
-    showDialog(
+    AppDialog.showConfirm(
       context: context,
-      barrierDismissible: true,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppColors.backgroundLight,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusXL),
-        ),
-        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-        actionsPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppColors.error.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.delete_forever_rounded,
-                  color: AppColors.error, size: 28),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'حذف الحساب',
-              style: AppTextStyles.headlineSmall.copyWith(
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimaryLight,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'هل أنت متأكد من حذف حسابك؟ سيتم حذف جميع بياناتك وإعلاناتك بشكل نهائي ولا يمكن التراجع عن هذا الإجراء.',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
-                height: 1.6,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: OutlinedButton.styleFrom(
-                    side:
-                        const BorderSide(color: AppColors.dividerLight),
-                    minimumSize: const Size(0, 48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusM),
-                    ),
-                  ),
-                  child: Text(
-                    'تراجع',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimaryLight,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.error,
-                    minimumSize: const Size(0, 48),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusM),
-                    ),
-                  ),
-                  child: Text(
-                    'حذف',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+      title: 'حذف الحساب',
+      message:
+          'هل أنت متأكد من حذف حسابك؟ سيتم حذف جميع بياناتك وإعلاناتك بشكل نهائي ولا يمكن التراجع عن هذا الإجراء.',
+      confirmText: 'حذف',
+      cancelText: 'تراجع',
+      isDestructive: true,
     );
   }
 }
@@ -670,16 +588,23 @@ class _ToggleRow extends StatelessWidget {
                 ),
               ),
             ),
-            Switch(
-              value: value,
-              onChanged: enabled ? onChanged : null,
-              activeColor: AppColors.primary,
-              activeTrackColor:
-                  AppColors.primary.withValues(alpha: 0.3),
-              inactiveThumbColor: AppColors.textHintLight,
-              inactiveTrackColor: AppColors.dividerLight,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
+            if (Platform.isIOS)
+              CupertinoSwitch(
+                value: value,
+                onChanged: enabled ? onChanged : null,
+                activeTrackColor: AppColors.primary,
+              )
+            else
+              Switch(
+                value: value,
+                onChanged: enabled ? onChanged : null,
+                activeColor: AppColors.primary,
+                activeTrackColor:
+                    AppColors.primary.withValues(alpha: 0.3),
+                inactiveThumbColor: AppColors.textHintLight,
+                inactiveTrackColor: AppColors.dividerLight,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
           ],
         ),
       ),

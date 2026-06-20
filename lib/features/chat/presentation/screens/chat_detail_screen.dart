@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../providers/chat_provider.dart';
 
 class ChatDetailScreen extends ConsumerStatefulWidget {
@@ -102,7 +103,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             onPressed: () => Navigator.of(context).maybePop(),
           ),
         ),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const Center(child: AppLoadingIndicator()),
       );
     }
 
@@ -268,11 +269,7 @@ class _MessagesList extends StatelessWidget {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
+              child: const AppLoadingIndicator(size: 20),
             ),
           );
         }

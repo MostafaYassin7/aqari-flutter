@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/listing.dart' show formatPrice;
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../../../../shared/models/project.dart';
 
 // ignore: depend_on_referenced_packages
@@ -39,10 +40,7 @@ class ProjectCard extends ConsumerWidget {
                     placeholder: (_, __) => Container(
                       color: AppColors.surfaceLight,
                       child: const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.primary,
-                        ),
+                        child: AppLoadingIndicator(color: AppColors.primary),
                       ),
                     ),
                     errorWidget: (_, __, ___) => Container(

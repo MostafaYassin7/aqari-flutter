@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -147,15 +148,9 @@ class _SplashContent extends StatelessWidget {
           const SizedBox(height: 80),
 
           // ── Loading indicator ──────────────────────────
-          SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.5,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                AppColors.white.withValues(alpha: 0.6),
-              ),
-            ),
+          AppLoadingIndicator(
+            size: 24,
+            color: AppColors.white.withValues(alpha: 0.6),
           ),
         ],
       ),

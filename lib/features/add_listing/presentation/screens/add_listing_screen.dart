@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +12,8 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_endpoints.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
+import '../../../../shared/utils/app_dialog.dart';
 import '../../../../core/utils/parse_helpers.dart';
 import '../providers/add_listing_provider.dart';
 import '../steps/step0_role_service.dart';
@@ -232,7 +237,7 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
         // POST /listings directly; backend sets status = PUBLISHED
         await _createListing(s, allPhotoUrls, licenseId: null);
         if (!mounted) return;
-        _showSuccessDialog();
+        await _showSuccessDialog();
       } else if (s.skipLicenseInfo) {
         // ── CASE 4: إدخال البيانات لاحقاً ─────────────────────
         // POST /listings without licenseId; backend sets status = DRAFT
@@ -267,7 +272,7 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
 
         await _createListing(s, allPhotoUrls, licenseId: licenseId);
         if (!mounted) return;
-        _showPendingDialog();
+        await _showPendingDialog();
       } else if (s.advertiserType == AdvertiserType.broker) {
         // ── CASE 3: مسوق عقاري — broker license then listing ───
         final licenseBody = ParseHelpers.buildBody({
@@ -286,7 +291,7 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
 
         await _createListing(s, allPhotoUrls, licenseId: licenseId);
         if (!mounted) return;
-        _showPendingDialog();
+        await _showPendingDialog();
       }
     } on DioException catch (e) {
       if (!mounted) return;
@@ -400,123 +405,28 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
   // ── Result dialogs ────────────────────────────────────────────────────────
 
   // Case 1 (host): listing published immediately
-  void _showSuccessDialog() {
-    showDialog(
+  Future<void> _showSuccessDialog() async {
+    await AppDialog.showInfo(
       context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppConstants.radiusL)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: const BoxDecoration(
-                color: AppColors.primaryLight,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check_rounded,
-                  color: AppColors.primary, size: 36),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'تم نشر إعلانك!',
-              style: AppTextStyles.headlineSmall
-                  .copyWith(color: AppColors.textPrimaryLight),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'سيتم مراجعة إعلانك وظهوره خلال 24 ساعة.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondaryLight),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              ref.read(addListingProvider.notifier).reset();
-              Navigator.of(context).pop();
-              context.go(AppRoutes.home);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              minimumSize: const Size(160, 44),
-              shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM)),
-            ),
-            child: Text('الرئيسية',
-                style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.white, fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
+      title: 'تم نشر إعلانك!',
+      message: 'سيتم مراجعة إعلانك وظهوره خلال 24 ساعة.',
+      buttonText: 'الرئيسية',
     );
+    if (!mounted) return;
+    ref.read(addListingProvider.notifier).reset();
+    context.go(AppRoutes.home);
   }
 
   // Cases 2 & 3 (owner / agent / broker): license pending admin review
-  void _showPendingDialog() {
-    showDialog(
+  Future<void> _showPendingDialog() async {
+    await AppDialog.showInfo(
       context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppConstants.radiusL)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: AppColors.warning.withAlpha(30),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.access_time_rounded,
-                  color: AppColors.warning, size: 36),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'تم إرسال طلبك',
-              style: AppTextStyles.headlineSmall
-                  .copyWith(color: AppColors.textPrimaryLight),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'تم حفظ إعلانك وسيتم مراجعة بيانات الترخيص من قِبل فريقنا.\nسيتم نشر إعلانك فور الموافقة على الترخيص.',
-              style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondaryLight),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              ref.read(addListingProvider.notifier).reset();
-              Navigator.of(context).pop();
-              context.go(AppRoutes.myListings);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              minimumSize: const Size(160, 44),
-              shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM)),
-            ),
-            child: Text('حسناً',
-                style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.white, fontWeight: FontWeight.w700)),
-          ),
-        ],
-      ),
+      title: 'تم إرسال طلبك',
+      message: 'تم حفظ إعلانك وسيتم مراجعة بيانات الترخيص من قِبل فريقنا.\nسيتم نشر إعلانك فور الموافقة على الترخيص.',
     );
+    if (!mounted) return;
+    ref.read(addListingProvider.notifier).reset();
+    context.go(AppRoutes.myListings);
   }
 
   // Case 4 (skipLicenseInfo): listing saved as DRAFT
@@ -635,11 +545,22 @@ class _TopBar extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(4, 8, 16, 4),
           child: Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back_ios_rounded,
-                    size: 20, color: AppColors.textPrimaryLight),
-                onPressed: onBack,
-              ),
+              if (Platform.isIOS)
+                CupertinoButton(
+                  padding: EdgeInsets.zero,
+                  onPressed: onBack,
+                  child: const Icon(
+                    CupertinoIcons.chevron_back,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
+                )
+              else
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_rounded,
+                      size: 20, color: AppColors.textPrimaryLight),
+                  onPressed: onBack,
+                ),
               Expanded(
                 child: Text(
                   label,
@@ -755,14 +676,7 @@ class _BottomBar extends StatelessWidget {
           elevation: 0,
         ),
         child: isPublishing
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: AppColors.white,
-                ),
-              )
+            ? const AppLoadingIndicator(size: 24, color: AppColors.white)
             : Text(
                 isLastStep ? 'نشر الإعلان' : 'التالي',
                 style: AppTextStyles.bodyLarge.copyWith(

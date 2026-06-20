@@ -7,6 +7,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../features/account/presentation/providers/account_provider.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../../../../features/home/data/mock_listings.dart';
 import '../../../../shared/models/listing.dart';
 import '../providers/public_profile_provider.dart';
@@ -618,10 +619,7 @@ class _ProfileListingCard extends StatelessWidget {
                   height: 140,
                   color: AppColors.surfaceLight,
                   child: const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.primary,
-                    ),
+                    child: AppLoadingIndicator(color: AppColors.primary),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(

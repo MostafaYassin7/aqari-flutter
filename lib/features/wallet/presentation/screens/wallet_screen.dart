@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../providers/wallet_provider.dart';
 
 class WalletScreen extends ConsumerStatefulWidget {
@@ -116,7 +117,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
           if (wallet.isLoading && wallet.transactions.isEmpty)
             const SliverFillRemaining(
               child: Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+                child: AppLoadingIndicator(color: AppColors.primary),
               ),
             )
           else if (wallet.transactions.isEmpty)
@@ -140,13 +141,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                           ? const Padding(
                               padding: EdgeInsets.symmetric(vertical: 16),
                               child: Center(
-                                child: SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.primary,
-                                  ),
+                                child: AppLoadingIndicator(
+                                  size: 24,
+                                  color: AppColors.primary,
                                 ),
                               ),
                             )

@@ -6,7 +6,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/utils/app_dialog.dart';
 import '../../../../shared/widgets/app_bottom_nav.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../providers/chat_provider.dart';
 
 class ChatsScreen extends ConsumerWidget {
@@ -37,7 +39,7 @@ class ChatsScreen extends ConsumerWidget {
         ),
       ),
       body: chatsState.isLoading && chats.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: AppLoadingIndicator())
           : chats.isEmpty
           ? const _EmptyState()
           : ListView.separated(
@@ -51,25 +53,13 @@ class ChatsScreen extends ConsumerWidget {
               itemBuilder: (_, i) => _SwipeableChatRow(
                 chat: chats[i],
                 onDelete: () async {
-                  final confirmed = await showDialog<bool>(
+                  final confirmed = await AppDialog.showConfirm(
                     context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('حذف المحادثة'),
-                      content: const Text('هل أنت متأكد من حذف هذه المحادثة؟'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('إلغاء'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppColors.error,
-                          ),
-                          child: const Text('حذف'),
-                        ),
-                      ],
-                    ),
+                    title: 'حذف المحادثة',
+                    message: 'هل أنت متأكد من حذف هذه المحادثة؟',
+                    confirmText: 'حذف',
+                    cancelText: 'إلغاء',
+                    isDestructive: true,
                   );
                   if (confirmed == true) {
                     ref.read(chatsProvider.notifier).deleteChat(chats[i].id);

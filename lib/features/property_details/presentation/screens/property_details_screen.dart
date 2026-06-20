@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/listing.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../../../chat/presentation/providers/chat_provider.dart';
 import '../providers/property_details_provider.dart';
 import '../widgets/photo_gallery_viewer.dart';
@@ -37,7 +38,7 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
       loading: () => const Scaffold(
         backgroundColor: AppColors.backgroundLight,
         body: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+          child: AppLoadingIndicator(color: AppColors.primary),
         ),
       ),
       error: (err, _) => Scaffold(
@@ -175,10 +176,7 @@ class _PhotoSectionState extends State<_PhotoSection> {
                 placeholder: (_, __) => Container(
                   color: AppColors.surfaceLight,
                   child: const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.primary,
-                    ),
+                    child: AppLoadingIndicator(color: AppColors.primary),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(

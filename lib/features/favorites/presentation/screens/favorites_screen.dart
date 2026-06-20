@@ -7,6 +7,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/listing.dart';
+import '../../../../shared/widgets/app_loading_indicator.dart';
 import '../../../home/presentation/providers/home_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../../../../shared/widgets/app_bottom_nav.dart';
@@ -74,7 +75,7 @@ class FavoritesScreen extends ConsumerWidget {
       ),
       body: asyncFavorites.when(
         loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+          child: AppLoadingIndicator(color: AppColors.primary),
         ),
         error: (_, __) => const _EmptyState(),
         data: (data) => data.isEmpty
@@ -135,10 +136,7 @@ class _GridCard extends ConsumerWidget {
                     placeholder: (_, __) => Container(
                       color: AppColors.surfaceLight,
                       child: const Center(
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.primary,
-                        ),
+                        child: AppLoadingIndicator(color: AppColors.primary),
                       ),
                     ),
                     errorWidget: (_, __, ___) => Container(
@@ -270,10 +268,7 @@ class _ListCard extends ConsumerWidget {
                     height: 110,
                     color: AppColors.surfaceLight,
                     child: const Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.primary,
-                      ),
+                      child: AppLoadingIndicator(color: AppColors.primary),
                     ),
                   ),
                   errorWidget: (_, __, ___) => Container(

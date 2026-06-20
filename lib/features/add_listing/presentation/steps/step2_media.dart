@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../../shared/widgets/app_loading_indicator.dart';
 import '../providers/add_listing_provider.dart';
 
 class Step2Media extends ConsumerWidget {
@@ -288,8 +289,7 @@ class _PhotoTile extends StatelessWidget {
                     placeholder: (_, __) => Container(
                         color: AppColors.surfaceLight,
                         child: const Center(
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                            child: AppLoadingIndicator(
                                 color: AppColors.primary))),
                     errorWidget: (_, __, ___) => Container(
                         color: AppColors.surfaceLight,
