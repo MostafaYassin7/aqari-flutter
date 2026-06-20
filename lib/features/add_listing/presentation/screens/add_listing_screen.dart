@@ -20,6 +20,7 @@ import '../steps/step0_role_service.dart';
 import '../steps/step0a_owner_info_screen.dart';
 import '../steps/step0b_owner_license_form.dart';
 import '../steps/step0c_broker_license_form.dart';
+import '../steps/step0d_host_license_form.dart';
 import '../steps/step1_category.dart';
 import '../steps/step2_media.dart';
 import '../steps/step3_info.dart';
@@ -50,10 +51,11 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
         advertiserType == AdvertiserType.agent) {
       return 2; // step0a + step0b
     }
-    if (advertiserType == AdvertiserType.broker) {
-      return 1; // step0c
+    if (advertiserType == AdvertiserType.broker ||
+        advertiserType == AdvertiserType.host) {
+      return 1; // step0c (broker) or step0d (host)
     }
-    return 0; // host — no license screens
+    return 0;
   }
 
   // Total step count for the given role:
@@ -85,7 +87,7 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
       return ['إضافة إعلان', 'معلومات الترخيص', ...listingLabels];
     }
     // host
-    return ['إضافة إعلان', ...listingLabels];
+    return ['إضافة إعلان', 'ترخيص المضيف', ...listingLabels];
   }
 
   // Builds the step widget list based on current advertiserType.
@@ -123,8 +125,12 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
       ];
     }
 
-    // host — no license screens
-    return [const Step0RoleService(), ...listingSteps];
+    // host — requires step0d tourism license validation
+    return [
+      const Step0RoleService(),
+      Step0dHostLicenseForm(onNext: _next),
+      ...listingSteps,
+    ];
   }
 
   // Returns true when the current step is a license step that manages
@@ -232,21 +238,22 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
       // Upload local photos first (shared across all cases)
       final allPhotoUrls = await _uploadPhotos(s.photos);
 
-      if (s.advertiserType == AdvertiserType.host) {
-        // ── CASE 1: مضيف — no license required ────────────────
-        // POST /listings directly; backend sets status = PUBLISHED
-        await _createListing(s, allPhotoUrls, licenseId: null);
+      if (s.advertiserType == AdvertiserType.broker ||
+          s.advertiserType == AdvertiserType.host) {
+        // ── CASE 1: مسوق / مضيف — licenseId set at step 0c / 0d ──
+        // Backend publishes immediately and deletes the temp license record
+        await _createListing(s, allPhotoUrls, licenseId: s.licenseId);
         if (!mounted) return;
         await _showSuccessDialog();
       } else if (s.skipLicenseInfo) {
-        // ── CASE 4: إدخال البيانات لاحقاً ─────────────────────
+        // ── CASE 2: إدخال البيانات لاحقاً ─────────────────────
         // POST /listings without licenseId; backend sets status = DRAFT
         await _createListing(s, allPhotoUrls, licenseId: null);
         if (!mounted) return;
         _showDraftMessage();
       } else if (s.advertiserType == AdvertiserType.owner ||
           s.advertiserType == AdvertiserType.agent) {
-        // ── CASE 2: مالك أو وكيل — create license then listing ─
+        // ── CASE 3: مالك أو وكيل — create license then listing ─
         final licenseBody = ParseHelpers.buildBody({
           'advertiserType': s.advertiserType,
           'ownershipDocumentType': s.ownershipDocumentType,
@@ -268,26 +275,7 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
         });
 
         final licenseId = await PropertyAdvertisementLicenseRepository()
-            .createLicense(licenseBody);
-
-        await _createListing(s, allPhotoUrls, licenseId: licenseId);
-        if (!mounted) return;
-        await _showPendingDialog();
-      } else if (s.advertiserType == AdvertiserType.broker) {
-        // ── CASE 3: مسوق عقاري — broker license then listing ───
-        final licenseBody = ParseHelpers.buildBody({
-          'advertiserType': AdvertiserType.broker,
-          'falLicenseNumber': s.falLicenseNumber,
-          'brokerageContractNumber': s.brokerageContractNumber,
-          'propertyOwnerIdType': s.propertyOwnerIdType,
-          // Only one of the three will be non-null — others stripped by buildBody
-          'ownerNationalIdNumber': s.ownerNationalIdNumber,
-          'ownerCommercialRegNumber': s.ownerCommercialRegNumber,
-          'ownerUnifiedNumber': s.ownerUnifiedNumber,
-        });
-
-        final licenseId = await PropertyAdvertisementLicenseRepository()
-            .createLicense(licenseBody);
+            .createOwnerAgentLicense(licenseBody);
 
         await _createListing(s, allPhotoUrls, licenseId: licenseId);
         if (!mounted) return;
@@ -295,12 +283,13 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
       }
     } on DioException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.message ?? 'حدث خطأ، يرجى المحاولة مجدداً'),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
+      final msg = (e.response?.data as Map?)?['message'] as String? ??
+          e.message ??
+          'حدث خطأ، يرجى المحاولة مجدداً';
+      await AppDialog.showInfo(
+        context: context,
+        title: 'حدث خطأ',
+        message: msg,
       );
     } finally {
       if (mounted) setState(() => _isPublishing = false);
@@ -404,20 +393,20 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
 
   // ── Result dialogs ────────────────────────────────────────────────────────
 
-  // Case 1 (host): listing published immediately
+  // Case 1 (broker / host): listing published immediately via external validation
   Future<void> _showSuccessDialog() async {
     await AppDialog.showInfo(
       context: context,
       title: 'تم نشر إعلانك!',
-      message: 'سيتم مراجعة إعلانك وظهوره خلال 24 ساعة.',
-      buttonText: 'الرئيسية',
+      message: 'تم نشر إعلانك بنجاح وهو متاح الآن للمشاهدة.',
+      buttonText: 'إعلاناتي',
     );
     if (!mounted) return;
     ref.read(addListingProvider.notifier).reset();
-    context.go(AppRoutes.home);
+    context.go(AppRoutes.myListings);
   }
 
-  // Cases 2 & 3 (owner / agent / broker): license pending admin review
+  // Case 3 (owner / agent): license submitted for admin review
   Future<void> _showPendingDialog() async {
     await AppDialog.showInfo(
       context: context,

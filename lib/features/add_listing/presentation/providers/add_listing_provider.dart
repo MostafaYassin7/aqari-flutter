@@ -25,15 +25,15 @@ class AddListingState {
   // Required: YES (has default 'owner')
   final String advertiserType;
 
-  // معرّف الترخيص — license ID returned from POST /property-advertisement-licenses
-  // Null until user submits the license form; passed to POST /listings
-  // Used by: all advertiserTypes except 'host'
-  // Required: only when advertiserType != 'host' and skipLicenseInfo = false
+  // معرّف الترخيص — license ID returned from the license endpoint
+  // For owner/agent: returned from POST /property-advertisement-licenses
+  // For broker: returned from POST /validate-broker (step 0c)
+  // For host: returned from POST /validate-host (step 0d)
+  // Passed to POST /listings so backend can link them
   final String? licenseId;
 
   // حالة تخطي الترخيص — true when user chose "إدخال البيانات لاحقاً"
   // When true, listing is created as DRAFT without licenseId
-  // User must complete license from My Listings to publish
   // Used by: owner and agent flows only
   // Required: NO (defaults false)
   final bool skipLicenseInfo;
@@ -50,104 +50,96 @@ class AddListingState {
   final String ownershipDocumentType;
 
   // رقم الوثيقة — the actual document number (deed / property / registry)
-  // Label changes based on ownershipDocumentType:
-  //   electronic_deed → "رقم الصك الإلكتروني"
-  //   property_number → "رقم العقار"
-  //   land_registry   → "رقم السجل العيني"
-  //   other           → "رقم الوثيقة"
+  // Label changes based on ownershipDocumentType
   // Used by: owner, agent
   // Required: YES
   final String? ownershipDocumentNumber;
 
   // نوع هوية المالك — identity document type of the property owner
   // 'national_id' | 'commercial_registration' | 'unified_700'
-  // Used by: owner, agent, broker
+  // Used by: owner, agent
   // Required: YES
   final String propertyOwnerIdType;
 
   // رقم الهوية الوطنية للمالك — filled ONLY when propertyOwnerIdType = 'national_id'
-  // NULL when propertyOwnerIdType is anything else
-  // Used by: owner, agent, broker
-  // Required: YES when national_id
+  // Used by: owner, agent
   final String? ownerNationalIdNumber;
 
   // رقم السجل التجاري للمنشأة المالكة — filled ONLY when propertyOwnerIdType = 'commercial_registration'
-  // NULL when propertyOwnerIdType is anything else
-  // Used by: owner, agent, broker
-  // Required: YES when commercial_registration
+  // Used by: owner, agent
   final String? ownerCommercialRegNumber;
 
   // الرقم الموحد 700 للمنشأة المالكة — filled ONLY when propertyOwnerIdType = 'unified_700'
-  // NULL when propertyOwnerIdType is anything else
-  // Used by: owner, agent, broker
-  // Required: YES when unified_700
+  // Used by: owner, agent
   final String? ownerUnifiedNumber;
 
   // تاريخ ميلاد المالك — birth date of the property owner
   // Only collected when propertyOwnerIdType = 'national_id'
-  // NULL for commercial_registration and unified_700 (companies have no birth date)
   // Used by: owner, agent (only when national_id)
-  // Required: YES when national_id
   final String? propertyOwnerBirthDate;
 
   // هل التاريخ بالتقويم الهجري؟ — true = Hijri calendar, false = Gregorian
   // Used by: owner, agent (when showing birth date field)
-  // Required: YES (has default true — Hijri is standard in Saudi Arabia)
   final bool isHijriCalendar;
 
   // رقم جوال المالك — property owner's mobile phone number
-  // Pre-filled from logged-in user's phone for owner role
-  // For agent role, pre-filled from agent's (current user's) phone
   // Used by: owner, agent
-  // Required: NO
   final String? propertyOwnerPhone;
 
-  // رقم هوية أحد الملاك — national ID of one co-owner
-  // Only applicable when property has multiple owners
+  // رقم هوية أحد الملاك — national ID of one co-owner (optional)
   // Used by: owner, agent
-  // Required: NO (optional)
   final String? oneOfOwnersNationalId;
 
   // ── Agent-specific fields ─────────────────────────────────────────────────
 
   // رقم الوكالة الرسمية — power of attorney number
-  // Official POA document issued by Saudi Ministry of Justice (وزارة العدل)
-  // Proves the agent is legally authorized to act on the owner's behalf
+  // Issued by: Saudi Ministry of Justice (وزارة العدل)
   // Used by: agent ONLY
-  // Required: YES when advertiserType = 'agent'
   final String? powerOfAttorneyNumber;
 
-  // رقم الهوية الوطنية للوكيل — national ID number of the agent (current user)
+  // رقم الهوية الوطنية للوكيل — national ID number of the agent
   // Used by: agent ONLY
-  // Required: YES when advertiserType = 'agent'
   final String? agentNationalIdNumber;
 
   // تاريخ ميلاد الوكيل — birth date of the agent
   // Used by: agent ONLY
-  // Required: YES when advertiserType = 'agent'
   final String? agentBirthDate;
 
   // رقم جوال الوكيل — agent's mobile phone number
-  // Pre-filled from logged-in user's phone
   // Used by: agent ONLY
-  // Required: NO
   final String? agentPhone;
 
-  // ── Broker-specific fields ────────────────────────────────────────────────
+  // ── Broker temporary fields (step 0c) ────────────────────────────────────
 
-  // رقم رخصة فال — FAL brokerage license number
-  // License for real estate brokerage and marketing
-  // Issued by: General Real Estate Authority (الهيئة العامة للعقار)
-  // Used by: broker ONLY
-  // Required: YES when advertiserType = 'broker'
-  final String? falLicenseNumber;
+  // NOT stored in DB — collected at step 0c for REGA validation only
+  // licenseId is stored in provider after validation succeeds
 
-  // رقم عقد الوساطة — brokerage contract number
-  // Contract registered between broker and property owner
-  // Registered on: eservicesredp.rega.gov.sa
-  // Used by: broker ONLY
-  // Required: YES when advertiserType = 'broker'
-  final String? brokerageContractNumber;
+  // رقم ترخيص الإعلان — ad license number from الهيئة العامة للعقار
+  final String? brokerAdLicenseNumber;
+
+  // نوع هوية مالك العقار — 'national_id' | 'commercial_registration'
+  final String brokerOwnerIdType;
+
+  // رقم هوية المالك — owner ID number (national ID or commercial reg)
+  final String? brokerOwnerIdNumber;
+
+  // ── Host temporary field (step 0d) ───────────────────────────────────────
+
+  // NOT stored in DB — collected at step 0d for Tourism validation only
+  // licenseId is stored in provider after validation succeeds
+
+  // رقم رخصة وزارة السياحة
+  final String? hostTourismLicenseNumber;
+
+  // ── Validation loading states ─────────────────────────────────────────────
+
+  // true while calling validate-broker or validate-host endpoint
+  // shows loading indicator on التالي button in step 0c / 0d
+  final bool isValidatingLicense;
+
+  // Error message from backend if validation fails
+  // shown under the field in red in step 0c / 0d
+  final String? licenseValidationError;
 
   // ── Listing steps ─────────────────────────────────────────────────────────
 
@@ -214,8 +206,12 @@ class AddListingState {
     this.agentNationalIdNumber,
     this.agentBirthDate,
     this.agentPhone,
-    this.falLicenseNumber,
-    this.brokerageContractNumber,
+    this.brokerAdLicenseNumber,
+    this.brokerOwnerIdType = 'national_id',
+    this.brokerOwnerIdNumber,
+    this.hostTourismLicenseNumber,
+    this.isValidatingLicense = false,
+    this.licenseValidationError,
     this.category,
     this.categoryId,
     this.propertyType,
@@ -269,8 +265,12 @@ class AddListingState {
     Object? agentNationalIdNumber = _kUnset,
     Object? agentBirthDate = _kUnset,
     Object? agentPhone = _kUnset,
-    Object? falLicenseNumber = _kUnset,
-    Object? brokerageContractNumber = _kUnset,
+    Object? brokerAdLicenseNumber = _kUnset,
+    String? brokerOwnerIdType,
+    Object? brokerOwnerIdNumber = _kUnset,
+    Object? hostTourismLicenseNumber = _kUnset,
+    bool? isValidatingLicense,
+    Object? licenseValidationError = _kUnset,
     Object? category = _kUnset,
     Object? categoryId = _kUnset,
     Object? propertyType = _kUnset,
@@ -341,12 +341,20 @@ class AddListingState {
           : agentNationalIdNumber as String?,
       agentBirthDate: identical(agentBirthDate, _kUnset) ? this.agentBirthDate : agentBirthDate as String?,
       agentPhone: identical(agentPhone, _kUnset) ? this.agentPhone : agentPhone as String?,
-      falLicenseNumber: identical(falLicenseNumber, _kUnset)
-          ? this.falLicenseNumber
-          : falLicenseNumber as String?,
-      brokerageContractNumber: identical(brokerageContractNumber, _kUnset)
-          ? this.brokerageContractNumber
-          : brokerageContractNumber as String?,
+      brokerAdLicenseNumber: identical(brokerAdLicenseNumber, _kUnset)
+          ? this.brokerAdLicenseNumber
+          : brokerAdLicenseNumber as String?,
+      brokerOwnerIdType: brokerOwnerIdType ?? this.brokerOwnerIdType,
+      brokerOwnerIdNumber: identical(brokerOwnerIdNumber, _kUnset)
+          ? this.brokerOwnerIdNumber
+          : brokerOwnerIdNumber as String?,
+      hostTourismLicenseNumber: identical(hostTourismLicenseNumber, _kUnset)
+          ? this.hostTourismLicenseNumber
+          : hostTourismLicenseNumber as String?,
+      isValidatingLicense: isValidatingLicense ?? this.isValidatingLicense,
+      licenseValidationError: identical(licenseValidationError, _kUnset)
+          ? this.licenseValidationError
+          : licenseValidationError as String?,
       category: identical(category, _kUnset) ? this.category : category as String?,
       categoryId: identical(categoryId, _kUnset) ? this.categoryId : categoryId as String?,
       propertyType: identical(propertyType, _kUnset) ? this.propertyType : propertyType as String?,
@@ -403,12 +411,40 @@ class AddListingNotifier extends Notifier<AddListingState> {
   void setAdvertiserType(String type) =>
       state = state.copyWith(advertiserType: type);
 
-  // Sets the licenseId returned from POST /property-advertisement-licenses
-  // Called just before creating the listing in step7 submit flow
+  // Sets the licenseId returned after license creation or external validation
+  // For owner/agent: called in _publish() after createOwnerAgentLicense()
+  // For broker/host: called in step 0c/0d after validateBrokerLicense/validateHostLicense()
   void setLicenseId(String id) => state = state.copyWith(licenseId: id);
 
-  // Generic license field updater — used by step0b and step0c form fields
-  // Avoids exposing 15+ individual setter methods for license fields
+  // Broker license validation setters (step 0c)
+  void setBrokerAdLicenseNumber(String value) =>
+      state = state.copyWith(brokerAdLicenseNumber: value);
+
+  void setBrokerOwnerIdType(String value) => state = state.copyWith(
+        brokerOwnerIdType: value,
+        brokerOwnerIdNumber: null,
+      );
+
+  void setBrokerOwnerIdNumber(String value) =>
+      state = state.copyWith(brokerOwnerIdNumber: value);
+
+  // Host license validation setter (step 0d)
+  void setHostTourismLicenseNumber(String value) =>
+      state = state.copyWith(hostTourismLicenseNumber: value);
+
+  // Validation loading state — set true before API call, false after
+  void setIsValidatingLicense(bool value) =>
+      state = state.copyWith(isValidatingLicense: value);
+
+  // Validation error — set from backend response or local field validation
+  void setLicenseValidationError(String? error) =>
+      state = state.copyWith(licenseValidationError: error);
+
+  void clearLicenseValidationError() =>
+      state = state.copyWith(licenseValidationError: null);
+
+  // Generic license field updater — used by step0b owner/agent form fields
+  // Avoids exposing individual setter methods for each owner/agent field
   void setLicenseField(String field, dynamic value) {
     switch (field) {
       case 'ownershipDocumentType':
@@ -445,10 +481,6 @@ class AddListingNotifier extends Notifier<AddListingState> {
         state = state.copyWith(agentBirthDate: value as String?);
       case 'agentPhone':
         state = state.copyWith(agentPhone: value as String?);
-      case 'falLicenseNumber':
-        state = state.copyWith(falLicenseNumber: value as String?);
-      case 'brokerageContractNumber':
-        state = state.copyWith(brokerageContractNumber: value as String?);
       case 'skipLicenseInfo':
         state = state.copyWith(skipLicenseInfo: value as bool);
     }
