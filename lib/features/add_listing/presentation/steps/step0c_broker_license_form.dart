@@ -327,6 +327,8 @@ class _NumberField extends StatelessWidget {
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             textAlign: TextAlign.right,
             textDirection: TextDirection.rtl,
+            style: AppTextStyles.bodySmall
+                .copyWith(color: AppColors.textPrimaryLight),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: AppTextStyles.bodySmall

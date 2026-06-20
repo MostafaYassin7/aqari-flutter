@@ -248,7 +248,7 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
           'ownershipDocumentNumber': s.ownershipDocumentNumber,
           'propertyOwnerIdType': s.propertyOwnerIdType,
           'propertyOwnerIdNumber': s.propertyOwnerIdNumber,
-          'propertyOwnerBirthDate': s.propertyOwnerBirthDate,
+          'propertyOwnerBirthDate': _toIsoDate(s.propertyOwnerBirthDate),
           'isHijriCalendar': s.isHijriCalendar,
           'propertyOwnerPhone': s.propertyOwnerPhone,
           'oneOfOwnersNationalId': s.oneOfOwnersNationalId,
@@ -257,7 +257,7 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
           // Agent-only fields — null for owner, stripped by buildBody
           'powerOfAttorneyNumber': s.powerOfAttorneyNumber,
           'agentNationalIdNumber': s.agentNationalIdNumber,
-          'agentBirthDate': s.agentBirthDate,
+          'agentBirthDate': _toIsoDate(s.agentBirthDate),
           'agentPhone': s.agentPhone,
         });
 
@@ -296,6 +296,14 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
     } finally {
       if (mounted) setState(() => _isPublishing = false);
     }
+  }
+
+  // Converts DD/MM/YYYY → YYYY-MM-DD for PostgreSQL date columns
+  String? _toIsoDate(String? ddmmyyyy) {
+    if (ddmmyyyy == null || ddmmyyyy.isEmpty) return null;
+    final parts = ddmmyyyy.split('/');
+    if (parts.length != 3) return ddmmyyyy;
+    return '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}';
   }
 
   // Uploads any local file paths to GCP and returns all final CDN URLs

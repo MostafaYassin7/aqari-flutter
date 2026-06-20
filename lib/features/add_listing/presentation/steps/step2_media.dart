@@ -35,12 +35,14 @@ class Step2Media extends ConsumerWidget {
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
-              title: const Text('اختر من المعرض'),
+              title: Text('اختر من المعرض',
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimaryLight)),
               onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
             ),
             ListTile(
               leading: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
-              title: const Text('التقط صورة'),
+              title: Text('التقط صورة',
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimaryLight)),
               onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
             ),
             const SizedBox(height: 8),

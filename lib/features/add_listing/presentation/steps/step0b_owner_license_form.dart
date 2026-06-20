@@ -619,6 +619,8 @@ class _FormTextField extends StatelessWidget {
             inputFormatters: inputFormatters,
             textAlign: TextAlign.right,
             textDirection: TextDirection.rtl,
+            style: AppTextStyles.bodySmall
+                .copyWith(color: AppColors.textPrimaryLight),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: AppTextStyles.bodySmall
@@ -800,6 +802,8 @@ class _BirthDateField extends StatelessWidget {
             ],
             textAlign: TextAlign.right,
             textDirection: TextDirection.rtl,
+            style: AppTextStyles.bodySmall
+                .copyWith(color: AppColors.textPrimaryLight),
             decoration: InputDecoration(
               hintText: isHijri ? 'يوم/شهر/سنة (هجري)' : 'يوم/شهر/سنة (ميلادي)',
               hintStyle: AppTextStyles.bodySmall

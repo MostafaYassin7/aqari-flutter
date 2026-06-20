@@ -94,14 +94,22 @@ class _Step5DetailsState extends ConsumerState<Step5Details> {
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: ['شمال', 'جنوب', 'شرق', 'غرب', 'شمال شرق', 'شمال غرب', 'جنوب شرق', 'جنوب غرب']
-                .map((d) => _FacadePill(
-                      label: d,
-                      selected: s.facade == d,
-                      onTap: () => notifier.setFacade(
-                          s.facade == d ? null : d),
-                    ))
-                .toList(),
+            children: [
+              ['شمال',     'north'],
+              ['جنوب',     'south'],
+              ['شرق',      'east'],
+              ['غرب',      'west'],
+              ['شمال شرق', 'northeast'],
+              ['شمال غرب', 'northwest'],
+              ['جنوب شرق', 'southeast'],
+              ['جنوب غرب', 'southwest'],
+            ].map((e) => _FacadePill(
+                  label: e[0],
+                  selected: s.facade == e[1],
+                  onTap: () => notifier.setFacade(
+                      s.facade == e[1] ? null : e[1]),
+                ))
+             .toList(),
           ),
           const SizedBox(height: 20),
           const Divider(color: AppColors.dividerLight),
