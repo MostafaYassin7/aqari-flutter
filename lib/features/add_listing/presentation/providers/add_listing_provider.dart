@@ -65,11 +65,23 @@ class AddListingState {
   // Required: YES
   final String propertyOwnerIdType;
 
-  // رقم هوية المالك — identity document number of the property owner
-  // Label changes based on propertyOwnerIdType
+  // رقم الهوية الوطنية للمالك — filled ONLY when propertyOwnerIdType = 'national_id'
+  // NULL when propertyOwnerIdType is anything else
   // Used by: owner, agent, broker
-  // Required: YES
-  final String? propertyOwnerIdNumber;
+  // Required: YES when national_id
+  final String? ownerNationalIdNumber;
+
+  // رقم السجل التجاري للمنشأة المالكة — filled ONLY when propertyOwnerIdType = 'commercial_registration'
+  // NULL when propertyOwnerIdType is anything else
+  // Used by: owner, agent, broker
+  // Required: YES when commercial_registration
+  final String? ownerCommercialRegNumber;
+
+  // الرقم الموحد 700 للمنشأة المالكة — filled ONLY when propertyOwnerIdType = 'unified_700'
+  // NULL when propertyOwnerIdType is anything else
+  // Used by: owner, agent, broker
+  // Required: YES when unified_700
+  final String? ownerUnifiedNumber;
 
   // تاريخ ميلاد المالك — birth date of the property owner
   // Only collected when propertyOwnerIdType = 'national_id'
@@ -95,13 +107,6 @@ class AddListingState {
   // Used by: owner, agent
   // Required: NO (optional)
   final String? oneOfOwnersNationalId;
-
-  // رقم السجل التجاري للمنشأة — commercial registration number of the owning entity
-  // Required ONLY when propertyOwnerIdType = 'commercial_registration' or 'unified_700'
-  // NULL when propertyOwnerIdType = 'national_id'
-  // Used by: owner, agent (only when commercial entity)
-  // Required: YES when commercial_registration or unified_700
-  final String? establishmentCommercialRegNumber;
 
   // ── Agent-specific fields ─────────────────────────────────────────────────
 
@@ -198,12 +203,13 @@ class AddListingState {
     this.ownershipDocumentType = OwnershipDocumentType.electronicDeed,
     this.ownershipDocumentNumber,
     this.propertyOwnerIdType = PropertyOwnerIdType.nationalId,
-    this.propertyOwnerIdNumber,
+    this.ownerNationalIdNumber,
+    this.ownerCommercialRegNumber,
+    this.ownerUnifiedNumber,
     this.propertyOwnerBirthDate,
     this.isHijriCalendar = true,
     this.propertyOwnerPhone,
     this.oneOfOwnersNationalId,
-    this.establishmentCommercialRegNumber,
     this.powerOfAttorneyNumber,
     this.agentNationalIdNumber,
     this.agentBirthDate,
@@ -252,12 +258,13 @@ class AddListingState {
     String? ownershipDocumentType,
     Object? ownershipDocumentNumber = _kUnset,
     String? propertyOwnerIdType,
-    Object? propertyOwnerIdNumber = _kUnset,
+    Object? ownerNationalIdNumber = _kUnset,
+    Object? ownerCommercialRegNumber = _kUnset,
+    Object? ownerUnifiedNumber = _kUnset,
     Object? propertyOwnerBirthDate = _kUnset,
     bool? isHijriCalendar,
     Object? propertyOwnerPhone = _kUnset,
     Object? oneOfOwnersNationalId = _kUnset,
-    Object? establishmentCommercialRegNumber = _kUnset,
     Object? powerOfAttorneyNumber = _kUnset,
     Object? agentNationalIdNumber = _kUnset,
     Object? agentBirthDate = _kUnset,
@@ -307,9 +314,15 @@ class AddListingState {
           ? this.ownershipDocumentNumber
           : ownershipDocumentNumber as String?,
       propertyOwnerIdType: propertyOwnerIdType ?? this.propertyOwnerIdType,
-      propertyOwnerIdNumber: identical(propertyOwnerIdNumber, _kUnset)
-          ? this.propertyOwnerIdNumber
-          : propertyOwnerIdNumber as String?,
+      ownerNationalIdNumber: identical(ownerNationalIdNumber, _kUnset)
+          ? this.ownerNationalIdNumber
+          : ownerNationalIdNumber as String?,
+      ownerCommercialRegNumber: identical(ownerCommercialRegNumber, _kUnset)
+          ? this.ownerCommercialRegNumber
+          : ownerCommercialRegNumber as String?,
+      ownerUnifiedNumber: identical(ownerUnifiedNumber, _kUnset)
+          ? this.ownerUnifiedNumber
+          : ownerUnifiedNumber as String?,
       propertyOwnerBirthDate: identical(propertyOwnerBirthDate, _kUnset)
           ? this.propertyOwnerBirthDate
           : propertyOwnerBirthDate as String?,
@@ -320,9 +333,6 @@ class AddListingState {
       oneOfOwnersNationalId: identical(oneOfOwnersNationalId, _kUnset)
           ? this.oneOfOwnersNationalId
           : oneOfOwnersNationalId as String?,
-      establishmentCommercialRegNumber: identical(establishmentCommercialRegNumber, _kUnset)
-          ? this.establishmentCommercialRegNumber
-          : establishmentCommercialRegNumber as String?,
       powerOfAttorneyNumber: identical(powerOfAttorneyNumber, _kUnset)
           ? this.powerOfAttorneyNumber
           : powerOfAttorneyNumber as String?,
@@ -406,9 +416,19 @@ class AddListingNotifier extends Notifier<AddListingState> {
       case 'ownershipDocumentNumber':
         state = state.copyWith(ownershipDocumentNumber: value as String?);
       case 'propertyOwnerIdType':
-        state = state.copyWith(propertyOwnerIdType: value as String);
-      case 'propertyOwnerIdNumber':
-        state = state.copyWith(propertyOwnerIdNumber: value as String?);
+        // Clear all three ID number fields when type changes — only one will be filled
+        state = state.copyWith(
+          propertyOwnerIdType: value as String,
+          ownerNationalIdNumber: null,
+          ownerCommercialRegNumber: null,
+          ownerUnifiedNumber: null,
+        );
+      case 'ownerNationalIdNumber':
+        state = state.copyWith(ownerNationalIdNumber: value as String?);
+      case 'ownerCommercialRegNumber':
+        state = state.copyWith(ownerCommercialRegNumber: value as String?);
+      case 'ownerUnifiedNumber':
+        state = state.copyWith(ownerUnifiedNumber: value as String?);
       case 'propertyOwnerBirthDate':
         state = state.copyWith(propertyOwnerBirthDate: value as String?);
       case 'isHijriCalendar':
@@ -417,9 +437,6 @@ class AddListingNotifier extends Notifier<AddListingState> {
         state = state.copyWith(propertyOwnerPhone: value as String?);
       case 'oneOfOwnersNationalId':
         state = state.copyWith(oneOfOwnersNationalId: value as String?);
-      case 'establishmentCommercialRegNumber':
-        state = state.copyWith(
-            establishmentCommercialRegNumber: value as String?);
       case 'powerOfAttorneyNumber':
         state = state.copyWith(powerOfAttorneyNumber: value as String?);
       case 'agentNationalIdNumber':

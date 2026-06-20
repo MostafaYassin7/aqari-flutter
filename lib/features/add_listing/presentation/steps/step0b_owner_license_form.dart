@@ -37,9 +37,9 @@ class _Step0bOwnerLicenseFormState
 
   // Text controllers — pre-filled where needed
   final _ownershipDocNumCtrl    = TextEditingController();
+  // Shared controller for all three owner-ID fields — cleared when type changes
   final _ownerIdNumCtrl         = TextEditingController();
   final _ownerBirthDateCtrl     = TextEditingController();
-  final _commercialRegCtrl      = TextEditingController();
   final _oneOfOwnersCtrl        = TextEditingController();
   final _powerOfAttorneyCtrl    = TextEditingController();
   final _agentIdNumCtrl         = TextEditingController();
@@ -70,7 +70,6 @@ class _Step0bOwnerLicenseFormState
     _ownershipDocNumCtrl.dispose();
     _ownerIdNumCtrl.dispose();
     _ownerBirthDateCtrl.dispose();
-    _commercialRegCtrl.dispose();
     _oneOfOwnersCtrl.dispose();
     _powerOfAttorneyCtrl.dispose();
     _agentIdNumCtrl.dispose();
@@ -89,25 +88,21 @@ class _Step0bOwnerLicenseFormState
       errs['ownershipDocumentNumber'] = 'هذا الحقل مطلوب';
     }
 
-    // Owner ID number — required for owner, agent, and broker
-    if (s.propertyOwnerIdNumber == null || s.propertyOwnerIdNumber!.isEmpty) {
-      errs['propertyOwnerIdNumber'] = 'هذا الحقل مطلوب';
-    }
-
-    // Birth date — only required when propertyOwnerIdType = 'national_id'
+    // Owner ID — required field changes based on propertyOwnerIdType
     if (s.propertyOwnerIdType == PropertyOwnerIdType.nationalId) {
-      if (s.propertyOwnerBirthDate == null ||
-          s.propertyOwnerBirthDate!.isEmpty) {
+      if (s.ownerNationalIdNumber == null || s.ownerNationalIdNumber!.isEmpty) {
+        errs['ownerNationalIdNumber'] = 'هذا الحقل مطلوب';
+      }
+      if (s.propertyOwnerBirthDate == null || s.propertyOwnerBirthDate!.isEmpty) {
         errs['propertyOwnerBirthDate'] = 'هذا الحقل مطلوب';
       }
-    }
-
-    // Commercial registration — required when commercial entity
-    if (s.propertyOwnerIdType == PropertyOwnerIdType.commercialRegistration ||
-        s.propertyOwnerIdType == PropertyOwnerIdType.unified700) {
-      if (s.establishmentCommercialRegNumber == null ||
-          s.establishmentCommercialRegNumber!.isEmpty) {
-        errs['establishmentCommercialRegNumber'] = 'هذا الحقل مطلوب';
+    } else if (s.propertyOwnerIdType == PropertyOwnerIdType.commercialRegistration) {
+      if (s.ownerCommercialRegNumber == null || s.ownerCommercialRegNumber!.isEmpty) {
+        errs['ownerCommercialRegNumber'] = 'هذا الحقل مطلوب';
+      }
+    } else {
+      if (s.ownerUnifiedNumber == null || s.ownerUnifiedNumber!.isEmpty) {
+        errs['ownerUnifiedNumber'] = 'هذا الحقل مطلوب';
       }
     }
 
@@ -244,17 +239,18 @@ class _Step0bOwnerLicenseFormState
                   ],
                   selected: s.propertyOwnerIdType,
                   onChanged: (v) {
-                    // Clear birth date and commercial reg when type changes
-                    // to avoid stale values being submitted
+                    // setLicenseField('propertyOwnerIdType') already clears all
+                    // three owner ID fields in the notifier; also clear the
+                    // shared controller and birth date so the UI appears empty
                     notifier.setLicenseField('propertyOwnerIdType', v);
                     notifier.setLicenseField('propertyOwnerBirthDate', null);
-                    notifier.setLicenseField(
-                        'establishmentCommercialRegNumber', null);
+                    _ownerIdNumCtrl.clear();
                     _ownerBirthDateCtrl.clear();
-                    _commercialRegCtrl.clear();
                     setState(() {
+                      _errors.remove('ownerNationalIdNumber');
+                      _errors.remove('ownerCommercialRegNumber');
+                      _errors.remove('ownerUnifiedNumber');
                       _errors.remove('propertyOwnerBirthDate');
-                      _errors.remove('establishmentCommercialRegNumber');
                     });
                   },
                 ),
@@ -283,7 +279,7 @@ class _Step0bOwnerLicenseFormState
 
                 const SizedBox(height: 16),
 
-                // رقم هوية المالك — label changes based on propertyOwnerIdType
+                // رقم هوية المالك — label and target field change with propertyOwnerIdType
                 _FormTextField(
                   label: _ownerIdLabel(s.propertyOwnerIdType),
                   required: true,
@@ -292,20 +288,25 @@ class _Step0bOwnerLicenseFormState
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly
                   ],
-                  error: _errors['propertyOwnerIdNumber'],
+                  error: _errors[_ownerIdErrorKey(s.propertyOwnerIdType)],
                   onChanged: (v) {
-                    notifier.setLicenseField(
-                        'propertyOwnerIdNumber', v.isEmpty ? null : v);
-                    if (_errors.containsKey('propertyOwnerIdNumber')) {
-                      setState(() => _errors.remove('propertyOwnerIdNumber'));
+                    final val = v.isEmpty ? null : v;
+                    final key = _ownerIdErrorKey(s.propertyOwnerIdType);
+                    if (s.propertyOwnerIdType == PropertyOwnerIdType.nationalId) {
+                      notifier.setLicenseField('ownerNationalIdNumber', val);
+                    } else if (s.propertyOwnerIdType == PropertyOwnerIdType.commercialRegistration) {
+                      notifier.setLicenseField('ownerCommercialRegNumber', val);
+                    } else {
+                      notifier.setLicenseField('ownerUnifiedNumber', val);
                     }
+                    if (_errors.containsKey(key)) setState(() => _errors.remove(key));
                   },
                 ),
 
                 const SizedBox(height: 16),
 
-                // Dynamic: birth date or commercial reg number
-                // AnimatedSwitcher fades between them when propertyOwnerIdType changes
+                // Birth date — only shown when propertyOwnerIdType = 'national_id'
+                // Companies and corporations have no birth date
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 250),
                   child: s.propertyOwnerIdType == PropertyOwnerIdType.nationalId
@@ -319,34 +320,13 @@ class _Step0bOwnerLicenseFormState
                             notifier.setLicenseField(
                                 'propertyOwnerBirthDate', v.isEmpty ? null : v);
                             if (_errors.containsKey('propertyOwnerBirthDate')) {
-                              setState(() =>
-                                  _errors.remove('propertyOwnerBirthDate'));
+                              setState(() => _errors.remove('propertyOwnerBirthDate'));
                             }
                           },
                           onHijriChanged: (v) =>
                               notifier.setLicenseField('isHijriCalendar', v),
                         )
-                      : _FormTextField(
-                          key: const ValueKey('commercialReg'),
-                          label: 'رقم السجل التجاري للمنشأة',
-                          required: true,
-                          controller: _commercialRegCtrl,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly
-                          ],
-                          error: _errors['establishmentCommercialRegNumber'],
-                          onChanged: (v) {
-                            notifier.setLicenseField(
-                                'establishmentCommercialRegNumber',
-                                v.isEmpty ? null : v);
-                            if (_errors.containsKey(
-                                'establishmentCommercialRegNumber')) {
-                              setState(() => _errors.remove(
-                                  'establishmentCommercialRegNumber'));
-                            }
-                          },
-                        ),
+                      : const SizedBox.shrink(key: ValueKey('noBirthDate')),
                 ),
 
                 const SizedBox(height: 16),
@@ -480,15 +460,27 @@ class _Step0bOwnerLicenseFormState
     );
   }
 
-  // رقم هوية المالك label depends on propertyOwnerIdType
+  // Field label for the owner ID input — changes with propertyOwnerIdType
   String _ownerIdLabel(String idType) {
     switch (idType) {
       case PropertyOwnerIdType.commercialRegistration:
-        return 'رقم السجل التجاري';
+        return 'رقم السجل التجاري للمنشأة';
       case PropertyOwnerIdType.unified700:
-        return 'الرقم الموحد 700';
+        return 'الرقم الموحد 700 للمنشأة';
       default:
-        return 'رقم الهوية الوطنية';
+        return 'رقم الهوية الوطنية للمالك';
+    }
+  }
+
+  // Error map key for the owner ID field — must match _validate() keys
+  String _ownerIdErrorKey(String idType) {
+    switch (idType) {
+      case PropertyOwnerIdType.commercialRegistration:
+        return 'ownerCommercialRegNumber';
+      case PropertyOwnerIdType.unified700:
+        return 'ownerUnifiedNumber';
+      default:
+        return 'ownerNationalIdNumber';
     }
   }
 }

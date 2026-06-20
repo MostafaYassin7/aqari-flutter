@@ -247,13 +247,14 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
           'ownershipDocumentType': s.ownershipDocumentType,
           'ownershipDocumentNumber': s.ownershipDocumentNumber,
           'propertyOwnerIdType': s.propertyOwnerIdType,
-          'propertyOwnerIdNumber': s.propertyOwnerIdNumber,
+          // Only one of the three will be non-null — others stripped by buildBody
+          'ownerNationalIdNumber': s.ownerNationalIdNumber,
+          'ownerCommercialRegNumber': s.ownerCommercialRegNumber,
+          'ownerUnifiedNumber': s.ownerUnifiedNumber,
           'propertyOwnerBirthDate': _toIsoDate(s.propertyOwnerBirthDate),
           'isHijriCalendar': s.isHijriCalendar,
           'propertyOwnerPhone': s.propertyOwnerPhone,
           'oneOfOwnersNationalId': s.oneOfOwnersNationalId,
-          'establishmentCommercialRegNumber':
-              s.establishmentCommercialRegNumber,
           // Agent-only fields — null for owner, stripped by buildBody
           'powerOfAttorneyNumber': s.powerOfAttorneyNumber,
           'agentNationalIdNumber': s.agentNationalIdNumber,

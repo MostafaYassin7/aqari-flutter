@@ -63,9 +63,19 @@ class _Step0cBrokerLicenseFormState
       errs['brokerageContractNumber'] = 'هذا الحقل مطلوب';
     }
 
-    // رقم هوية المالك — required for all advertiserTypes
-    if (s.propertyOwnerIdNumber == null || s.propertyOwnerIdNumber!.isEmpty) {
-      errs['propertyOwnerIdNumber'] = 'هذا الحقل مطلوب';
+    // رقم هوية المالك — required field changes based on propertyOwnerIdType
+    if (s.propertyOwnerIdType == PropertyOwnerIdType.nationalId) {
+      if (s.ownerNationalIdNumber == null || s.ownerNationalIdNumber!.isEmpty) {
+        errs['ownerNationalIdNumber'] = 'هذا الحقل مطلوب';
+      }
+    } else if (s.propertyOwnerIdType == PropertyOwnerIdType.commercialRegistration) {
+      if (s.ownerCommercialRegNumber == null || s.ownerCommercialRegNumber!.isEmpty) {
+        errs['ownerCommercialRegNumber'] = 'هذا الحقل مطلوب';
+      }
+    } else {
+      if (s.ownerUnifiedNumber == null || s.ownerUnifiedNumber!.isEmpty) {
+        errs['ownerUnifiedNumber'] = 'هذا الحقل مطلوب';
+      }
     }
 
     setState(() => _errors.addAll(errs));
@@ -223,28 +233,38 @@ class _Step0cBrokerLicenseFormState
                 _OwnerIdTypePills(
                   selected: s.propertyOwnerIdType,
                   onChanged: (v) {
+                    // setLicenseField('propertyOwnerIdType') clears all three
+                    // owner ID fields in the notifier automatically
                     notifier.setLicenseField('propertyOwnerIdType', v);
-                    notifier.setLicenseField('propertyOwnerIdNumber', null);
                     _ownerIdNumCtrl.clear();
-                    setState(() => _errors.remove('propertyOwnerIdNumber'));
+                    setState(() {
+                      _errors.remove('ownerNationalIdNumber');
+                      _errors.remove('ownerCommercialRegNumber');
+                      _errors.remove('ownerUnifiedNumber');
+                    });
                   },
                 ),
 
                 const SizedBox(height: 16),
 
                 // ── Field 4: رقم هوية المالك ─────────────────
-                // Label changes based on propertyOwnerIdType
+                // Label and target field change with propertyOwnerIdType
                 // Required: YES for broker
                 _LabeledNumberField(
                   label: _ownerIdLabel(s.propertyOwnerIdType),
                   controller: _ownerIdNumCtrl,
-                  error: _errors['propertyOwnerIdNumber'],
+                  error: _errors[_ownerIdErrorKey(s.propertyOwnerIdType)],
                   onChanged: (v) {
-                    notifier.setLicenseField(
-                        'propertyOwnerIdNumber', v.isEmpty ? null : v);
-                    if (_errors.containsKey('propertyOwnerIdNumber')) {
-                      setState(() => _errors.remove('propertyOwnerIdNumber'));
+                    final val = v.isEmpty ? null : v;
+                    final key = _ownerIdErrorKey(s.propertyOwnerIdType);
+                    if (s.propertyOwnerIdType == PropertyOwnerIdType.nationalId) {
+                      notifier.setLicenseField('ownerNationalIdNumber', val);
+                    } else if (s.propertyOwnerIdType == PropertyOwnerIdType.commercialRegistration) {
+                      notifier.setLicenseField('ownerCommercialRegNumber', val);
+                    } else {
+                      notifier.setLicenseField('ownerUnifiedNumber', val);
                     }
+                    if (_errors.containsKey(key)) setState(() => _errors.remove(key));
                   },
                 ),
 
@@ -293,11 +313,22 @@ class _Step0cBrokerLicenseFormState
   String _ownerIdLabel(String idType) {
     switch (idType) {
       case PropertyOwnerIdType.commercialRegistration:
-        return 'رقم السجل التجاري';
+        return 'رقم السجل التجاري للمنشأة';
       case PropertyOwnerIdType.unified700:
-        return 'الرقم الموحد 700';
+        return 'الرقم الموحد 700 للمنشأة';
       default:
-        return 'رقم هوية المالك';
+        return 'رقم الهوية الوطنية للمالك';
+    }
+  }
+
+  String _ownerIdErrorKey(String idType) {
+    switch (idType) {
+      case PropertyOwnerIdType.commercialRegistration:
+        return 'ownerCommercialRegNumber';
+      case PropertyOwnerIdType.unified700:
+        return 'ownerUnifiedNumber';
+      default:
+        return 'ownerNationalIdNumber';
     }
   }
 }
