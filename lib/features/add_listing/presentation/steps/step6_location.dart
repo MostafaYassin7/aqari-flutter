@@ -33,9 +33,9 @@ class _Step6LocationState extends ConsumerState<Step6Location> {
     super.dispose();
   }
 
-  List<_District> get _currentDistricts {
+  List<DistrictEntry> get _currentDistricts {
     final city = ref.read(addListingProvider).city;
-    return _districts[city] ?? [];
+    return districtsByCity[city] ?? [];
   }
 
   @override
@@ -287,7 +287,7 @@ class _DistrictFieldState extends State<_DistrictField> {
   }
 
   void _syncSelected() {
-    final districts = _districts[widget.cityEn] ?? [];
+    final districts = districtsByCity[widget.cityEn] ?? [];
     final current = widget.controller.text;
     final match = districts.any((d) => d.en == current);
     _selected = (match && current.isNotEmpty) ? current : null;
