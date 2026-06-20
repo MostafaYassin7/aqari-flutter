@@ -275,7 +275,10 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
           'falLicenseNumber': s.falLicenseNumber,
           'brokerageContractNumber': s.brokerageContractNumber,
           'propertyOwnerIdType': s.propertyOwnerIdType,
-          'propertyOwnerIdNumber': s.propertyOwnerIdNumber,
+          // Only one of the three will be non-null — others stripped by buildBody
+          'ownerNationalIdNumber': s.ownerNationalIdNumber,
+          'ownerCommercialRegNumber': s.ownerCommercialRegNumber,
+          'ownerUnifiedNumber': s.ownerUnifiedNumber,
         });
 
         final licenseId = await PropertyAdvertisementLicenseRepository()
