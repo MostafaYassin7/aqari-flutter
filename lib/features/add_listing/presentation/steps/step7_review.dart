@@ -5,6 +5,7 @@ import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../providers/add_listing_provider.dart';
+import 'city_mappings.dart';
 
 class Step7Review extends ConsumerWidget {
   final void Function(int step) onEdit;
@@ -143,9 +144,9 @@ class Step7Review extends ConsumerWidget {
               children: [
                 _ReviewRow(
                     label: 'المدينة',
-                    value: s.city.isEmpty ? '—' : s.city),
+                    value: s.city.isEmpty ? '—' : cityArLabel(s.city)),
                 if (s.district.isNotEmpty)
-                  _ReviewRow(label: 'الحي', value: s.district),
+                  _ReviewRow(label: 'الحي', value: districtArLabel(s.district)),
                 if (s.address.isNotEmpty)
                   _ReviewRow(label: 'العنوان', value: s.address),
               ],

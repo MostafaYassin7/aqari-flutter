@@ -23,6 +23,9 @@ class Listing {
   final String listingType;
   final String status;
   final String ownerName;
+  final String ownerPhone;
+  final String ownerPhotoUrl;
+  final String ownerRole;
   final String adNumber;
   final String facade;
   final int floor;
@@ -67,6 +70,9 @@ class Listing {
     this.listingType = '',
     this.status = '',
     this.ownerName = '',
+    this.ownerPhone = '',
+    this.ownerPhotoUrl = '',
+    this.ownerRole = '',
     this.adNumber = '',
     this.facade = '',
     this.floor = 0,
@@ -170,7 +176,10 @@ class Listing {
       lng: lng,
       listingType: (json['listingType'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
-      ownerName: (json['ownerName'] ?? '').toString(),
+      ownerName: (json['ownerName'] ?? (json['__owner__'] is Map ? json['__owner__']['name'] : null) ?? '').toString(),
+      ownerPhone: ((json['__owner__'] is Map ? json['__owner__']['phone'] : null) ?? '').toString(),
+      ownerPhotoUrl: ((json['__owner__'] is Map ? json['__owner__']['profilePhoto'] : null) ?? '').toString(),
+      ownerRole: ((json['__owner__'] is Map ? json['__owner__']['role'] : null) ?? '').toString(),
       adNumber: (json['adNumber'] ?? '').toString(),
       facade: (json['facade'] ?? '').toString(),
       floor: ParseHelpers.toInt(json['floor']),

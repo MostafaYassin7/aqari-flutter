@@ -132,7 +132,9 @@ class _SwipeableChatRow extends StatelessWidget {
         onLongPress: onDelete,
         child: Container(
           height: 80,
-          color: AppColors.backgroundLight,
+          color: chat.unreadCount > 0
+              ? AppColors.primary.withValues(alpha: 0.04)
+              : AppColors.backgroundLight,
           padding: const EdgeInsets.symmetric(
             horizontal: AppConstants.spaceM,
             vertical: 12,

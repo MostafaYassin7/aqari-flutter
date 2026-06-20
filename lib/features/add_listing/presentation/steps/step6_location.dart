@@ -5,6 +5,7 @@ import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/theme/app_colors.dart';
 import '../../../../../core/theme/app_text_styles.dart';
 import '../providers/add_listing_provider.dart';
+import 'city_mappings.dart';
 
 class Step6Location extends ConsumerStatefulWidget {
   const Step6Location({super.key});
@@ -14,7 +15,6 @@ class Step6Location extends ConsumerStatefulWidget {
 }
 
 class _Step6LocationState extends ConsumerState<Step6Location> {
-  late TextEditingController _cityCtrl;
   late TextEditingController _districtCtrl;
   late TextEditingController _addressCtrl;
 
@@ -22,21 +22,26 @@ class _Step6LocationState extends ConsumerState<Step6Location> {
   void initState() {
     super.initState();
     final s = ref.read(addListingProvider);
-    _cityCtrl = TextEditingController(text: s.city);
     _districtCtrl = TextEditingController(text: s.district);
     _addressCtrl = TextEditingController(text: s.address);
   }
 
   @override
   void dispose() {
-    _cityCtrl.dispose();
     _districtCtrl.dispose();
     _addressCtrl.dispose();
     super.dispose();
   }
 
+  List<_District> get _currentDistricts {
+    final city = ref.read(addListingProvider).city;
+    return _districts[city] ?? [];
+  }
+
   @override
   Widget build(BuildContext context) {
+    final s = ref.watch(addListingProvider);
+
     return Column(
       children: [
         // ── Header ───────────────────────────────────────────
@@ -67,23 +72,18 @@ class _Step6LocationState extends ConsumerState<Step6Location> {
         Expanded(
           child: Stack(
             children: [
-              // Map canvas
               SizedBox.expand(
                 child: CustomPaint(painter: _MapPainter()),
               ),
-
-              // Pin
               const Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.location_pin,
-                      color: AppColors.error,
-                      size: 48,
-                    ),
+                    Icon(Icons.location_pin, color: AppColors.error, size: 48),
                     SizedBox(height: 2),
-                    SizedBox(width: 4, height: 4,
+                    SizedBox(
+                      width: 4,
+                      height: 4,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
                           color: AppColors.overlay,
@@ -94,8 +94,6 @@ class _Step6LocationState extends ConsumerState<Step6Location> {
                   ],
                 ),
               ),
-
-              // "Open Maps" button
               PositionedDirectional(
                 bottom: 12,
                 end: 12,
@@ -107,8 +105,7 @@ class _Step6LocationState extends ConsumerState<Step6Location> {
                               'سيتم فتح خرائط جوجل عند التكامل الكامل')),
                     );
                   },
-                  icon: const Icon(Icons.open_in_new_rounded,
-                      size: 16),
+                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
                   label: const Text('فتح الخريطة'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.white,
@@ -129,19 +126,18 @@ class _Step6LocationState extends ConsumerState<Step6Location> {
           ),
         ),
 
-        // ── Address input ─────────────────────────────────────
+        // ── Address inputs ────────────────────────────────────
         Container(
           padding: const EdgeInsets.all(AppConstants.spaceM),
           decoration: const BoxDecoration(
             color: AppColors.backgroundLight,
-            border: Border(
-                top: BorderSide(color: AppColors.dividerLight)),
+            border: Border(top: BorderSide(color: AppColors.dividerLight)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ── City ──────────────────────────────────────
+              // ── City dropdown ──────────────────────────────
               Text(
                 'المدينة *',
                 style: AppTextStyles.titleSmall.copyWith(
@@ -149,16 +145,9 @@ class _Step6LocationState extends ConsumerState<Step6Location> {
                     color: AppColors.textPrimaryLight),
               ),
               const SizedBox(height: 8),
-              TextField(
-                controller: _cityCtrl,
-                onChanged: (v) =>
-                    ref.read(addListingProvider.notifier).setCity(v),
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textPrimaryLight),
+              DropdownButtonFormField<String>(
+                value: s.city.isEmpty ? null : s.city,
                 decoration: InputDecoration(
-                  hintText: 'مثال: الرياض',
-                  hintStyle: AppTextStyles.bodyMedium
-                      .copyWith(color: AppColors.textHintLight),
                   prefixIcon: const Icon(Icons.location_city_rounded,
                       color: AppColors.primary, size: 20),
                   filled: true,
@@ -173,12 +162,31 @@ class _Step6LocationState extends ConsumerState<Step6Location> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                    borderSide: const BorderSide(
-                        color: AppColors.primary, width: 1.5),
+                    borderSide:
+                        const BorderSide(color: AppColors.primary, width: 1.5),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 14),
+                  hintText: 'اختر المدينة',
+                  hintStyle: AppTextStyles.bodyMedium
+                      .copyWith(color: AppColors.textHintLight),
                 ),
+                items: cities
+                    .map((c) => DropdownMenuItem(
+                          value: c.en,
+                          child: Text(c.ar,
+                              style: AppTextStyles.bodyMedium.copyWith(
+                                  color: AppColors.textPrimaryLight)),
+                        ))
+                    .toList(),
+                onChanged: (en) {
+                  if (en == null) return;
+                  ref.read(addListingProvider.notifier).setCity(en);
+                  // Clear district if city changes
+                  ref.read(addListingProvider.notifier).setDistrict('');
+                  _districtCtrl.clear();
+                  setState(() {});
+                },
               ),
               const SizedBox(height: 10),
 
@@ -190,36 +198,11 @@ class _Step6LocationState extends ConsumerState<Step6Location> {
                     color: AppColors.textPrimaryLight),
               ),
               const SizedBox(height: 8),
-              TextField(
+              _DistrictField(
+                cityEn: s.city,
                 controller: _districtCtrl,
                 onChanged: (v) =>
                     ref.read(addListingProvider.notifier).setDistrict(v),
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textPrimaryLight),
-                decoration: InputDecoration(
-                  hintText: 'مثال: حي العليا',
-                  hintStyle: AppTextStyles.bodyMedium
-                      .copyWith(color: AppColors.textHintLight),
-                  prefixIcon: const Icon(Icons.map_rounded,
-                      color: AppColors.primary, size: 20),
-                  filled: true,
-                  fillColor: AppColors.surfaceLight,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                    borderSide: const BorderSide(color: AppColors.dividerLight),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                    borderSide: const BorderSide(color: AppColors.dividerLight),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                    borderSide: const BorderSide(
-                        color: AppColors.primary, width: 1.5),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 14),
-                ),
               ),
               const SizedBox(height: 10),
 
@@ -255,8 +238,8 @@ class _Step6LocationState extends ConsumerState<Step6Location> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                    borderSide: const BorderSide(
-                        color: AppColors.primary, width: 1.5),
+                    borderSide:
+                        const BorderSide(color: AppColors.primary, width: 1.5),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 14),
@@ -270,6 +253,145 @@ class _Step6LocationState extends ConsumerState<Step6Location> {
   }
 }
 
+// ── District field — dropdown if city has predefined list, text otherwise ──────
+
+class _DistrictField extends StatefulWidget {
+  final String cityEn;
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
+  const _DistrictField({
+    required this.cityEn,
+    required this.controller,
+    required this.onChanged,
+  });
+
+  @override
+  State<_DistrictField> createState() => _DistrictFieldState();
+}
+
+class _DistrictFieldState extends State<_DistrictField> {
+  static const _other = 'Other';
+  String? _selected;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncSelected();
+  }
+
+  @override
+  void didUpdateWidget(_DistrictField old) {
+    super.didUpdateWidget(old);
+    if (old.cityEn != widget.cityEn) _syncSelected();
+  }
+
+  void _syncSelected() {
+    final districts = _districts[widget.cityEn] ?? [];
+    final current = widget.controller.text;
+    final match = districts.any((d) => d.en == current);
+    _selected = (match && current.isNotEmpty) ? current : null;
+  }
+
+  List<DistrictEntry> get _list => districtsByCity[widget.cityEn] ?? [];
+
+  bool get _hasDropdown => _list.isNotEmpty;
+
+  InputDecoration get _inputDeco => InputDecoration(
+        prefixIcon: const Icon(Icons.map_rounded,
+            color: AppColors.primary, size: 20),
+        filled: true,
+        fillColor: AppColors.surfaceLight,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppConstants.radiusM),
+          borderSide: const BorderSide(color: AppColors.dividerLight),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppConstants.radiusM),
+          borderSide: const BorderSide(color: AppColors.dividerLight),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppConstants.radiusM),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_hasDropdown) {
+      // City not in our list — plain text field
+      return TextField(
+        controller: widget.controller,
+        onChanged: widget.onChanged,
+        style: AppTextStyles.bodyMedium
+            .copyWith(color: AppColors.textPrimaryLight),
+        decoration: _inputDeco.copyWith(
+          hintText: 'e.g. Al Olaya',
+          hintStyle: AppTextStyles.bodyMedium
+              .copyWith(color: AppColors.textHintLight),
+        ),
+      );
+    }
+
+    final showTextFallback = _selected == _other;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DropdownButtonFormField<String>(
+          value: _selected,
+          decoration: _inputDeco.copyWith(
+            hintText: 'اختر الحي',
+            hintStyle: AppTextStyles.bodyMedium
+                .copyWith(color: AppColors.textHintLight),
+          ),
+          items: [
+            ..._list.map((d) => DropdownMenuItem(
+                  value: d.en,
+                  child: Text(d.ar,
+                      style: AppTextStyles.bodyMedium
+                          .copyWith(color: AppColors.textPrimaryLight)),
+                )),
+            DropdownMenuItem(
+              value: _other,
+              child: Text('أخرى',
+                  style: AppTextStyles.bodyMedium
+                      .copyWith(color: AppColors.textPrimaryLight)),
+            ),
+          ],
+          onChanged: (v) {
+            setState(() => _selected = v);
+            if (v != null && v != _other) {
+              widget.controller.text = v;
+              widget.onChanged(v);
+            } else {
+              widget.controller.clear();
+              widget.onChanged('');
+            }
+          },
+        ),
+        if (showTextFallback) ...[
+          const SizedBox(height: 8),
+          TextField(
+            controller: widget.controller,
+            onChanged: widget.onChanged,
+            autofocus: true,
+            style: AppTextStyles.bodyMedium
+                .copyWith(color: AppColors.textPrimaryLight),
+            decoration: _inputDeco.copyWith(
+              hintText: 'e.g. Al Murabba',
+              hintStyle: AppTextStyles.bodyMedium
+                  .copyWith(color: AppColors.textHintLight),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 // ── Map painter ───────────────────────────────────────────────────────────────
 
 class _MapPainter extends CustomPainter {
@@ -278,7 +400,6 @@ class _MapPainter extends CustomPainter {
     final bgPaint = Paint()..color = const Color(0xFFE8F0E0);
     canvas.drawRect(Offset.zero & size, bgPaint);
 
-    // Road paint
     final roadPaint = Paint()
       ..color = const Color(0xFFFFFFFF)
       ..strokeWidth = 12
@@ -288,10 +409,8 @@ class _MapPainter extends CustomPainter {
       ..color = const Color(0xFFF5F5F0)
       ..strokeWidth = 6;
 
-    // Block paint
     final blockPaint = Paint()..color = const Color(0xFFD4C9B0);
 
-    // Draw blocks
     final blocks = [
       Rect.fromLTWH(20, 30, size.width * 0.3, size.height * 0.18),
       Rect.fromLTWH(size.width * 0.4, 30, size.width * 0.25, size.height * 0.18),
@@ -310,22 +429,12 @@ class _MapPainter extends CustomPainter {
           RRect.fromRectAndRadius(b, const Radius.circular(3)), blockPaint);
     }
 
-    // Horizontal roads
-    for (final y in [
-      size.height * 0.25,
-      size.height * 0.52,
-      size.height * 0.77,
-    ]) {
+    for (final y in [size.height * 0.25, size.height * 0.52, size.height * 0.77]) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), roadPaint);
     }
-    // Vertical roads
-    for (final x in [
-      size.width * 0.35,
-      size.width * 0.68,
-    ]) {
+    for (final x in [size.width * 0.35, size.width * 0.68]) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), roadPaint);
     }
-    // Minor roads
     canvas.drawLine(
         Offset(0, size.height * 0.13),
         Offset(size.width, size.height * 0.13),

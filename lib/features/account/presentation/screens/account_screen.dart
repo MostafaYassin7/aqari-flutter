@@ -53,15 +53,28 @@ class AccountScreen extends ConsumerWidget {
                     onPressed: () => context.push(AppRoutes.notifications),
                   ),
                   if (unreadNotifications > 0)
-                    Positioned(
-                      top: 10,
-                      right: 10,
+                    PositionedDirectional(
+                      top: 8,
+                      end: 8,
                       child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
+                        constraints: const BoxConstraints(
+                            minWidth: 16, minHeight: 16),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          unreadNotifications > 9
+                              ? '9+'
+                              : '$unreadNotifications',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 10,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
                     ),
@@ -187,6 +200,9 @@ class AccountScreen extends ConsumerWidget {
                     _MenuItem(
                       icon: Icons.notifications_rounded,
                       label: 'الإشعارات',
+                      badge: unreadNotifications > 0
+                          ? (unreadNotifications > 9 ? '9+' : '$unreadNotifications')
+                          : null,
                       onTap: () => context.push(AppRoutes.notifications),
                     ),
                     _MenuItem(

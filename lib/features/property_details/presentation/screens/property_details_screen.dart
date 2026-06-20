@@ -7,7 +7,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/listing.dart';
 import '../../../chat/presentation/providers/chat_provider.dart';
-import '../../data/mock_property_extras.dart';
 import '../providers/property_details_provider.dart';
 import '../widgets/photo_gallery_viewer.dart';
 
@@ -74,7 +73,6 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
       data: (details) {
         final listing = details.listing;
         final isFav = details.isFavorited;
-        final owner = getOwnerForListing(listing.id);
         final features = getFeaturesFromListing(listing);
 
         return Scaffold(
@@ -96,7 +94,7 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
                           const _Divider(),
                           _StatsRow(listing: listing),
                           const _Divider(),
-                          _OwnerCard(owner: owner),
+                          _OwnerCard(listing: listing),
                           const _Divider(),
                           _DescriptionSection(listing: listing),
                           if (features.isNotEmpty) ...[
@@ -464,33 +462,45 @@ class _StatsRow extends StatelessWidget {
 // ── Owner card ────────────────────────────────────────────────────────────────
 
 class _OwnerCard extends StatelessWidget {
-  final PropertyOwner owner;
-  const _OwnerCard({required this.owner});
+  final Listing listing;
+  const _OwnerCard({required this.listing});
+
+  String _roleLabel(String role) {
+    switch (role) {
+      case 'broker':
+        return 'وسيط';
+      case 'owner':
+        return 'مالك';
+      case 'host':
+        return 'مضيف';
+      case 'agent':
+        return 'وكيل';
+      default:
+        return 'مُعلن';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final name = listing.ownerName.isNotEmpty ? listing.ownerName : 'مُعلن';
+    final photoUrl = listing.ownerPhotoUrl;
+    final roleLabel = _roleLabel(listing.ownerRole);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           // Avatar
           ClipOval(
-            child: CachedNetworkImage(
-              imageUrl: owner.photoUrl,
-              width: 56,
-              height: 56,
-              fit: BoxFit.cover,
-              errorWidget: (_, __, ___) => Container(
-                width: 56,
-                height: 56,
-                color: AppColors.primaryLight,
-                child: const Icon(
-                  Icons.person_rounded,
-                  size: 32,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
+            child: photoUrl.isNotEmpty
+                ? CachedNetworkImage(
+                    imageUrl: photoUrl,
+                    width: 56,
+                    height: 56,
+                    fit: BoxFit.cover,
+                    errorWidget: (_, __, ___) => _AvatarFallback(name: name),
+                  )
+                : _AvatarFallback(name: name),
           ),
           const SizedBox(width: 14),
 
@@ -501,11 +511,14 @@ class _OwnerCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      owner.name,
-                      style: AppTextStyles.titleLarge.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimaryLight,
+                    Flexible(
+                      child: Text(
+                        name,
+                        style: AppTextStyles.titleLarge.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimaryLight,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -519,7 +532,7 @@ class _OwnerCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        owner.type,
+                        roleLabel,
                         style: AppTextStyles.labelSmall.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w700,
@@ -528,34 +541,53 @@ class _OwnerCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.star_rounded,
-                      size: 14,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 3),
-                    Text(
-                      owner.rating.toStringAsFixed(1),
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textPrimaryLight,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      '  ·  ${owner.reviewCount} تقييم  ·  ${owner.lastActive}',
-                      style: AppTextStyles.bodySmall.copyWith(
+                if (listing.ownerPhone.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.phone_rounded,
+                        size: 13,
                         color: AppColors.textSecondaryLight,
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 4),
+                      Text(
+                        listing.ownerPhone,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondaryLight,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AvatarFallback extends StatelessWidget {
+  final String name;
+  const _AvatarFallback({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = name.isNotEmpty ? name[0] : '؟';
+    return Container(
+      width: 56,
+      height: 56,
+      color: AppColors.primaryLight,
+      child: Center(
+        child: Text(
+          initial,
+          style: AppTextStyles.titleLarge.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../features/chat/presentation/providers/chat_provider.dart';
 
 /// Custom Airbnb-style bottom navigation bar with a center golden FAB.
 /// Pass [currentIndex] to highlight the active tab:
 ///   0 = Home, 1 = Search, 2 = Add (center), 3 = Chats, 4 = Account
-class AppBottomNav extends StatelessWidget {
+class AppBottomNav extends ConsumerWidget {
   final int currentIndex;
 
   const AppBottomNav({required this.currentIndex, super.key});
@@ -29,26 +31,16 @@ class AppBottomNav extends StatelessWidget {
     }
   }
 
-  void _showComingSoon(BuildContext context, String name) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$name — قريباً'),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unreadChats = ref.watch(totalUnreadChatsProvider);
+
     return Directionality(
-      textDirection: TextDirection.ltr, // keep visual order consistent
+      textDirection: TextDirection.ltr,
       child: Container(
         decoration: const BoxDecoration(
           color: AppColors.white,
-          border: Border(
-            top: BorderSide(color: AppColors.dividerLight),
-          ),
+          border: Border(top: BorderSide(color: AppColors.dividerLight)),
         ),
         child: SafeArea(
           top: false,
@@ -105,6 +97,7 @@ class AppBottomNav extends StatelessWidget {
                   activeIcon: Icons.chat_bubble_rounded,
                   label: 'الرسائل',
                   isActive: currentIndex == 3,
+                  badgeCount: unreadChats,
                   onTap: () => _onTap(context, 3),
                 ),
                 _NavItem(
@@ -130,6 +123,7 @@ class _NavItem extends StatelessWidget {
   final IconData activeIcon;
   final String label;
   final bool isActive;
+  final int badgeCount;
   final VoidCallback onTap;
 
   const _NavItem({
@@ -138,6 +132,7 @@ class _NavItem extends StatelessWidget {
     required this.label,
     required this.isActive,
     required this.onTap,
+    this.badgeCount = 0,
   });
 
   @override
@@ -149,17 +144,49 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              isActive ? activeIcon : icon,
-              size: 24,
-              color: isActive ? AppColors.primary : AppColors.iconLight,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  isActive ? activeIcon : icon,
+                  size: 24,
+                  color: isActive ? AppColors.primary : AppColors.iconLight,
+                ),
+                if (badgeCount > 0)
+                  PositionedDirectional(
+                    top: -6,
+                    end: -10,
+                    child: Container(
+                      constraints: const BoxConstraints(
+                          minWidth: 16, minHeight: 16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: AppColors.error,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        badgeCount > 9 ? '9+' : '$badgeCount',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 10,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 3),
             Text(
               label,
               style: AppTextStyles.labelSmall.copyWith(
-                color: isActive ? AppColors.primary : AppColors.textSecondaryLight,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                color: isActive
+                    ? AppColors.primary
+                    : AppColors.textSecondaryLight,
+                fontWeight:
+                    isActive ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
           ],
