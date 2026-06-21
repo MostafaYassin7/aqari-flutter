@@ -9,7 +9,9 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_loading_indicator.dart';
+import '../../data/payment_service.dart';
 import '../providers/wallet_provider.dart';
+import 'payment_card_screen.dart';
 
 class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key});
@@ -105,6 +107,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
               ),
               child: _BalanceCard(
                 balance: wallet.balance,
+                onTopUp: () => _showTopUpSheet(context),
               ),
             ),
           ),
@@ -203,19 +206,33 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
 
   String _monthKey(DateTime d) => '${d.year}-${d.month}';
 
-  void _showTopUpSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
+  void _showTopUpSheet(BuildContext ctx) {
+    showModalBottomSheet<void>(
+      context: ctx,
       isScrollControlled: true,
-      backgroundColor: context.background,
+      backgroundColor: ctx.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppConstants.radiusXL),
         ),
       ),
-      builder: (_) => _TopUpSheet(
-        onConfirm: (amount) async {
-          await ref.read(walletProvider.notifier).topUp(amount);
+      builder: (sheetCtx) => _TopUpSheet(
+        onProceed: (amount) async {
+          final (:sessionId, :countryCode) =
+              await PaymentService.initiateSession(amount);
+          if (!sheetCtx.mounted) return;
+          Navigator.of(sheetCtx).pop();
+          if (!ctx.mounted) return;
+          Navigator.of(ctx).push(
+            MaterialPageRoute(
+              fullscreenDialog: true,
+              builder: (_) => PaymentCardScreen(
+                sessionId: sessionId,
+                countryCode: countryCode,
+                invoiceValue: amount,
+              ),
+            ),
+          );
         },
       ),
     );
@@ -561,8 +578,8 @@ class _EmptyFilter extends StatelessWidget {
 // ── Top-up bottom sheet ───────────────────────────────────────────────────────
 
 class _TopUpSheet extends StatefulWidget {
-  final ValueChanged<double> onConfirm;
-  const _TopUpSheet({required this.onConfirm});
+  final Future<void> Function(double amount) onProceed;
+  const _TopUpSheet({required this.onProceed});
 
   @override
   State<_TopUpSheet> createState() => _TopUpSheetState();
@@ -574,6 +591,7 @@ class _TopUpSheetState extends State<_TopUpSheet> {
   double? _selectedQuick;
   final _customCtrl = TextEditingController();
   bool _isCustomActive = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -589,19 +607,24 @@ class _TopUpSheetState extends State<_TopUpSheet> {
     return _selectedQuick;
   }
 
-  void _confirm() {
+  Future<void> _confirm() async {
     final amount = _effectiveAmount;
-    if (amount == null) return;
-    widget.onConfirm(amount);
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('تم شحن ${amount.toStringAsFixed(0)} ريال بنجاح ✓'),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    if (amount == null || _isLoading) return;
+    setState(() => _isLoading = true);
+    try {
+      await widget.onProceed(amount);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('حدث خطأ. يرجى المحاولة مرة أخرى.'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -796,7 +819,7 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                 width: double.infinity,
                 height: AppConstants.buttonHeight,
                 child: ElevatedButton(
-                  onPressed: canConfirm ? _confirm : null,
+                  onPressed: (canConfirm && !_isLoading) ? _confirm : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     disabledBackgroundColor: context.divider,
@@ -805,17 +828,28 @@ class _TopUpSheetState extends State<_TopUpSheet> {
                       borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     ),
                   ),
-                  child: Text(
-                    canConfirm
-                        ? 'شحن ${_effectiveAmount!.toInt()} ريال'
-                        : 'اختر مبلغاً',
-                    style: AppTextStyles.bodyLarge.copyWith(
-                      color: canConfirm
-                          ? context.textPrimary
-                          : context.textHint,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              AppColors.white,
+                            ),
+                          ),
+                        )
+                      : Text(
+                          canConfirm
+                              ? 'متابعة — ${_effectiveAmount!.toInt()} ريال'
+                              : 'اختر مبلغاً',
+                          style: AppTextStyles.bodyLarge.copyWith(
+                            color: canConfirm
+                                ? context.textPrimary
+                                : context.textHint,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                 ),
               ),
             ),

@@ -7,6 +7,7 @@ import 'package:flutter/widgets.dart';
 import '../network/api_client.dart';
 import '../network/api_endpoints.dart';
 import '../router/app_router.dart';
+import 'payment_event_service.dart';
 
 class FcmService {
   static final FcmService _instance = FcmService._internal();
@@ -30,6 +31,13 @@ class FcmService {
         sound: true,
       );
     }
+
+    // Foreground messages — notify wallet to refresh on PAYMENT_CONFIRMED
+    FirebaseMessaging.onMessage.listen((message) {
+      final type = message.data['referenceType'] as String?
+                ?? message.data['type'] as String?;
+      if (type == 'payment') PaymentEventService.notifyPaymentConfirmed();
+    });
 
     // App was backgrounded — user tapped notification to resume
     FirebaseMessaging.onMessageOpenedApp.listen(_handleTap);

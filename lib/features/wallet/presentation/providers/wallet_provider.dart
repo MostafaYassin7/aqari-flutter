@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_endpoints.dart';
+import '../../../../core/services/payment_event_service.dart';
 
 // ── Transaction type ──────────────────────────────────────────────────────────
 
@@ -204,6 +207,13 @@ class WalletNotifier extends Notifier<WalletState> {
 
   @override
   WalletState build() {
+    // Refresh balance + transactions when backend confirms a top-up via FCM.
+    final sub = PaymentEventService.onPaymentConfirmed.listen((_) {
+      fetchWallet();
+      fetchTransactions();
+    });
+    ref.onDispose(sub.cancel);
+
     Future.microtask(() async {
       await fetchWallet();
       await fetchTransactions();

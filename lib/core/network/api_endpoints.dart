@@ -30,6 +30,10 @@ class ApiEndpoints {
   static const walletTransactions = '/wallet/transactions';
   static const walletInvoices    = '/wallet/invoices';
 
+  // Payment (MyFatoorah)
+  static const paymentInitiateSession = '/payment/initiate-session';
+  static const paymentExecute         = '/payment/execute';
+
   // Chat
   static const chats             = '/chats';
 

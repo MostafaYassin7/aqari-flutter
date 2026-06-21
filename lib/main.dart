@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:myfatoorah_flutter/myfatoorah_flutter.dart';
+
 import 'core/router/app_router.dart';
 import 'core/services/fcm_service.dart';
 import 'core/theme/app_theme.dart';
@@ -24,6 +26,9 @@ void main() async {
   await Firebase.initializeApp();
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await FcmService().initListeners();
+
+  // swap "MYFATOORAH_TEST_TOKEN" for the live token in release builds
+  MFSDK.init("MYFATOORAH_TEST_TOKEN", MFCountry.KUWAIT, MFEnvironment.TEST);
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
