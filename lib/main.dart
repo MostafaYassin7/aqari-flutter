@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -56,8 +58,13 @@ class AqarApp extends StatelessWidget {
       // ── Navigation ────────────────────────────────────
       routerConfig: appRouter,
 
-      // ── RTL default (Arabic) — override per-screen for LTR ──
+      // ── RTL (Arabic) ──────────────────────────────────────
+      // On iOS the Navigator must see LTR so that CupertinoPage transitions
+      // slide from the right edge and swipe-to-go-back fires from the left
+      // edge. RTL is applied inside each page via the _page() helper in
+      // app_router.dart instead of here.
       builder: (context, child) {
+        if (Platform.isIOS) return child!;
         return Directionality(
           textDirection: TextDirection.rtl,
           child: child!,

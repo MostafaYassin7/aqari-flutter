@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/constants/app_constants.dart';
@@ -63,18 +63,18 @@ class Step1Category extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'ما نوع العقار؟',
             style: AppTextStyles.headlineMedium.copyWith(
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             'اختر نوع العقار الذي تريد إضافته',
             style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textSecondaryLight),
+                .copyWith(color: context.textSecondary),
           ),
           const SizedBox(height: 24),
 
@@ -88,13 +88,13 @@ class Step1Category extends ConsumerWidget {
             error: (_, __) => Center(
               child: Column(
                 children: [
-                  const SizedBox(height: 32),
-                  const Icon(Icons.wifi_off_rounded,
-                      size: 48, color: AppColors.textSecondaryLight),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 32),
+                  Icon(Icons.wifi_off_rounded,
+                      size: 48, color: context.textSecondary),
+                  SizedBox(height: 12),
                   Text('تعذّر تحميل الفئات',
                       style: AppTextStyles.bodyMedium
-                          .copyWith(color: AppColors.textSecondaryLight)),
+                          .copyWith(color: context.textSecondary)),
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: () =>
@@ -132,17 +132,17 @@ class Step1Category extends ConsumerWidget {
                         listingType: listingType,
                       ),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                    duration: Duration(milliseconds: 200),
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.primaryLight
-                          : AppColors.surfaceLight,
+                          : context.surface,
                       borderRadius:
                           BorderRadius.circular(AppConstants.radiusL),
                       border: Border.all(
                         color: isSelected
                             ? AppColors.primary
-                            : AppColors.dividerLight,
+                            : context.divider,
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -154,15 +154,15 @@ class Step1Category extends ConsumerWidget {
                           size: 32,
                           color: isSelected
                               ? AppColors.primary
-                              : AppColors.textSecondaryLight,
+                              : context.textSecondary,
                         ),
-                        const SizedBox(height: 8),
+                        SizedBox(height: 8),
                         Text(
                           nameAr,
                           style: AppTextStyles.titleSmall.copyWith(
                             color: isSelected
                                 ? AppColors.primary
-                                : AppColors.textPrimaryLight,
+                                : context.textPrimary,
                             fontWeight: isSelected
                                 ? FontWeight.w700
                                 : FontWeight.w500,

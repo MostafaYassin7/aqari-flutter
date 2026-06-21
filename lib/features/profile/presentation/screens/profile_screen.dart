@@ -1,4 +1,7 @@
+﻿import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../features/account/presentation/providers/account_provider.dart';
 import '../../../../shared/widgets/app_loading_indicator.dart';
+import '../../../../shared/widgets/ltr_app_bar.dart';
 import '../../../../features/home/data/mock_listings.dart';
 import '../../../../shared/models/listing.dart';
 import '../providers/public_profile_provider.dart';
@@ -24,51 +28,70 @@ class ProfileScreen extends ConsumerWidget {
 
     if (profile == null) {
       return Scaffold(
-        appBar: AppBar(
-          backgroundColor: AppColors.backgroundLight,
+        appBar: LtrAppBar(AppBar(
+          backgroundColor: context.background,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_rounded,
               size: 20,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
-        ),
+        )),
         body: const Center(child: Text('الملف غير موجود')),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
       body: CustomScrollView(
         slivers: [
           // ── App bar ──────────────────────────────────────────
           SliverAppBar(
-            backgroundColor: AppColors.backgroundLight,
+            backgroundColor: context.background,
             elevation: 0,
             scrolledUnderElevation: 0,
             pinned: true,
-            leading: IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios_rounded,
-                size: 20,
-                color: AppColors.textPrimaryLight,
-              ),
-              onPressed: () => Navigator.of(context).maybePop(),
-            ),
+            automaticallyImplyLeading: false,
+            // On iOS: back button in actions (appears on the visual LEFT in RTL).
+            // On Android: back button in leading (appears on the visual RIGHT in RTL,
+            // which is correct for Android RTL Material convention).
+            leading: Platform.isIOS
+                ? null
+                : IconButton(
+                    icon: Icon(
+                      Icons.arrow_back_ios_rounded,
+                      size: 20,
+                      color: context.textPrimary,
+                    ),
+                    onPressed: () => Navigator.of(context).maybePop(),
+                  ),
+            actions: Platform.isIOS
+                ? [
+                    CupertinoButton(
+                      padding: const EdgeInsets.only(right: 4),
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      child: const Icon(
+                        CupertinoIcons.chevron_back,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
+                  ]
+                : [],
             title: Text(
               'الملف الشخصي',
               style: AppTextStyles.titleLarge.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
               ),
             ),
             centerTitle: true,
-            bottom: const PreferredSize(
+            bottom: PreferredSize(
               preferredSize: Size.fromHeight(1),
-              child: Divider(height: 1, color: AppColors.dividerLight),
+              child: Divider(height: 1, color: context.divider),
             ),
           ),
 
@@ -79,9 +102,9 @@ class ProfileScreen extends ConsumerWidget {
                 // ── Top section ────────────────────────────────
                 _TopSection(profile: profile),
 
-                const Divider(
+                Divider(
                   height: 1,
-                  color: AppColors.dividerLight,
+                  color: context.divider,
                   indent: AppConstants.spaceM,
                   endIndent: AppConstants.spaceM,
                 ),
@@ -92,14 +115,14 @@ class ProfileScreen extends ConsumerWidget {
                   // ── Stats row ────────────────────────────────
                   _StatsRow(profile: profile),
 
-                  const Divider(height: 8, color: AppColors.surfaceLight),
+                  Divider(height: 8, color: context.surface),
                 ],
 
                 // ── Active listings ────────────────────────────
                 _ListingsSection(listingIds: profile.listingIds),
 
                 if (profile.reviewCount > 0) ...[
-                  const Divider(height: 8, color: AppColors.surfaceLight),
+                  Divider(height: 8, color: context.surface),
 
                   // ── Reviews ──────────────────────────────────
                   _ReviewsSection(profile: profile),
@@ -194,7 +217,7 @@ class _TopSectionState extends State<_TopSection> {
                 // Aqar+ badge on avatar
                 if (p.hasAqarPlus)
                   Transform.translate(
-                    offset: const Offset(0, 4),
+                    offset: Offset(0, 4),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -216,7 +239,7 @@ class _TopSectionState extends State<_TopSection> {
                       child: Text(
                         'عقار+',
                         style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textPrimaryLight,
+                          color: context.textPrimary,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -236,7 +259,7 @@ class _TopSectionState extends State<_TopSection> {
                 p.name,
                 style: AppTextStyles.headlineMedium.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimaryLight,
+                  color: context.textPrimary,
                 ),
               ),
               if (p.isVerified) ...[
@@ -247,11 +270,11 @@ class _TopSectionState extends State<_TopSection> {
           ),
 
           if (p.establishmentName != null) ...[
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               p.establishmentName!,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
               ),
             ),
           ],
@@ -273,7 +296,7 @@ class _TopSectionState extends State<_TopSection> {
 
           // ── Rating ────────────────────────────────────────────
           if (p.reviewCount > 0) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -282,19 +305,19 @@ class _TopSectionState extends State<_TopSection> {
                   color: AppColors.primary,
                   size: 18,
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Text(
                   p.rating.toStringAsFixed(1),
                   style: AppTextStyles.bodyMedium.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                   ),
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Text(
                   '(${p.reviewCount} تقييم)',
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.textSecondary,
                   ),
                 ),
               ],
@@ -328,7 +351,7 @@ class _TopSectionState extends State<_TopSection> {
 
           // ── Bio ───────────────────────────────────────────────
           if (bioText.isNotEmpty) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             GestureDetector(
               onTap: bioIsLong
                   ? () => setState(() => _bioExpanded = !_bioExpanded)
@@ -341,7 +364,7 @@ class _TopSectionState extends State<_TopSection> {
                         ? bioText
                         : '${bioText.substring(0, 120)}...',
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.textSecondary,
                       height: 1.6,
                     ),
                     textAlign: TextAlign.center,
@@ -444,12 +467,12 @@ class _MetaChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: AppColors.textHintLight),
-        const SizedBox(width: 4),
+        Icon(icon, size: 13, color: context.textHint),
+        SizedBox(width: 4),
         Text(
           label,
           style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.textSecondary,
           ),
         ),
       ],
@@ -497,14 +520,14 @@ class _StatCell extends StatelessWidget {
             value,
             style: AppTextStyles.headlineMedium.copyWith(
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             label,
             style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -517,7 +540,7 @@ class _StatCell extends StatelessWidget {
 class _StatDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1, height: 36, color: AppColors.dividerLight);
+    return Container(width: 1, height: 36, color: context.divider);
   }
 }
 
@@ -553,7 +576,7 @@ class _ListingsSection extends StatelessWidget {
                   'الإعلانات النشطة',
                   style: AppTextStyles.titleLarge.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                   ),
                 ),
               ),
@@ -617,7 +640,7 @@ class _ProfileListingCard extends StatelessWidget {
                 placeholder: (_, __) => Container(
                   width: 190,
                   height: 140,
-                  color: AppColors.surfaceLight,
+                  color: context.surface,
                   child: const Center(
                     child: AppLoadingIndicator(color: AppColors.primary),
                   ),
@@ -625,7 +648,7 @@ class _ProfileListingCard extends StatelessWidget {
                 errorWidget: (_, __, ___) => Container(
                   width: 190,
                   height: 140,
-                  color: AppColors.surfaceLight,
+                  color: context.surface,
                   child: const Center(
                     child: Icon(
                       Icons.home_rounded,
@@ -636,29 +659,29 @@ class _ProfileListingCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               listing.title,
               style: AppTextStyles.bodySmall.copyWith(
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 3),
+            SizedBox(height: 3),
             Text(
               _formatPrice(listing.price),
               style: AppTextStyles.bodyMedium.copyWith(
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 2),
+            SizedBox(height: 2),
             Text(
               '${listing.city}  ·  ${listing.category}',
               style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
               ),
             ),
           ],
@@ -709,12 +732,12 @@ class _ReviewsSection extends StatelessWidget {
                 color: AppColors.primary,
                 size: 20,
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               Text(
                 '${profile.rating.toStringAsFixed(1)}  ·  ${profile.reviewCount} تقييم',
                 style: AppTextStyles.titleLarge.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight,
+                  color: context.textPrimary,
                 ),
               ),
             ],
@@ -728,20 +751,20 @@ class _ReviewsSection extends StatelessWidget {
             total: profile.reviewCount,
           ),
 
-          const SizedBox(height: AppConstants.spaceL),
-          const Divider(height: 1, color: AppColors.dividerLight),
+          SizedBox(height: AppConstants.spaceL),
+          Divider(height: 1, color: context.divider),
 
           // ── Individual reviews ───────────────────────────
           ...shown.map((r) => _ReviewCard(review: r)),
 
           // Show all button
           if (reviews.length > 3) ...[
-            const SizedBox(height: AppConstants.spaceS),
+            SizedBox(height: AppConstants.spaceS),
             Center(
               child: OutlinedButton(
                 onPressed: () {},
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.dividerLight),
+                  side: BorderSide(color: context.divider),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppConstants.radiusM),
                   ),
@@ -750,7 +773,7 @@ class _ReviewsSection extends StatelessWidget {
                 child: Text(
                   'عرض جميع التقييمات (${reviews.length})',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -787,7 +810,7 @@ class _RatingBreakdown extends StatelessWidget {
               Text(
                 '$star',
                 style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -797,7 +820,7 @@ class _RatingBreakdown extends StatelessWidget {
                 size: 13,
                 color: AppColors.primary,
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(
                 child: LayoutBuilder(
                   builder: (_, constraints) => Stack(
@@ -806,7 +829,7 @@ class _RatingBreakdown extends StatelessWidget {
                         height: 6,
                         width: constraints.maxWidth,
                         decoration: BoxDecoration(
-                          color: AppColors.dividerLight,
+                          color: context.divider,
                           borderRadius: BorderRadius.circular(
                             AppConstants.radiusCircle,
                           ),
@@ -828,13 +851,13 @@ class _RatingBreakdown extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               SizedBox(
                 width: 28,
                 child: Text(
                   '$count',
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.textSecondary,
                   ),
                   textAlign: TextAlign.end,
                 ),
@@ -891,7 +914,7 @@ class _ReviewCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -900,7 +923,7 @@ class _ReviewCard extends StatelessWidget {
                       review.reviewerName,
                       style: AppTextStyles.bodyMedium.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimaryLight,
+                        color: context.textPrimary,
                       ),
                     ),
                     Row(
@@ -916,11 +939,11 @@ class _ReviewCard extends StatelessWidget {
                             color: AppColors.primary,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        SizedBox(width: 6),
                         Text(
                           _formatDate(review.date),
                           style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.textHintLight,
+                            color: context.textHint,
                           ),
                         ),
                       ],
@@ -930,17 +953,17 @@ class _ReviewCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(
             review.text,
             style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.textSecondary,
               height: 1.6,
             ),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(top: 16),
-            child: Divider(height: 1, color: AppColors.dividerLight),
+            child: Divider(height: 1, color: context.divider),
           ),
         ],
       ),
@@ -983,9 +1006,9 @@ class _ContactBar extends ConsumerWidget {
         AppConstants.spaceM,
         AppConstants.spaceM + bottomPad,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundLight,
-        border: Border(top: BorderSide(color: AppColors.dividerLight)),
+      decoration: BoxDecoration(
+        color: context.background,
+        border: Border(top: BorderSide(color: context.divider)),
       ),
       child: Row(
         children: [
@@ -996,17 +1019,17 @@ class _ContactBar extends ConsumerWidget {
               height: AppConstants.buttonHeight,
               child: ElevatedButton.icon(
                 onPressed: () => context.push(AppRoutes.chat),
-                icon: const Icon(Icons.chat_bubble_rounded, size: 18),
+                icon: Icon(Icons.chat_bubble_rounded, size: 18),
                 label: Text(
                   'إرسال رسالة',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.textPrimaryLight,
+                  foregroundColor: context.textPrimary,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppConstants.radiusM),
@@ -1032,14 +1055,14 @@ class _ContactBar extends ConsumerWidget {
               },
               style: OutlinedButton.styleFrom(
                 padding: EdgeInsets.zero,
-                side: const BorderSide(color: AppColors.dividerLight),
+                side: BorderSide(color: context.divider),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.phone_rounded,
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
                 size: 22,
               ),
             ),

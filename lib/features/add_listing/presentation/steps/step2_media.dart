@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +17,7 @@ class Step2Media extends ConsumerWidget {
   Future<void> _showPickerSheet(BuildContext context, WidgetRef ref) async {
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -25,25 +25,25 @@ class Step2Media extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Container(
               width: 40, height: 4,
               decoration: BoxDecoration(
-                color: AppColors.dividerLight,
+                color: context.divider,
                 borderRadius: BorderRadius.circular(AppConstants.radiusCircle),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             ListTile(
-              leading: const Icon(Icons.photo_library_rounded, color: AppColors.primary),
+              leading: Icon(Icons.photo_library_rounded, color: AppColors.primary),
               title: Text('اختر من المعرض',
-                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimaryLight)),
+                  style: AppTextStyles.bodyMedium.copyWith(color: context.textPrimary)),
               onTap: () => Navigator.pop(sheetContext, ImageSource.gallery),
             ),
             ListTile(
-              leading: const Icon(Icons.camera_alt_rounded, color: AppColors.primary),
+              leading: Icon(Icons.camera_alt_rounded, color: AppColors.primary),
               title: Text('التقط صورة',
-                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimaryLight)),
+                  style: AppTextStyles.bodyMedium.copyWith(color: context.textPrimary)),
               onTap: () => Navigator.pop(sheetContext, ImageSource.camera),
             ),
             const SizedBox(height: 8),
@@ -77,18 +77,18 @@ class Step2Media extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'أضف الصور والفيديو',
             style: AppTextStyles.headlineMedium.copyWith(
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             'أضف 3 صور على الأقل لإبراز عقارك',
             style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight),
+                color: context.textSecondary),
           ),
           const SizedBox(height: 20),
 
@@ -99,7 +99,7 @@ class Step2Media extends ConsumerWidget {
               width: double.infinity,
               height: 160,
               decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
+                color: context.surface,
                 borderRadius: BorderRadius.circular(AppConstants.radiusL),
                 border: Border.all(
                   color: AppColors.primary.withAlpha(128),
@@ -131,11 +131,11 @@ class Step2Media extends ConsumerWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     'JPG, PNG, HEIC',
                     style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textHintLight),
+                        color: context.textHint),
                   ),
                 ],
               ),
@@ -143,21 +143,21 @@ class Step2Media extends ConsumerWidget {
           ),
 
           if (photos.isNotEmpty) ...[
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'الصور المضافة (${photos.length})',
                   style: AppTextStyles.titleMedium.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
                   'اسحب لإعادة الترتيب',
                   style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight),
+                      color: context.textSecondary),
                 ),
               ],
             ),
@@ -181,7 +181,7 @@ class Step2Media extends ConsumerWidget {
 
           // ── Photo count hint ─────────────────────────────
           if (photos.length < 3) ...[
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -194,12 +194,12 @@ class Step2Media extends ConsumerWidget {
                 children: [
                   const Icon(Icons.info_outline_rounded,
                       color: AppColors.warning, size: 18),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'الحد الأدنى 3 صور — أضفت ${photos.length} حتى الآن',
                       style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textPrimaryLight),
+                          color: context.textPrimary),
                     ),
                   ),
                 ],
@@ -221,21 +221,21 @@ class Step2Media extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(
                   horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
+                color: context.surface,
                 borderRadius:
                     BorderRadius.circular(AppConstants.radiusM),
-                border: Border.all(color: AppColors.dividerLight),
+                border: Border.all(color: context.divider),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.videocam_rounded,
-                      color: AppColors.textSecondaryLight, size: 22),
-                  const SizedBox(width: 12),
+                  Icon(Icons.videocam_rounded,
+                      color: context.textSecondary, size: 22),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'أضف فيديو (اختياري)',
                       style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textPrimaryLight),
+                          color: context.textPrimary),
                     ),
                   ),
                   const Icon(Icons.add_circle_outline_rounded,
@@ -272,7 +272,7 @@ class _PhotoTile extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
         border: Border.all(
-          color: isCover ? AppColors.primary : AppColors.dividerLight,
+          color: isCover ? AppColors.primary : context.divider,
           width: isCover ? 2 : 1,
         ),
       ),
@@ -287,14 +287,14 @@ class _PhotoTile extends StatelessWidget {
                     imageUrl: url,
                     fit: BoxFit.cover,
                     placeholder: (_, __) => Container(
-                        color: AppColors.surfaceLight,
+                        color: context.surface,
                         child: const Center(
                             child: AppLoadingIndicator(
                                 color: AppColors.primary))),
                     errorWidget: (_, __, ___) => Container(
-                        color: AppColors.surfaceLight,
-                        child: const Icon(Icons.image_rounded,
-                            color: AppColors.textHintLight, size: 36)),
+                        color: context.surface,
+                        child: Icon(Icons.image_rounded,
+                            color: context.textHint, size: 36)),
                   ),
             // Cover badge
             if (isCover)

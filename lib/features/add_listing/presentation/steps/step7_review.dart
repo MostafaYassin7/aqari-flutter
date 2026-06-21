@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/constants/app_constants.dart';
@@ -20,17 +20,17 @@ class Step7Review extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'مراجعة الإعلان',
             style: AppTextStyles.headlineMedium
-                .copyWith(color: AppColors.textPrimaryLight),
+                .copyWith(color: context.textPrimary),
           ),
-          const SizedBox(height: 4),
+          SizedBox(height: 4),
           Text(
             'راجع جميع التفاصيل قبل النشر',
             style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textSecondaryLight),
+                .copyWith(color: context.textSecondary),
           ),
           const SizedBox(height: 20),
 
@@ -54,7 +54,7 @@ class Step7Review extends ConsumerWidget {
               style: AppTextStyles.bodyMedium.copyWith(
                 color: s.photos.length < 3
                     ? AppColors.warning
-                    : AppColors.textPrimaryLight,
+                    : context.textPrimary,
               ),
             ),
           ),
@@ -98,7 +98,7 @@ class Step7Review extends ConsumerWidget {
             child: s.features.isEmpty
                 ? Text('لم يتم الاختيار',
                     style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondaryLight))
+                        color: context.textSecondary))
                 : Wrap(
                     spacing: 6,
                     runSpacing: 6,
@@ -168,12 +168,12 @@ class Step7Review extends ConsumerWidget {
               children: [
                 const Icon(Icons.check_circle_outline_rounded,
                     color: AppColors.success, size: 20),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'سيتم مراجعة إعلانك خلال 24 ساعة قبل ظهوره للمستخدمين',
                     style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textPrimaryLight),
+                        color: context.textPrimary),
                   ),
                 ),
               ],
@@ -205,7 +205,7 @@ class _ReviewSection extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(AppConstants.radiusL),
-          border: Border.all(color: AppColors.dividerLight),
+          border: Border.all(color: context.divider),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,7 +217,7 @@ class _ReviewSection extends StatelessWidget {
                   title,
                   style: AppTextStyles.titleSmall.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                   ),
                 ),
                 GestureDetector(
@@ -232,8 +232,8 @@ class _ReviewSection extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            const Divider(height: 1, color: AppColors.dividerLight),
+            SizedBox(height: 10),
+            Divider(height: 1, color: context.divider),
             const SizedBox(height: 10),
             child,
           ],
@@ -257,14 +257,14 @@ class _ReviewRow extends StatelessWidget {
               child: Text(
                 label,
                 style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondaryLight),
+                    color: context.textSecondary),
               ),
             ),
             Expanded(
               child: Text(
                 value,
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textPrimaryLight,
+                  color: context.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),

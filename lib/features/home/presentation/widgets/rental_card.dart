@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -39,13 +39,13 @@ class RentalCard extends ConsumerWidget {
                     height: AppConstants.listingCardImageHeight,
                     fit: BoxFit.cover,
                     placeholder: (_, __) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.surface,
                       child: const Center(
                         child: AppLoadingIndicator(color: AppColors.primary),
                       ),
                     ),
                     errorWidget: (_, __, ___) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.surface,
                       child: const Center(
                         child: Icon(
                           Icons.home_rounded,
@@ -77,7 +77,7 @@ class RentalCard extends ConsumerWidget {
                         size: 20,
                         color: isFav
                             ? AppColors.error
-                            : AppColors.textSecondaryLight,
+                            : context.textSecondary,
                       ),
                     ),
                   ),
@@ -94,7 +94,7 @@ class RentalCard extends ConsumerWidget {
                 Text(
                   '${rental.city}  ·  ${rental.district}',
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.textSecondary,
                   ),
                 ),
                 // Star rating
@@ -102,18 +102,18 @@ class RentalCard extends ConsumerWidget {
                   children: [
                     const Icon(Icons.star_rounded,
                         size: 13, color: AppColors.primary),
-                    const SizedBox(width: 3),
+                    SizedBox(width: 3),
                     Text(
                       rental.rating.toStringAsFixed(1),
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textPrimaryLight,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
                       '  (${rental.reviewCount})',
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.textSecondary,
                       ),
                     ),
                   ],
@@ -128,7 +128,7 @@ class RentalCard extends ConsumerWidget {
               rental.name,
               style: AppTextStyles.titleLarge.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
               ),
             ),
 
@@ -160,13 +160,13 @@ class RentalCard extends ConsumerWidget {
                         '${rental.pricePerNight.toStringAsFixed(0)} ريال',
                     style: AppTextStyles.titleLarge.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimaryLight,
+                      color: context.textPrimary,
                     ),
                   ),
                   TextSpan(
                     text: ' / ليلة',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.textSecondary,
                     ),
                   ),
                 ],
@@ -189,11 +189,11 @@ class _Stat extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: AppColors.textSecondaryLight),
-        const SizedBox(width: 4),
+        Icon(icon, size: 14, color: context.textSecondary),
+        SizedBox(width: 4),
         Text(label,
             style: AppTextStyles.bodySmall
-                .copyWith(color: AppColors.textSecondaryLight)),
+                .copyWith(color: context.textSecondary)),
       ],
     );
   }

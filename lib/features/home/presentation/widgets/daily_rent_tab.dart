@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -50,11 +50,11 @@ class DailyRentTab extends ConsumerWidget {
             ),
           ),
 
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Divider(
               height: 1,
               thickness: 1,
-              color: AppColors.dividerLight,
+              color: context.divider,
             ),
           ),
 
@@ -75,16 +75,16 @@ class DailyRentTab extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.home_work_outlined,
                       size: 64,
-                      color: AppColors.iconLight,
+                      color: context.iconColor,
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Text(
                       'لا توجد وحدات في هذه الفئة',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.textSecondary,
                       ),
                     ),
                   ],
@@ -161,10 +161,10 @@ class _DateBar extends ConsumerWidget {
           decoration: BoxDecoration(
             color: AppColors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.dividerLight),
+            border: Border.all(color: context.divider),
             boxShadow: [
               BoxShadow(
-                color: AppColors.shadowLight,
+                color: context.shadow,
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -186,7 +186,7 @@ class _DateBar extends ConsumerWidget {
               ),
 
               // Divider
-              Container(width: 1, height: 44, color: AppColors.dividerLight),
+              Container(width: 1, height: 44, color: context.divider),
 
               // Check-out
               Expanded(
@@ -236,17 +236,17 @@ class _DateCell extends StatelessWidget {
             Text(
               label,
               style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 2),
+            SizedBox(height: 2),
             Text(
               value,
               style: AppTextStyles.titleSmall.copyWith(
                 color: isSet
-                    ? AppColors.textPrimaryLight
-                    : AppColors.textHintLight,
+                    ? context.textPrimary
+                    : context.textHint,
                 fontWeight: isSet ? FontWeight.w700 : FontWeight.w400,
               ),
             ),
@@ -271,16 +271,16 @@ class _GuestSelector extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.person_outline_rounded,
             size: 20,
-            color: AppColors.textSecondaryLight,
+            color: context.textSecondary,
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: 8),
           Text(
             'الضيوف',
             style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.textSecondary,
             ),
           ),
           const Spacer(),
@@ -295,7 +295,7 @@ class _GuestSelector extends ConsumerWidget {
             child: Text(
               '$count ضيف',
               style: AppTextStyles.titleSmall.copyWith(
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -334,14 +334,14 @@ class _CounterButton extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(
             color: enabled
-                ? AppColors.textSecondaryLight
-                : AppColors.dividerLight,
+                ? context.textSecondary
+                : context.divider,
           ),
         ),
         child: Icon(
           icon,
           size: 16,
-          color: enabled ? AppColors.textPrimaryLight : AppColors.dividerLight,
+          color: enabled ? context.textPrimary : context.divider,
         ),
       ),
     );

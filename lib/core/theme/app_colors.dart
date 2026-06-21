@@ -44,3 +44,20 @@ class AppColors {
   static const Color black = Color(0xFF000000);
   static const Color overlay = Color(0x80000000);
 }
+
+/// Theme-aware color accessors — available on every [BuildContext] that
+/// already imports [AppColors]. Returns the light or dark variant based
+/// on the ambient [ThemeData.brightness].
+extension AppColorsX on BuildContext {
+  bool get _isDark => Theme.of(this).brightness == Brightness.dark;
+
+  Color get background  => _isDark ? AppColors.backgroundDark  : AppColors.backgroundLight;
+  Color get surface     => _isDark ? AppColors.surfaceDark      : AppColors.surfaceLight;
+  Color get card        => _isDark ? AppColors.cardDark         : AppColors.cardLight;
+  Color get divider     => _isDark ? AppColors.dividerDark      : AppColors.dividerLight;
+  Color get textPrimary    => _isDark ? AppColors.textPrimaryDark    : AppColors.textPrimaryLight;
+  Color get textSecondary  => _isDark ? AppColors.textSecondaryDark  : AppColors.textSecondaryLight;
+  Color get textHint       => _isDark ? AppColors.textHintDark       : AppColors.textHintLight;
+  Color get iconColor      => _isDark ? AppColors.iconDark            : AppColors.iconLight;
+  Color get shadow         => _isDark ? AppColors.shadowDark          : AppColors.shadowLight;
+}

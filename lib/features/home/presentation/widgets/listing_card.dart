@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,13 +38,13 @@ class ListingCard extends ConsumerWidget {
                     height: AppConstants.listingCardImageHeight,
                     fit: BoxFit.cover,
                     placeholder: (_, __) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.surface,
                       child: const Center(
                         child: AppLoadingIndicator(color: AppColors.primary),
                       ),
                     ),
                     errorWidget: (_, __, ___) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.surface,
                       child: const Center(
                         child: Icon(
                           Icons.home_rounded,
@@ -64,7 +64,7 @@ class ListingCard extends ConsumerWidget {
             Text(
               '${listing.city}  ·  ${listing.category}',
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
               ),
             ),
 
@@ -75,7 +75,7 @@ class ListingCard extends ConsumerWidget {
               formatPrice(listing.price),
               style: AppTextStyles.titleLarge.copyWith(
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
               ),
             ),
 
@@ -90,7 +90,7 @@ class ListingCard extends ConsumerWidget {
             Text(
               listing.description,
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -143,12 +143,12 @@ class _Stat extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: AppColors.textSecondaryLight),
-        const SizedBox(width: 4),
+        Icon(icon, size: 14, color: context.textSecondary),
+        SizedBox(width: 4),
         Text(
           label,
           style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.textSecondary,
           ),
         ),
       ],

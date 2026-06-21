@@ -1,7 +1,10 @@
+﻿import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -35,14 +38,14 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
     final asyncDetails = ref.watch(propertyDetailsProvider);
 
     return asyncDetails.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.backgroundLight,
+      loading: () => Scaffold(
+        backgroundColor: context.background,
         body: Center(
           child: AppLoadingIndicator(color: AppColors.primary),
         ),
       ),
       error: (err, _) => Scaffold(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.background,
         appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: Center(
           child: Column(
@@ -53,11 +56,11 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
                 size: 48,
                 color: AppColors.error,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Text(
                 'حدث خطأ أثناء تحميل البيانات',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.textSecondary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -77,7 +80,7 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
         final features = getFeaturesFromListing(listing);
 
         return Scaffold(
-          backgroundColor: AppColors.backgroundLight,
+          backgroundColor: context.background,
           extendBodyBehindAppBar: true,
           body: Stack(
             children: [
@@ -174,13 +177,13 @@ class _PhotoSectionState extends State<_PhotoSection> {
                 height: 320,
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.surface,
                   child: const Center(
                     child: AppLoadingIndicator(color: AppColors.primary),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.surface,
                   child: const Center(
                     child: Icon(
                       Icons.home_rounded,
@@ -263,7 +266,10 @@ class _TopOverlayBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
+      child: Directionality(
+        textDirection:
+            Platform.isIOS ? TextDirection.ltr : TextDirection.rtl,
+        child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [
@@ -317,6 +323,7 @@ class _TopOverlayBar extends StatelessWidget {
           ],
         ),
       ),
+      ),
     );
   }
 }
@@ -344,7 +351,7 @@ class _OverlayIconButton extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowLight,
+              color: context.shadow,
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -353,7 +360,7 @@ class _OverlayIconButton extends StatelessWidget {
         child: Icon(
           icon,
           size: 18,
-          color: iconColor ?? AppColors.textPrimaryLight,
+          color: iconColor ?? context.textPrimary,
         ),
       ),
     );
@@ -375,14 +382,14 @@ class _TitleSection extends StatelessWidget {
           listing.title,
           style: AppTextStyles.headlineMedium.copyWith(
             fontWeight: FontWeight.w800,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         Text(
           '${listing.city}  ·  ${listing.district}  ·  ${listing.category}',
           style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.textSecondary,
           ),
         ),
         const SizedBox(height: 16),
@@ -433,19 +440,19 @@ class _StatsRow extends StatelessWidget {
             child: Column(
               children: [
                 Icon(s['icon'] as IconData, size: 22, color: AppColors.primary),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
                 Text(
                   s['value'] as String,
                   style: AppTextStyles.headlineSmall.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   s['label'] as String,
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.textSecondary,
                   ),
                 ),
               ],
@@ -514,7 +521,7 @@ class _OwnerCard extends StatelessWidget {
                         name,
                         style: AppTextStyles.titleLarge.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimaryLight,
+                          color: context.textPrimary,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -540,19 +547,19 @@ class _OwnerCard extends StatelessWidget {
                   ],
                 ),
                 if (listing.ownerPhone.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.phone_rounded,
                         size: 13,
-                        color: AppColors.textSecondaryLight,
+                        color: context.textSecondary,
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       Text(
                         listing.ownerPhone,
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondaryLight,
+                          color: context.textSecondary,
                         ),
                       ),
                     ],
@@ -615,10 +622,10 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
             'عن العقار',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           AnimatedCrossFade(
             duration: const Duration(milliseconds: 250),
             crossFadeState: _expanded
@@ -629,19 +636,19 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
                 height: 1.7,
               ),
             ),
             secondChild: Text(
               widget.listing.description,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
                 height: 1.7,
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           GestureDetector(
             onTap: () => setState(() => _expanded = !_expanded),
             child: Row(
@@ -650,18 +657,18 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
                 Text(
                   _expanded ? 'عرض أقل' : 'اقرأ المزيد',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w700,
                     decoration: TextDecoration.underline,
                   ),
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Icon(
                   _expanded
                       ? Icons.keyboard_arrow_up_rounded
                       : Icons.keyboard_arrow_down_rounded,
                   size: 18,
-                  color: AppColors.textPrimaryLight,
+                  color: context.textPrimary,
                 ),
               ],
             ),
@@ -689,7 +696,7 @@ class _FeaturesGrid extends StatelessWidget {
             'المرافق والخدمات',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -723,27 +730,52 @@ class _FeatureTile extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppColors.surfaceLight,
+            color: context.surface,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             feature.icon,
             size: 20,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 10),
         Expanded(
           child: Text(
             feature.label,
             style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
             overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
     );
+  }
+}
+
+// ── URL helpers ───────────────────────────────────────────────────────────────
+
+// Normalise a Saudi phone number to international digits for wa.me links.
+// e.g. "0501234567" → "966501234567", "+966501234567" → "966501234567"
+String _normalizePhone(String phone) {
+  var d = phone.replaceAll(RegExp(r'[^\d]'), '');
+  if (d.startsWith('00')) d = d.substring(2);
+  if (d.startsWith('0') && d.length <= 11) d = '966${d.substring(1)}';
+  if (!d.startsWith('966') && d.startsWith('5')) d = '966$d';
+  return d;
+}
+
+Future<void> _launch(Uri uri, BuildContext context) async {
+  if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تعذّر فتح الرابط'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 }
 
@@ -764,7 +796,7 @@ class _LocationSection extends StatelessWidget {
             'الموقع',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
@@ -773,7 +805,7 @@ class _LocationSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             child: Container(
               height: 180,
-              color: const Color(0xFFD6EAD6),
+              color: Color(0xFFD6EAD6),
               child: Stack(
                 children: [
                   // Simulated map grid
@@ -795,7 +827,7 @@ class _LocationSection extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.shadowLight,
+                                color: context.shadow,
                                 blurRadius: 8,
                               ),
                             ],
@@ -803,7 +835,7 @@ class _LocationSection extends StatelessWidget {
                           child: Text(
                             '${listing.district}، ${listing.city}',
                             style: AppTextStyles.labelMedium.copyWith(
-                              color: AppColors.textPrimaryLight,
+                              color: context.textPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -821,22 +853,22 @@ class _LocationSection extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('فتح الخريطة — قريباً'),
-                  duration: Duration(seconds: 1),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              final hasCoords = listing.lat != 0.0 || listing.lng != 0.0;
+              final uri = hasCoords
+                  ? Uri.parse(
+                      'https://maps.google.com/?q=${listing.lat},${listing.lng}')
+                  : Uri.parse(
+                      'https://maps.google.com/?q=${Uri.encodeComponent('${listing.district} ${listing.city} السعودية')}');
+              _launch(uri, context);
             },
             icon: const Icon(Icons.map_rounded, size: 18),
-            label: const Text('فتح الخريطة'),
+            label: Text('فتح الخريطة'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textPrimaryLight,
-              side: const BorderSide(color: AppColors.dividerLight),
+              foregroundColor: context.textPrimary,
+              side: BorderSide(color: context.divider),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -904,23 +936,23 @@ class _PriceSection extends StatelessWidget {
             'السعر',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Text(
             formatPrice(listing.price),
             style: AppTextStyles.headlineLarge.copyWith(
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
           if (pricePerSqm > 0) ...[
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               'السعر / م²  ≈  ${_fmtNum(pricePerSqm)} ريال',
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
               ),
             ),
           ],
@@ -944,9 +976,9 @@ class _BottomBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.white,
-        border: Border(top: BorderSide(color: AppColors.dividerLight)),
+        border: Border(top: BorderSide(color: context.divider)),
       ),
       child: SafeArea(
         top: false,
@@ -963,15 +995,15 @@ class _BottomBar extends ConsumerWidget {
                     Text(
                       'السعر الإجمالي',
                       style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       formatPrice(listing.price),
                       style: AppTextStyles.titleLarge.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimaryLight,
+                        color: context.textPrimary,
                       ),
                     ),
                   ],
@@ -1011,28 +1043,19 @@ class _BottomBar extends ConsumerWidget {
                 label: 'واتساب',
                 icon: Icons.message_rounded,
                 color: const Color(0xFF25D366),
-                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('فتح واتساب — قريباً'),
-                    duration: Duration(seconds: 1),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-
-              // Call (primary)
-              _BarButton(
-                label: 'اتصال',
-                icon: Icons.phone_rounded,
-                color: AppColors.primary,
-                onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('الاتصال — قريباً'),
-                    duration: Duration(seconds: 1),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                ),
+                onTap: () {
+                  if (listing.ownerPhone.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('لا يوجد رقم للمُعلن'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    return;
+                  }
+                  final phone = _normalizePhone(listing.ownerPhone);
+                  _launch(Uri.parse('https://wa.me/$phone'), context);
+                },
               ),
             ],
           ),
@@ -1066,7 +1089,7 @@ class _BarButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: outlined ? AppColors.white : (color ?? AppColors.primary),
           borderRadius: BorderRadius.circular(10),
-          border: outlined ? Border.all(color: AppColors.dividerLight) : null,
+          border: outlined ? Border.all(color: context.divider) : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1074,13 +1097,13 @@ class _BarButton extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: outlined ? AppColors.textPrimaryLight : AppColors.white,
+              color: outlined ? context.textPrimary : AppColors.white,
             ),
-            const SizedBox(width: 5),
+            SizedBox(width: 5),
             Text(
               label,
               style: AppTextStyles.labelMedium.copyWith(
-                color: outlined ? AppColors.textPrimaryLight : AppColors.white,
+                color: outlined ? context.textPrimary : AppColors.white,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1098,9 +1121,9 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.symmetric(vertical: 20),
-      child: Divider(height: 1, color: AppColors.dividerLight),
+      child: Divider(height: 1, color: context.divider),
     );
   }
 }

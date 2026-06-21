@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -54,44 +54,44 @@ class _Step3InfoState extends ConsumerState<Step3Info> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'المعلومات الأساسية',
             style: AppTextStyles.headlineMedium.copyWith(
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             'أدخل تفاصيل العقار الأساسية',
             style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight),
+                color: context.textSecondary),
           ),
           const SizedBox(height: 24),
 
           // ── Title ────────────────────────────────────────
           _FieldLabel('عنوان الإعلان'),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           TextField(
             controller: _titleCtrl,
             onChanged: (v) =>
                 ref.read(addListingProvider.notifier).setTitle(v),
             style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textPrimaryLight),
+                color: context.textPrimary),
             textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(
               hintText: 'مثال: شقة للبيع في حي العليا',
               hintStyle: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textHintLight),
+                  .copyWith(color: context.textHint),
               filled: true,
-              fillColor: AppColors.surfaceLight,
+              fillColor: context.surface,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                borderSide: const BorderSide(color: AppColors.dividerLight),
+                borderSide: BorderSide(color: context.divider),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                borderSide: const BorderSide(color: AppColors.dividerLight),
+                borderSide: BorderSide(color: context.divider),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
@@ -163,9 +163,9 @@ class _Step3InfoState extends ConsumerState<Step3Info> {
             padding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
+              color: context.surface,
               borderRadius: BorderRadius.circular(AppConstants.radiusM),
-              border: Border.all(color: AppColors.dividerLight),
+              border: Border.all(color: context.divider),
             ),
             child: Row(
               children: [
@@ -173,7 +173,7 @@ class _Step3InfoState extends ConsumerState<Step3Info> {
                   child: Text(
                     'يوجد عمولة',
                     style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textPrimaryLight),
+                        color: context.textPrimary),
                   ),
                 ),
                 if (Platform.isIOS)
@@ -213,7 +213,7 @@ class _Step3InfoState extends ConsumerState<Step3Info> {
 
           // ── Description ───────────────────────────────────
           _FieldLabel('وصف العقار'),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           TextField(
             controller: _descCtrl,
             onChanged: (v) =>
@@ -221,20 +221,20 @@ class _Step3InfoState extends ConsumerState<Step3Info> {
             maxLines: 5,
             keyboardType: TextInputType.multiline,
             style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textPrimaryLight),
+                color: context.textPrimary),
             decoration: InputDecoration(
               hintText: 'اكتب وصفاً تفصيلياً للعقار...',
               hintStyle: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textHintLight),
+                  color: context.textHint),
               filled: true,
-              fillColor: AppColors.surfaceLight,
+              fillColor: context.surface,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                borderSide: const BorderSide(color: AppColors.dividerLight),
+                borderSide: BorderSide(color: context.divider),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                borderSide: const BorderSide(color: AppColors.dividerLight),
+                borderSide: BorderSide(color: context.divider),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
@@ -259,7 +259,7 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) => Text(
         text,
         style: AppTextStyles.titleSmall.copyWith(
-          color: AppColors.textPrimaryLight,
+          color: context.textPrimary,
           fontWeight: FontWeight.w600,
         ),
       );
@@ -287,27 +287,27 @@ class _NumberField extends StatelessWidget {
           FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
         ],
         style: AppTextStyles.bodyLarge.copyWith(
-            color: AppColors.textPrimaryLight),
+            color: context.textPrimary),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textHintLight),
+              color: context.textHint),
           suffixText: suffix,
           suffixStyle: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondaryLight),
+              color: context.textSecondary),
           filled: true,
-          fillColor: AppColors.surfaceLight,
+          fillColor: context.surface,
           border: OutlineInputBorder(
             borderRadius:
                 BorderRadius.circular(AppConstants.radiusM),
             borderSide:
-                const BorderSide(color: AppColors.dividerLight),
+                BorderSide(color: context.divider),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius:
                 BorderRadius.circular(AppConstants.radiusM),
             borderSide:
-                const BorderSide(color: AppColors.dividerLight),
+                BorderSide(color: context.divider),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius:
@@ -342,12 +342,12 @@ class _UseTypeChip extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected
                 ? AppColors.primaryLight
-                : AppColors.surfaceLight,
+                : context.surface,
             borderRadius:
                 BorderRadius.circular(AppConstants.radiusM),
             border: Border.all(
               color:
-                  selected ? AppColors.primary : AppColors.dividerLight,
+                  selected ? AppColors.primary : context.divider,
               width: selected ? 2 : 1,
             ),
           ),
@@ -358,14 +358,14 @@ class _UseTypeChip extends StatelessWidget {
                   size: 20,
                   color: selected
                       ? AppColors.primary
-                      : AppColors.textSecondaryLight),
-              const SizedBox(width: 8),
+                      : context.textSecondary),
+              SizedBox(width: 8),
               Text(
                 label,
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: selected
                       ? AppColors.primary
-                      : AppColors.textPrimaryLight,
+                      : context.textPrimary,
                   fontWeight: selected
                       ? FontWeight.w700
                       : FontWeight.w400,

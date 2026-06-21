@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -25,7 +25,7 @@ class LoginScreen extends ConsumerWidget {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
       body: SafeArea(
         child: Stack(
           children: [
@@ -70,12 +70,12 @@ class LoginScreen extends ConsumerWidget {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: 6),
                         Text(
                           'سجّل دخولك أو أنشئ حساباً جديداً',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondaryLight,
+                            color: context.textSecondary,
                           ),
                         ),
 
@@ -108,7 +108,7 @@ class LoginScreen extends ConsumerWidget {
                 child: ColoredBox(
                   color: AppColors.overlay,
                   child: Center(
-                    child: const AppLoadingIndicator(color: AppColors.white),
+                    child: AppLoadingIndicator(color: AppColors.white),
                   ),
                 ),
               ),
@@ -127,8 +127,8 @@ class _TopBar extends StatelessWidget {
     return Align(
       alignment: AlignmentDirectional.centerStart,
       child: IconButton(
-        icon: const Icon(Icons.close_rounded),
-        color: AppColors.textPrimaryLight,
+        icon: Icon(Icons.close_rounded),
+        color: context.textPrimary,
         onPressed: () {
           context.go(AppRoutes.onboarding);
         },
@@ -146,17 +146,17 @@ class _OrDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Expanded(child: Divider(color: AppColors.dividerLight)),
+        Expanded(child: Divider(color: context.divider)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'أو',
             style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.textSecondary,
             ),
           ),
         ),
-        const Expanded(child: Divider(color: AppColors.dividerLight)),
+        Expanded(child: Divider(color: context.divider)),
       ],
     );
   }
@@ -172,7 +172,7 @@ class _GoogleIcon extends StatelessWidget {
       height: 22,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.dividerLight),
+        border: Border.all(color: context.divider),
       ),
       child: const Center(
         child: Text(
@@ -223,7 +223,7 @@ class _TermsText extends StatelessWidget {
         TextSpan(
           text: 'بالمتابعة أنت توافق على ',
           style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.textSecondary,
           ),
           children: [
             WidgetSpan(
@@ -232,20 +232,20 @@ class _TermsText extends StatelessWidget {
                 child: Text(
                   'شروط الخدمة',
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                     decoration: TextDecoration.underline,
                   ),
                 ),
               ),
             ),
-            const TextSpan(text: ' و'),
+            TextSpan(text: ' و'),
             WidgetSpan(
               child: GestureDetector(
                 onTap: () => _showPrivacy(context),
                 child: Text(
                   ' سياسة الخصوصية',
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                     decoration: TextDecoration.underline,
                   ),
                 ),

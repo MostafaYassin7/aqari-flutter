@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -54,7 +54,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -75,11 +75,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 fontWeight: FontWeight.w500,
               ),
               labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.textSecondaryLight,
+              unselectedLabelColor: context.textSecondary,
               indicatorColor: AppColors.primary,
               indicatorWeight: 2.5,
               indicatorSize: TabBarIndicatorSize.label,
-              dividerColor: AppColors.dividerLight,
+              dividerColor: context.divider,
               tabs: const [
                 Tab(text: 'عقارات'),
                 Tab(text: 'مشاريع'),
@@ -115,14 +115,18 @@ class _RealEstateTab extends ConsumerWidget {
       mapProvider.select((s) => s.viewMode == MapViewMode.map),
     );
 
+    // IndexedStack keeps MapView alive in the tree so the GMSMapView
+    // (UiKitView) is never destroyed and recreated, avoiding the
+    // FadeTransition/Opacity bug that breaks iOS gesture forwarding.
     return Stack(
       children: [
         // ── Content: list or map ─────────────────────────────────────
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: isMapMode
-              ? const MapView(key: ValueKey('map'))
-              : _ListContent(key: const ValueKey('list')),
+        IndexedStack(
+          index: isMapMode ? 0 : 1,
+          children: [
+            const MapView(),
+            _ListContent(),
+          ],
         ),
 
         // ── Toggle pill button — bottom center ───────────────────────
@@ -169,11 +173,11 @@ class _ListContent extends ConsumerWidget {
             ),
           ),
 
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Divider(
               height: 1,
               thickness: 1,
-              color: AppColors.dividerLight,
+              color: context.divider,
             ),
           ),
 
@@ -193,16 +197,16 @@ class _ListContent extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.home_work_outlined,
                       size: 64,
-                      color: AppColors.iconLight,
+                      color: context.iconColor,
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Text(
                       'لا توجد عقارات في هذه الفئة',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.textSecondary,
                       ),
                     ),
                   ],

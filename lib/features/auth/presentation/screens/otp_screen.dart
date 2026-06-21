@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +9,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_loading_indicator.dart';
+import '../../../../shared/widgets/ltr_app_bar.dart';
 import '../providers/auth_provider.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
@@ -121,15 +122,15 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     final auth = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
+      appBar: LtrAppBar(AppBar(
+        backgroundColor: context.background,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => context.go(AppRoutes.phoneInput),
         ),
         elevation: 0,
-      ),
+      )),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -145,19 +146,19 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Text.rich(
                 TextSpan(
                   text: 'أرسلنا رمزاً من $_length أرقام إلى ',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.textSecondary,
                   ),
                   children: [
                     TextSpan(
                       text:
                           '${auth.countryCode} ${auth.phoneNumber}',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textPrimaryLight,
+                        color: context.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -215,7 +216,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                     : Text(
                         'إعادة الإرسال بعد $_secondsLeft ثانية',
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondaryLight,
+                          color: context.textSecondary,
                         ),
                       ),
               ),
@@ -227,9 +228,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 onPressed: (_isFull && !auth.isLoading) ? _verify : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor:
-                      _isFull ? AppColors.primary : AppColors.surfaceLight,
+                      _isFull ? AppColors.primary : context.surface,
                   foregroundColor:
-                      _isFull ? AppColors.white : AppColors.textHintLight,
+                      _isFull ? AppColors.white : context.textHint,
                 ),
                 child: auth.isLoading
                     ? const AppLoadingIndicator(
@@ -289,7 +290,7 @@ class _OtpBoxState extends State<_OtpBox> {
     } else if (isFilled) {
       borderColor = AppColors.primary;
     } else {
-      borderColor = AppColors.dividerLight;
+      borderColor = context.divider;
     }
 
     return Focus(
@@ -309,7 +310,7 @@ class _OtpBoxState extends State<_OtpBox> {
         decoration: BoxDecoration(
           color: isFilled
               ? AppColors.primary.withValues(alpha: 0.06)
-              : AppColors.surfaceLight,
+              : context.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: borderColor,

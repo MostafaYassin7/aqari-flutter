@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -32,10 +32,10 @@ class HomeSearchBar extends ConsumerWidget {
         decoration: BoxDecoration(
           color: AppColors.white,
           borderRadius: BorderRadius.circular(36),
-          border: Border.all(color: AppColors.dividerLight),
+          border: Border.all(color: context.divider),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowLight,
+              color: context.shadow,
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -61,15 +61,15 @@ class HomeSearchBar extends ConsumerWidget {
                   Text(
                     'أين تريد؟',
                     style: AppTextStyles.titleSmall.copyWith(
-                      color: AppColors.textPrimaryLight,
+                      color: context.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 1),
+                  SizedBox(height: 1),
                   Text(
                     subtitle,
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.textSecondary,
                     ),
                   ),
                 ],
@@ -82,12 +82,12 @@ class HomeSearchBar extends ConsumerWidget {
               height: 34,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.dividerLight),
+                border: Border.all(color: context.divider),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.tune_rounded,
                 size: 16,
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
               ),
             ),
           ],

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/constants/app_constants.dart';
@@ -28,7 +28,7 @@ class Step0RoleService extends ConsumerWidget {
           Text(
             'هل أنت؟',
             style: AppTextStyles.headlineMedium.copyWith(
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -63,7 +63,7 @@ class Step0RoleService extends ConsumerWidget {
           Text(
             'ما الذي تحاول الإعلان؟',
             style: AppTextStyles.headlineMedium.copyWith(
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -96,13 +96,13 @@ class Step0RoleService extends ConsumerWidget {
             iconWidget: Container(
               width: 52,
               height: 52,
-              decoration: const BoxDecoration(
-                color: AppColors.dividerLight,
+              decoration: BoxDecoration(
+                color: context.divider,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.chat_bubble_outline_rounded,
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
                 size: 24,
               ),
             ),
@@ -144,12 +144,12 @@ class _RoleCard extends StatelessWidget {
             color: isSelected ? AppColors.primaryLight : AppColors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? AppColors.primary : AppColors.dividerLight,
+              color: isSelected ? AppColors.primary : context.divider,
               width: isSelected ? 2 : 1,
             ),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: AppColors.shadowLight,
+                color: context.shadow,
                 blurRadius: 8,
                 offset: Offset(0, 2),
               ),
@@ -163,15 +163,15 @@ class _RoleCard extends StatelessWidget {
                 size: 28,
                 color: isSelected
                     ? AppColors.primary
-                    : AppColors.textSecondaryLight,
+                    : context.textSecondary,
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Text(
                 label,
                 style: AppTextStyles.bodySmall.copyWith(
                   color: isSelected
                       ? AppColors.primary
-                      : AppColors.textPrimaryLight,
+                      : context.textPrimary,
                   fontWeight:
                       isSelected ? FontWeight.w700 : FontWeight.w500,
                 ),
@@ -214,12 +214,12 @@ class _ServiceCard extends StatelessWidget {
           color: isSelected ? AppColors.primaryLight : AppColors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.dividerLight,
+            color: isSelected ? AppColors.primary : context.divider,
             width: isSelected ? 2 : 1,
           ),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: AppColors.shadowLight,
+              color: context.shadow,
               blurRadius: 8,
               offset: Offset(0, 2),
             ),
@@ -235,15 +235,15 @@ class _ServiceCard extends StatelessWidget {
                   Text(
                     title,
                     style: AppTextStyles.titleMedium.copyWith(
-                      color: AppColors.textPrimaryLight,
+                      color: context.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     subtitle,
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.textSecondary,
                     ),
                   ),
                 ],

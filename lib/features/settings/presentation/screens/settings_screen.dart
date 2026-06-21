@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +8,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/utils/app_dialog.dart';
+import '../../../../shared/widgets/ltr_app_bar.dart';
 import '../providers/settings_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -19,29 +20,29 @@ class SettingsScreen extends ConsumerWidget {
     final notifier = ref.read(settingsProvider.notifier);
 
     return Scaffold(
-      backgroundColor: AppColors.surfaceLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.surface,
+      appBar: LtrAppBar(AppBar(
+        backgroundColor: context.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: AppColors.textPrimaryLight),
+          icon: Icon(Icons.arrow_back_ios_rounded,
+              size: 20, color: context.textPrimary),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
           'الإعدادات',
           style: AppTextStyles.titleLarge.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
           ),
         ),
         centerTitle: true,
-        bottom: const PreferredSize(
+        bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.dividerLight),
+          child: Divider(height: 1, color: context.divider),
         ),
-      ),
+      )),
       body: ListView(
         padding: const EdgeInsets.symmetric(
           horizontal: AppConstants.spaceM,
@@ -62,12 +63,12 @@ class SettingsScreen extends ConsumerWidget {
                     Text(
                       s.language.label,
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.textSecondary,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward_ios_rounded,
-                        size: 13, color: AppColors.textHintLight),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_ios_rounded,
+                        size: 13, color: context.textHint),
                   ],
                 ),
                 onTap: () => _showLanguageSheet(context, ref, s.language),
@@ -158,7 +159,7 @@ class SettingsScreen extends ConsumerWidget {
             child: Text(
               'عقار — الإصدار ${AppConstants.appVersion}',
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textHintLight,
+                color: context.textHint,
               ),
             ),
           ),
@@ -175,7 +176,7 @@ class SettingsScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, AppLanguage current) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppConstants.radiusXL),
@@ -197,7 +198,7 @@ class SettingsScreen extends ConsumerWidget {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: AppColors.dividerLight,
+                    color: context.divider,
                     borderRadius:
                         BorderRadius.circular(AppConstants.radiusCircle),
                   ),
@@ -209,7 +210,7 @@ class SettingsScreen extends ConsumerWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               ...AppLanguage.values.map((lang) {
                 final isSelected = lang == current;
                 return GestureDetector(
@@ -226,13 +227,13 @@ class SettingsScreen extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.primaryLight
-                          : AppColors.surfaceLight,
+                          : context.surface,
                       borderRadius:
                           BorderRadius.circular(AppConstants.radiusM),
                       border: Border.all(
                         color: isSelected
                             ? AppColors.primary
-                            : AppColors.dividerLight,
+                            : context.divider,
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -245,8 +246,8 @@ class SettingsScreen extends ConsumerWidget {
                                 ? FontWeight.w700
                                 : FontWeight.w400,
                             color: isSelected
-                                ? AppColors.textPrimaryLight
-                                : AppColors.textSecondaryLight,
+                                ? context.textPrimary
+                                : context.textSecondary,
                           ),
                         ),
                         const Spacer(),
@@ -258,9 +259,9 @@ class SettingsScreen extends ConsumerWidget {
                               color: AppColors.primary,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.check_rounded,
+                            child: Icon(Icons.check_rounded,
                                 size: 14,
-                                color: AppColors.textPrimaryLight),
+                                color: context.textPrimary),
                           ),
                       ],
                     ),
@@ -306,7 +307,7 @@ class _SectionLabel extends StatelessWidget {
       child: Text(
         text,
         style: AppTextStyles.labelMedium.copyWith(
-          color: AppColors.textSecondaryLight,
+          color: context.textSecondary,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.3,
         ),
@@ -325,7 +326,7 @@ class _SettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.backgroundLight,
+        color: context.background,
         borderRadius: BorderRadius.circular(AppConstants.radiusL),
         boxShadow: [
           BoxShadow(
@@ -353,9 +354,9 @@ class _ItemDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
+    return Divider(
       height: 1,
-      color: AppColors.dividerLight,
+      color: context.divider,
       indent: 52,
     );
   }
@@ -404,13 +405,13 @@ class _TappableRow extends StatelessWidget {
                   size: 18,
                   color: iconColor ?? AppColors.primary),
             ),
-            const SizedBox(width: 14),
+            SizedBox(width: 14),
             Expanded(
               child: Text(
                 label,
                 style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.w500,
-                  color: labelColor ?? AppColors.textPrimaryLight,
+                  color: labelColor ?? context.textPrimary,
                 ),
               ),
             ),
@@ -447,13 +448,13 @@ class _ThemeRow extends StatelessWidget {
             child: const Icon(Icons.palette_rounded,
                 size: 18, color: AppColors.primary),
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Text(
               'المظهر',
               style: AppTextStyles.bodyMedium.copyWith(
                 fontWeight: FontWeight.w500,
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
               ),
             ),
           ),
@@ -488,9 +489,9 @@ class _SegmentedControl<T> extends StatelessWidget {
       height: 34,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
+        color: context.surface,
         borderRadius: BorderRadius.circular(AppConstants.radiusS),
-        border: Border.all(color: AppColors.dividerLight),
+        border: Border.all(color: context.divider),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -515,8 +516,8 @@ class _SegmentedControl<T> extends StatelessWidget {
                   fontWeight:
                       isActive ? FontWeight.w700 : FontWeight.w500,
                   color: isActive
-                      ? AppColors.textPrimaryLight
-                      : AppColors.textSecondaryLight,
+                      ? context.textPrimary
+                      : context.textSecondary,
                 ),
               ),
             ),
@@ -551,10 +552,10 @@ class _ToggleRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveColor = enabled
-        ? AppColors.textPrimaryLight
-        : AppColors.textHintLight;
+        ? context.textPrimary
+        : context.textHint;
     final effectiveIconColor =
-        enabled ? AppColors.primary : AppColors.textHintLight;
+        enabled ? AppColors.primary : context.textHint;
 
     return Opacity(
       opacity: enabled ? 1.0 : 0.45,
@@ -601,8 +602,8 @@ class _ToggleRow extends StatelessWidget {
                 activeColor: AppColors.primary,
                 activeTrackColor:
                     AppColors.primary.withValues(alpha: 0.3),
-                inactiveThumbColor: AppColors.textHintLight,
-                inactiveTrackColor: AppColors.dividerLight,
+                inactiveThumbColor: context.textHint,
+                inactiveTrackColor: context.divider,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
           ],

@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/listing.dart';
 import '../../../../shared/widgets/app_loading_indicator.dart';
+import '../../../../shared/widgets/ltr_app_bar.dart';
 import '../../../home/presentation/providers/home_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../../../../shared/widgets/app_bottom_nav.dart';
@@ -36,16 +37,16 @@ class FavoritesScreen extends ConsumerWidget {
     final isGrid = ref.watch(_viewModeProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
+      appBar: LtrAppBar(AppBar(
+        backgroundColor: context.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_rounded,
             size: 20,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
           ),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
@@ -53,7 +54,7 @@ class FavoritesScreen extends ConsumerWidget {
           'المفضلة',
           style: AppTextStyles.titleLarge.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -62,17 +63,17 @@ class FavoritesScreen extends ConsumerWidget {
             IconButton(
               icon: Icon(
                 isGrid ? Icons.view_list_rounded : Icons.grid_view_rounded,
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
                 size: 22,
               ),
               onPressed: () => ref.read(_viewModeProvider.notifier).toggle(),
             ),
         ],
-        bottom: const PreferredSize(
+        bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.dividerLight),
+          child: Divider(height: 1, color: context.divider),
         ),
-      ),
+      )),
       body: asyncFavorites.when(
         loading: () => const Center(
           child: AppLoadingIndicator(color: AppColors.primary),
@@ -134,13 +135,13 @@ class _GridCard extends ConsumerWidget {
                     height: double.infinity,
                     fit: BoxFit.cover,
                     placeholder: (_, __) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.surface,
                       child: const Center(
                         child: AppLoadingIndicator(color: AppColors.primary),
                       ),
                     ),
                     errorWidget: (_, __, ___) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.surface,
                       child: const Center(
                         child: Icon(
                           Icons.home_rounded,
@@ -190,7 +191,7 @@ class _GridCard extends ConsumerWidget {
             listing.title,
             style: AppTextStyles.bodySmall.copyWith(
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -202,7 +203,7 @@ class _GridCard extends ConsumerWidget {
             formatPrice(listing.price),
             style: AppTextStyles.bodyMedium.copyWith(
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 2),
@@ -211,7 +212,7 @@ class _GridCard extends ConsumerWidget {
           Text(
             '${listing.city}  ·  ${listing.category}',
             style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.textSecondary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -266,7 +267,7 @@ class _ListCard extends ConsumerWidget {
                   placeholder: (_, __) => Container(
                     width: 120,
                     height: 110,
-                    color: AppColors.surfaceLight,
+                    color: context.surface,
                     child: const Center(
                       child: AppLoadingIndicator(color: AppColors.primary),
                     ),
@@ -274,7 +275,7 @@ class _ListCard extends ConsumerWidget {
                   errorWidget: (_, __, ___) => Container(
                     width: 120,
                     height: 110,
-                    color: AppColors.surfaceLight,
+                    color: context.surface,
                     child: const Center(
                       child: Icon(
                         Icons.home_rounded,
@@ -328,7 +329,7 @@ class _ListCard extends ConsumerWidget {
                     listing.title,
                     style: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimaryLight,
+                      color: context.textPrimary,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -338,7 +339,7 @@ class _ListCard extends ConsumerWidget {
                   Text(
                     '${listing.city}  ·  ${listing.category}',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.textSecondary,
                     ),
                   ),
 
@@ -350,7 +351,7 @@ class _ListCard extends ConsumerWidget {
                     formatPrice(listing.price),
                     style: AppTextStyles.bodyLarge.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimaryLight,
+                      color: context.textPrimary,
                     ),
                   ),
                 ],
@@ -394,12 +395,12 @@ class _MiniStat extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: AppColors.textSecondaryLight),
-        const SizedBox(width: 3),
+        Icon(icon, size: 13, color: context.textSecondary),
+        SizedBox(width: 3),
         Text(
           label,
           style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.textSecondary,
           ),
         ),
       ],
@@ -434,23 +435,23 @@ class _EmptyState extends StatelessWidget {
                 color: AppColors.error,
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Text(
               'لا توجد مفضلة بعد',
               style: AppTextStyles.headlineSmall.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Text(
               'احفظ العقارات التي تعجبك باضغط على القلب ❤',
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 28),
+            SizedBox(height: 28),
             ElevatedButton(
               onPressed: () => context.go(AppRoutes.home),
               style: ElevatedButton.styleFrom(

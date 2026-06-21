@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,13 +38,13 @@ class ProjectCard extends ConsumerWidget {
                     height: AppConstants.listingCardImageHeight,
                     fit: BoxFit.cover,
                     placeholder: (_, __) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.surface,
                       child: const Center(
                         child: AppLoadingIndicator(color: AppColors.primary),
                       ),
                     ),
                     errorWidget: (_, __, ___) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.surface,
                       child: const Center(
                         child: Icon(
                           Icons.apartment_rounded,
@@ -71,7 +71,7 @@ class ProjectCard extends ConsumerWidget {
             Text(
               '${project.developerName}  ·  ${project.projectType}',
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
               ),
             ),
 
@@ -82,7 +82,7 @@ class ProjectCard extends ConsumerWidget {
               project.name,
               style: AppTextStyles.titleLarge.copyWith(
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
               ),
             ),
 
@@ -91,16 +91,16 @@ class ProjectCard extends ConsumerWidget {
             // ── City ─────────────────────────────────────
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.location_on_rounded,
                   size: 14,
-                  color: AppColors.textSecondaryLight,
+                  color: context.textSecondary,
                 ),
-                const SizedBox(width: 3),
+                SizedBox(width: 3),
                 Text(
                   project.city,
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.textSecondary,
                   ),
                 ),
               ],
@@ -115,7 +115,7 @@ class ProjectCard extends ConsumerWidget {
                   TextSpan(
                     text: 'يبدأ من  ',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.textSecondary,
                     ),
                   ),
                   TextSpan(
@@ -135,7 +135,7 @@ class ProjectCard extends ConsumerWidget {
             Text(
               project.description,
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

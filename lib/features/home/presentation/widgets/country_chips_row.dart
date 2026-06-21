@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_enums.dart';
@@ -73,14 +73,14 @@ class _CityChip extends StatelessWidget {
           color: isActive ? AppColors.primary : AppColors.white,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isActive ? AppColors.primary : AppColors.dividerLight,
+            color: isActive ? AppColors.primary : context.divider,
           ),
         ),
         child: Center(
           child: Text(
             label,
             style: AppTextStyles.labelMedium.copyWith(
-              color: isActive ? AppColors.white : AppColors.textPrimaryLight,
+              color: isActive ? AppColors.white : context.textPrimary,
               fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
             ),
           ),

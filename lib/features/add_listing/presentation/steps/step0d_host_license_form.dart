@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -107,7 +107,7 @@ class _Step0dHostLicenseFormState
                         child: Text(
                           'لإضافة إعلان إيجار يومي على منصة عقار يجب أن يكون لديك ترخيص صادر من وزارة السياحة السعودية',
                           style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondaryLight,
+                            color: context.textSecondary,
                           ),
                           textAlign: TextAlign.right,
                         ),
@@ -154,12 +154,12 @@ class _Step0dHostLicenseFormState
                             'رقم رخصة وزارة السياحة',
                             style: AppTextStyles.bodySmall.copyWith(
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimaryLight,
+                              color: context.textPrimary,
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       TextField(
                         controller: _licenseCtrl,
                         keyboardType: TextInputType.number,
@@ -169,20 +169,20 @@ class _Step0dHostLicenseFormState
                         textDirection: TextDirection.ltr,
                         textAlign: TextAlign.right,
                         style: AppTextStyles.bodySmall
-                            .copyWith(color: AppColors.textPrimaryLight),
+                            .copyWith(color: context.textPrimary),
                         decoration: InputDecoration(
                           hintText: 'أدخل رقم الرخصة',
                           hintStyle: AppTextStyles.bodySmall
-                              .copyWith(color: AppColors.textHintLight),
+                              .copyWith(color: context.textHint),
                           filled: true,
-                          fillColor: AppColors.surfaceLight,
+                          fillColor: context.surface,
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 14),
                           border: OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.circular(AppConstants.radiusM),
                             borderSide:
-                                const BorderSide(color: AppColors.dividerLight),
+                                BorderSide(color: context.divider),
                           ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius:
@@ -190,7 +190,7 @@ class _Step0dHostLicenseFormState
                             borderSide: BorderSide(
                               color: _fieldError != null
                                   ? AppColors.error
-                                  : AppColors.dividerLight,
+                                  : context.divider,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
@@ -233,9 +233,9 @@ class _Step0dHostLicenseFormState
             AppConstants.spaceM,
             AppConstants.spaceS + MediaQuery.of(context).padding.bottom,
           ),
-          decoration: const BoxDecoration(
-            color: AppColors.backgroundLight,
-            border: Border(top: BorderSide(color: AppColors.dividerLight)),
+          decoration: BoxDecoration(
+            color: context.background,
+            border: Border(top: BorderSide(color: context.divider)),
           ),
           child: ElevatedButton(
             onPressed: s.isValidatingLicense ? null : _onNext,

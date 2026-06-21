@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -122,12 +122,12 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
       child: Column(
         children: [
           // Drag handle
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Container(
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.dividerLight,
+              color: context.divider,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -141,22 +141,22 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
                 Text(
                   'اختر تواريخ إقامتك',
                   style: AppTextStyles.headlineSmall.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const Spacer(),
+                Spacer(),
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
                   child: Container(
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceLight,
+                      color: context.surface,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.close_rounded,
-                        size: 16, color: AppColors.textPrimaryLight),
+                    child: Icon(Icons.close_rounded,
+                        size: 16, color: context.textPrimary),
                   ),
                 ),
               ],
@@ -180,7 +180,7 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
                       '${_monthNames[_viewMonth.month - 1]} ${_viewMonth.year}',
                       style: AppTextStyles.titleLarge.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimaryLight,
+                        color: context.textPrimary,
                       ),
                     ),
                   ),
@@ -208,7 +208,7 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
                           child: Text(
                             d,
                             style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.textSecondaryLight,
+                              color: context.textSecondary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -220,8 +220,8 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
             ),
           ),
 
-          const SizedBox(height: 8),
-          const Divider(height: 1, color: AppColors.dividerLight),
+          SizedBox(height: 8),
+          Divider(height: 1, color: context.divider),
           const SizedBox(height: 8),
 
           // Calendar grid
@@ -236,7 +236,7 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
           ),
 
           // Bottom bar
-          const Divider(height: 1, color: AppColors.dividerLight),
+          Divider(height: 1, color: context.divider),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
             child: Row(
@@ -250,7 +250,7 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
                   child: Text(
                     'مسح',
                     style: AppTextStyles.labelLarge.copyWith(
-                      color: AppColors.textPrimaryLight,
+                      color: context.textPrimary,
                       decoration: TextDecoration.underline,
                     ),
                   ),
@@ -266,7 +266,7 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
                       : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    disabledBackgroundColor: AppColors.dividerLight,
+                    disabledBackgroundColor: context.divider,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 32, vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -280,7 +280,7 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
                     style: AppTextStyles.labelLarge.copyWith(
                       color: _canConfirm
                           ? AppColors.white
-                          : AppColors.textSecondaryLight,
+                          : context.textSecondary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -384,10 +384,10 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
                   color: isSelected
                       ? AppColors.white
                       : isPast
-                          ? AppColors.textHintLight
+                          ? context.textHint
                           : isInRange
                               ? AppColors.primary
-                              : AppColors.textPrimaryLight,
+                              : context.textPrimary,
                   fontWeight: isSelected
                       ? FontWeight.w700
                       : FontWeight.w400,
@@ -417,10 +417,10 @@ class _NavArrow extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.dividerLight),
+          border: Border.all(color: context.divider),
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, size: 20, color: AppColors.textPrimaryLight),
+        child: Icon(icon, size: 20, color: context.textPrimary),
       ),
     );
   }

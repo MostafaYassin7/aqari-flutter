@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +7,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_loading_indicator.dart';
+import '../../../../shared/widgets/ltr_app_bar.dart';
 import '../../../../shared/models/listing.dart' show formatPrice;
 import '../../../../shared/models/listing_category.dart';
 import '../providers/my_listings_provider.dart';
@@ -20,16 +21,16 @@ class MyListingsScreen extends ConsumerWidget {
     final listings = asyncListings.value ?? <MyListing>[];
 
     return Scaffold(
-      backgroundColor: AppColors.surfaceLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.surface,
+      appBar: LtrAppBar(AppBar(
+        backgroundColor: context.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_rounded,
             size: 20,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
           ),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
@@ -37,15 +38,15 @@ class MyListingsScreen extends ConsumerWidget {
           'إعلاناتي',
           style: AppTextStyles.titleLarge.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
           ),
         ),
         centerTitle: true,
-        bottom: const PreferredSize(
+        bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.dividerLight),
+          child: Divider(height: 1, color: context.divider),
         ),
-      ),
+      )),
       body: NotificationListener<ScrollNotification>(
         onNotification: (notification) {
           if (notification is ScrollEndNotification &&
@@ -64,11 +65,11 @@ class MyListingsScreen extends ConsumerWidget {
             // ── Status filter ─────────────────────────────────
             const SliverToBoxAdapter(child: _StatusFilter()),
 
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: Divider(
                 height: 1,
                 thickness: 1,
-                color: AppColors.dividerLight,
+                color: context.divider,
               ),
             ),
 
@@ -80,7 +81,7 @@ class MyListingsScreen extends ConsumerWidget {
                   child: Text(
                     '${listings.length} إعلان',
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.textSecondary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -153,7 +154,7 @@ class _CategoryFilter extends ConsumerWidget {
     final selected = ref.watch(selectedCategoryProvider);
 
     return Container(
-      color: AppColors.backgroundLight,
+      color: context.background,
       padding: const EdgeInsets.fromLTRB(
         AppConstants.spaceM,
         12,
@@ -199,7 +200,7 @@ class _StatusFilter extends ConsumerWidget {
     final selected = ref.watch(selectedStatusProvider);
 
     return Container(
-      color: AppColors.backgroundLight,
+      color: context.background,
       padding: const EdgeInsets.fromLTRB(
         AppConstants.spaceM,
         4,
@@ -246,16 +247,16 @@ class _ChipButton extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
       decoration: BoxDecoration(
-        color: selected ? AppColors.primary : AppColors.surfaceLight,
+        color: selected ? AppColors.primary : context.surface,
         borderRadius: BorderRadius.circular(AppConstants.radiusCircle),
         border: Border.all(
-          color: selected ? AppColors.primary : AppColors.dividerLight,
+          color: selected ? AppColors.primary : context.divider,
         ),
       ),
       child: Text(
         label,
         style: AppTextStyles.bodySmall.copyWith(
-          color: selected ? AppColors.white : AppColors.textPrimaryLight,
+          color: selected ? AppColors.white : context.textPrimary,
           fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
         ),
       ),
@@ -276,9 +277,9 @@ class _MyListingCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: AppConstants.spaceM),
         decoration: BoxDecoration(
-          color: AppColors.backgroundLight,
+          color: context.background,
           borderRadius: BorderRadius.circular(AppConstants.radiusL),
-          border: Border.all(color: AppColors.dividerLight),
+          border: Border.all(color: context.divider),
         ),
         padding: const EdgeInsets.all(12),
         child: Row(
@@ -295,20 +296,20 @@ class _MyListingCard extends StatelessWidget {
                 placeholder: (_, __) => Container(
                   width: 90,
                   height: 90,
-                  color: AppColors.surfaceLight,
-                  child: const Icon(
+                  color: context.surface,
+                  child: Icon(
                     Icons.home_rounded,
-                    color: AppColors.textHintLight,
+                    color: context.textHint,
                     size: 32,
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
                   width: 90,
                   height: 90,
-                  color: AppColors.surfaceLight,
-                  child: const Icon(
+                  color: context.surface,
+                  child: Icon(
                     Icons.home_rounded,
-                    color: AppColors.textHintLight,
+                    color: context.textHint,
                     size: 32,
                   ),
                 ),
@@ -326,7 +327,7 @@ class _MyListingCard extends StatelessWidget {
                     listing.title,
                     style: AppTextStyles.titleSmall.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimaryLight,
+                      color: context.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -340,7 +341,7 @@ class _MyListingCard extends StatelessWidget {
                       listing.adNumber,
                     ].where((s) => s.isNotEmpty).join('  ·  '),
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.textSecondary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -354,7 +355,7 @@ class _MyListingCard extends StatelessWidget {
                           .where((s) => s.isNotEmpty && s != 'string')
                           .join('  ·  '),
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.textSecondary,
                       ),
                     ),
                   const SizedBox(height: 4),
@@ -381,7 +382,7 @@ class _MyListingCard extends StatelessWidget {
                           formatPrice(listing.totalPrice),
                           style: AppTextStyles.titleSmall.copyWith(
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimaryLight,
+                            color: context.textPrimary,
                           ),
                         ),
                       ),
@@ -390,13 +391,13 @@ class _MyListingCard extends StatelessWidget {
                         Icon(
                           Icons.visibility_rounded,
                           size: 12,
-                          color: AppColors.textHintLight,
+                          color: context.textHint,
                         ),
-                        const SizedBox(width: 3),
+                        SizedBox(width: 3),
                         Text(
                           '${listing.viewCount}',
                           style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.textSecondaryLight,
+                            color: context.textSecondary,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -457,7 +458,7 @@ class _Stat extends StatelessWidget {
   Widget build(BuildContext context) => Text(
     text,
     style: AppTextStyles.bodySmall.copyWith(
-      color: AppColors.textSecondaryLight,
+      color: context.textSecondary,
     ),
   );
 }
@@ -466,37 +467,37 @@ class _StatusBadge extends StatelessWidget {
   final String status;
   const _StatusBadge(this.status);
 
-  Color get _bg {
+  Color _bg(BuildContext context) {
     switch (status) {
       case 'published':
         return AppColors.success.withAlpha(25);
       case 'paused_temp':
         return AppColors.warning.withAlpha(25);
       case 'paused':
-        return AppColors.textHintLight.withAlpha(40);
+        return context.textHint.withAlpha(40);
       case 'expired':
         return AppColors.error.withAlpha(25);
       case 'pending':
         return AppColors.warning.withAlpha(20);
       default:
-        return AppColors.textHintLight.withAlpha(40);
+        return context.textHint.withAlpha(40);
     }
   }
 
-  Color get _fg {
+  Color _fg(BuildContext context) {
     switch (status) {
       case 'published':
         return AppColors.success;
       case 'paused_temp':
         return AppColors.warning;
       case 'paused':
-        return AppColors.textSecondaryLight;
+        return context.textSecondary;
       case 'expired':
         return AppColors.error;
       case 'pending':
         return AppColors.warning;
       default:
-        return AppColors.textSecondaryLight;
+        return context.textSecondary;
     }
   }
 
@@ -521,14 +522,14 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
     decoration: BoxDecoration(
-      color: _bg,
+      color: _bg(context),
       borderRadius: BorderRadius.circular(AppConstants.radiusCircle),
-      border: Border.all(color: _fg.withAlpha(80)),
+      border: Border.all(color: _fg(context).withAlpha(80)),
     ),
     child: Text(
       _label,
       style: AppTextStyles.labelSmall.copyWith(
-        color: _fg,
+        color: _fg(context),
         fontWeight: FontWeight.w700,
       ),
     ),
@@ -551,26 +552,26 @@ class _EmptyState extends StatelessWidget {
             Icon(
               Icons.home_work_outlined,
               size: 80,
-              color: AppColors.dividerLight,
+              color: context.divider,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Text(
               'لا توجد إعلانات',
               style: AppTextStyles.headlineSmall.copyWith(
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
                 fontWeight: FontWeight.w700,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'أضف إعلانك الأول وابدأ في الوصول إلى المشترين',
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: () => context.push(AppRoutes.addListing),
               icon: const Icon(Icons.add_rounded),

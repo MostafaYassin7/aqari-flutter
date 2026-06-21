@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -115,7 +115,7 @@ class _Step0cBrokerLicenseFormState
                         child: Text(
                           'لإضافة إعلان على منصة عقار يجب أن يكون لديك ترخيص إعلان صادر من الهيئة العامة للعقار',
                           style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondaryLight,
+                            color: context.textSecondary,
                           ),
                           textAlign: TextAlign.right,
                         ),
@@ -224,9 +224,9 @@ class _Step0cBrokerLicenseFormState
             AppConstants.spaceM,
             AppConstants.spaceS + MediaQuery.of(context).padding.bottom,
           ),
-          decoration: const BoxDecoration(
-            color: AppColors.backgroundLight,
-            border: Border(top: BorderSide(color: AppColors.dividerLight)),
+          decoration: BoxDecoration(
+            color: context.background,
+            border: Border(top: BorderSide(color: context.divider)),
           ),
           child: ElevatedButton(
             onPressed: s.isValidatingLicense ? null : _onNext,
@@ -274,7 +274,7 @@ class _FieldLabel extends StatelessWidget {
             label,
             style: AppTextStyles.bodySmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
         ],
@@ -302,23 +302,23 @@ class _LicenseTextField extends StatelessWidget {
         textDirection: TextDirection.ltr,
         textAlign: TextAlign.right,
         style: AppTextStyles.bodySmall
-            .copyWith(color: AppColors.textPrimaryLight),
+            .copyWith(color: context.textPrimary),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle:
-              AppTextStyles.bodySmall.copyWith(color: AppColors.textHintLight),
+              AppTextStyles.bodySmall.copyWith(color: context.textHint),
           filled: true,
-          fillColor: AppColors.surfaceLight,
+          fillColor: context.surface,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppConstants.radiusM),
-            borderSide: const BorderSide(color: AppColors.dividerLight),
+            borderSide: BorderSide(color: context.divider),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppConstants.radiusM),
             borderSide: BorderSide(
-              color: hasError ? AppColors.error : AppColors.dividerLight,
+              color: hasError ? AppColors.error : context.divider,
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -342,13 +342,13 @@ class _TwoPillToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
         children: [
-          _pill('هوية وطنية', 'national_id'),           // first = visual RIGHT in RTL
+          _pill('هوية وطنية', 'national_id', context),           // first = visual RIGHT in RTL
           const SizedBox(width: 8),
-          _pill('سجل تجاري', 'commercial_registration'), // second = visual LEFT in RTL
+          _pill('سجل تجاري', 'commercial_registration', context), // second = visual LEFT in RTL
         ],
       );
 
-  Widget _pill(String label, String value) {
+  Widget _pill(String label, String value, BuildContext context) {
     final isSelected = selected == value;
     return Expanded(
       child: GestureDetector(
@@ -360,13 +360,13 @@ class _TwoPillToggle extends StatelessWidget {
             color: isSelected ? AppColors.primary : AppColors.white,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: isSelected ? AppColors.primary : AppColors.dividerLight,
+              color: isSelected ? AppColors.primary : context.divider,
             ),
           ),
           child: Text(
             label,
             style: AppTextStyles.bodySmall.copyWith(
-              color: isSelected ? AppColors.white : AppColors.textSecondaryLight,
+              color: isSelected ? AppColors.white : context.textSecondary,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             ),
             textAlign: TextAlign.center,

@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,22 +20,22 @@ class ChatsScreen extends ConsumerWidget {
     final chats = chatsState.chats;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Text(
           'الرسائل',
           style: AppTextStyles.titleLarge.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
           ),
         ),
         centerTitle: true,
-        bottom: const PreferredSize(
+        bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.dividerLight),
+          child: Divider(height: 1, color: context.divider),
         ),
       ),
       body: chatsState.isLoading && chats.isEmpty
@@ -44,11 +44,11 @@ class ChatsScreen extends ConsumerWidget {
           ? const _EmptyState()
           : ListView.separated(
               itemCount: chats.length,
-              separatorBuilder: (_, __) => const Padding(
+              separatorBuilder: (_, __) => Padding(
                 padding: EdgeInsetsDirectional.only(
                   start: AppConstants.spaceM + 60,
                 ),
-                child: Divider(height: 1, color: AppColors.dividerLight),
+                child: Divider(height: 1, color: context.divider),
               ),
               itemBuilder: (_, i) => _SwipeableChatRow(
                 chat: chats[i],
@@ -124,7 +124,7 @@ class _SwipeableChatRow extends StatelessWidget {
           height: 80,
           color: chat.unreadCount > 0
               ? AppColors.primary.withValues(alpha: 0.04)
-              : AppColors.backgroundLight,
+              : context.background,
           padding: const EdgeInsets.symmetric(
             horizontal: AppConstants.spaceM,
             vertical: 12,
@@ -194,7 +194,7 @@ class _ChatRowContent extends StatelessWidget {
                         fontWeight: chat.unreadCount > 0
                             ? FontWeight.w700
                             : FontWeight.w600,
-                        color: AppColors.textPrimaryLight,
+                        color: context.textPrimary,
                       ),
                     ),
                   ),
@@ -203,7 +203,7 @@ class _ChatRowContent extends StatelessWidget {
                     style: AppTextStyles.labelSmall.copyWith(
                       color: chat.unreadCount > 0
                           ? AppColors.primary
-                          : AppColors.textSecondaryLight,
+                          : context.textSecondary,
                       fontWeight: chat.unreadCount > 0
                           ? FontWeight.w700
                           : FontWeight.w400,
@@ -211,7 +211,7 @@ class _ChatRowContent extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: 4),
               Row(
                 children: [
                   Expanded(
@@ -219,8 +219,8 @@ class _ChatRowContent extends StatelessWidget {
                       chat.lastMessageText,
                       style: AppTextStyles.bodySmall.copyWith(
                         color: chat.unreadCount > 0
-                            ? AppColors.textPrimaryLight
-                            : AppColors.textSecondaryLight,
+                            ? context.textPrimary
+                            : context.textSecondary,
                         fontWeight: chat.unreadCount > 0
                             ? FontWeight.w600
                             : FontWeight.w400,
@@ -293,7 +293,7 @@ class _EmptyState extends StatelessWidget {
           Icon(
             Icons.chat_bubble_outline_rounded,
             size: 80,
-            color: AppColors.dividerLight,
+            color: context.divider,
           ),
           const SizedBox(height: 16),
           Text(
@@ -302,15 +302,15 @@ class _EmptyState extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'تفضّل بتصفح الإعلانات للتواصل مع المُعلنين',
             style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           ElevatedButton(
             onPressed: () => context.go(AppRoutes.home),
             style: ElevatedButton.styleFrom(

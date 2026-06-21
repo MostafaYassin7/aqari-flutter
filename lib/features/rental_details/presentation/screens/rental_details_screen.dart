@@ -1,3 +1,5 @@
+﻿import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,7 +30,7 @@ class RentalDetailsScreen extends ConsumerWidget {
     final isFav = ref.watch(favoritedRentalsProvider).contains(rental.id);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
@@ -117,13 +119,13 @@ class _PhotoSectionState extends State<_PhotoSection> {
                 height: 320,
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.surface,
                   child: const Center(
                     child: AppLoadingIndicator(color: AppColors.primary),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.surface,
                   child: const Center(
                       child: Icon(Icons.home_rounded,
                           size: 64, color: AppColors.primary)),
@@ -185,33 +187,37 @@ class _TopOverlayBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          children: [
-            _OBtn(
-                icon: Icons.arrow_back_rounded,
-                onTap: () => Navigator.of(context).pop()),
-            const Spacer(),
-            _OBtn(
-              icon: Icons.share_rounded,
-              onTap: () => _snack(context, 'مشاركة الوحدة — قريباً'),
-            ),
-            const SizedBox(width: 8),
-            _OBtn(
-              icon: isFav
-                  ? Icons.favorite_rounded
-                  : Icons.favorite_border_rounded,
-              iconColor: isFav ? AppColors.error : null,
-              onTap: () =>
-                  ref.read(favoritedRentalsProvider.notifier).toggle(rental.id),
-            ),
-            const SizedBox(width: 8),
-            _OBtn(
-              icon: Icons.more_horiz_rounded,
-              onTap: () => _showMoreSheet(context),
-            ),
-          ],
+      child: Directionality(
+        textDirection:
+            Platform.isIOS ? TextDirection.ltr : TextDirection.rtl,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              _OBtn(
+                  icon: Icons.arrow_back_rounded,
+                  onTap: () => Navigator.of(context).pop()),
+              const Spacer(),
+              _OBtn(
+                icon: Icons.share_rounded,
+                onTap: () => _snack(context, 'مشاركة الوحدة — قريباً'),
+              ),
+              const SizedBox(width: 8),
+              _OBtn(
+                icon: isFav
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                iconColor: isFav ? AppColors.error : null,
+                onTap: () =>
+                    ref.read(favoritedRentalsProvider.notifier).toggle(rental.id),
+              ),
+              const SizedBox(width: 8),
+              _OBtn(
+                icon: Icons.more_horiz_rounded,
+                onTap: () => _showMoreSheet(context),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -234,12 +240,12 @@ class _TopOverlayBar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Container(
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                    color: AppColors.dividerLight,
+                    color: context.divider,
                     borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 8),
             _SheetAction(
@@ -285,7 +291,7 @@ class _SheetAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? AppColors.textPrimaryLight;
+    final c = color ?? context.textPrimary;
     return ListTile(
       leading: Icon(icon, color: c),
       title:
@@ -311,13 +317,13 @@ class _OBtn extends StatelessWidget {
             color: AppColors.white,
             shape: BoxShape.circle,
             boxShadow: [
-              BoxShadow(color: AppColors.shadowLight, blurRadius: 6,
+              BoxShadow(color: context.shadow, blurRadius: 6,
                   offset: const Offset(0, 2))
             ],
           ),
           child: Icon(icon,
               size: 18,
-              color: iconColor ?? AppColors.textPrimaryLight),
+              color: iconColor ?? context.textPrimary),
         ),
       );
 }
@@ -337,30 +343,30 @@ class _TitleSection extends StatelessWidget {
           rental.name,
           style: AppTextStyles.headlineMedium.copyWith(
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimaryLight),
+              color: context.textPrimary),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         Row(
           children: [
             Text(
               '${rental.city}  ·  ${rental.district}',
               style: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textSecondaryLight),
+                  .copyWith(color: context.textSecondary),
             ),
             const Spacer(),
             const Icon(Icons.star_rounded,
                 size: 14, color: AppColors.primary),
-            const SizedBox(width: 3),
+            SizedBox(width: 3),
             Text(
               rental.rating.toStringAsFixed(1),
               style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textPrimaryLight,
+                  color: context.textPrimary,
                   fontWeight: FontWeight.w700),
             ),
             Text(
               '  (${rental.reviewCount})',
               style: AppTextStyles.bodySmall
-                  .copyWith(color: AppColors.textSecondaryLight),
+                  .copyWith(color: context.textSecondary),
             ),
           ],
         ),
@@ -395,15 +401,15 @@ class _StatsRow extends StatelessWidget {
           child: Column(
             children: [
               Icon(s['i'] as IconData, size: 22, color: AppColors.primary),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(s['v'] as String,
                   style: AppTextStyles.headlineSmall.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimaryLight)),
-              const SizedBox(height: 2),
+                      color: context.textPrimary)),
+              SizedBox(height: 2),
               Text(s['l'] as String,
                   style: AppTextStyles.labelSmall
-                      .copyWith(color: AppColors.textSecondaryLight)),
+                      .copyWith(color: context.textSecondary)),
             ],
           ),
         )).toList(),
@@ -456,7 +462,7 @@ class _HostCard extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,7 +473,7 @@ class _HostCard extends StatelessWidget {
                       host.name,
                       style: AppTextStyles.titleLarge.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimaryLight),
+                          color: context.textPrimary),
                     ),
                     if (host.isVerified) ...[
                       const SizedBox(width: 6),
@@ -486,16 +492,16 @@ class _HostCard extends StatelessWidget {
                     ],
                   ],
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   '${host.memberSince}  ·  نسبة الرد ${host.responseRate}',
                   style: AppTextStyles.bodySmall
-                      .copyWith(color: AppColors.textSecondaryLight),
+                      .copyWith(color: context.textSecondary),
                 ),
                 Text(
                   'وقت الرد: ${host.responseTime}',
                   style: AppTextStyles.bodySmall
-                      .copyWith(color: AppColors.textSecondaryLight),
+                      .copyWith(color: context.textSecondary),
                 ),
               ],
             ),
@@ -529,8 +535,8 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
           Text('عن الوحدة',
               style: AppTextStyles.headlineSmall.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight)),
-          const SizedBox(height: 12),
+                  color: context.textPrimary)),
+          SizedBox(height: 12),
           AnimatedCrossFade(
             duration: const Duration(milliseconds: 250),
             crossFadeState: _expanded
@@ -541,15 +547,15 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondaryLight, height: 1.7),
+                  color: context.textSecondary, height: 1.7),
             ),
             secondChild: Text(
               widget.rental.description,
               style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondaryLight, height: 1.7),
+                  color: context.textSecondary, height: 1.7),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           GestureDetector(
             onTap: () => setState(() => _expanded = !_expanded),
             child: Row(
@@ -558,17 +564,17 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
                 Text(
                   _expanded ? 'عرض أقل' : 'اقرأ المزيد',
                   style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textPrimaryLight,
+                      color: context.textPrimary,
                       fontWeight: FontWeight.w700,
                       decoration: TextDecoration.underline),
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 Icon(
                   _expanded
                       ? Icons.keyboard_arrow_up_rounded
                       : Icons.keyboard_arrow_down_rounded,
                   size: 18,
-                  color: AppColors.textPrimaryLight,
+                  color: context.textPrimary,
                 ),
               ],
             ),
@@ -595,8 +601,8 @@ class _AmenitiesGrid extends StatelessWidget {
           Text('المرافق والخدمات',
               style: AppTextStyles.headlineSmall.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight)),
-          const SizedBox(height: 16),
+                  color: context.textPrimary)),
+          SizedBox(height: 16),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -614,18 +620,18 @@ class _AmenitiesGrid extends StatelessWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLight,
+                    color: context.surface,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(amenities[i].icon,
-                      size: 19, color: AppColors.textPrimaryLight),
+                      size: 19, color: context.textPrimary),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     amenities[i].label,
                     style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textPrimaryLight),
+                        color: context.textPrimary),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -672,14 +678,14 @@ class _DateSection extends ConsumerWidget {
           Text('التوافر',
               style: AppTextStyles.headlineSmall.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight)),
-          const SizedBox(height: 14),
+                  color: context.textPrimary)),
+          SizedBox(height: 14),
           GestureDetector(
             onTap: openCalendar,
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.dividerLight),
+                border: Border.all(color: context.divider),
               ),
               child: Row(
                 children: [
@@ -694,7 +700,7 @@ class _DateSection extends ConsumerWidget {
                     ),
                   ),
                   Container(
-                      width: 1, height: 44, color: AppColors.dividerLight),
+                      width: 1, height: 44, color: context.divider),
                   Expanded(
                     child: _DateCell(
                       label: 'المغادرة',
@@ -739,14 +745,14 @@ class _DateCell extends StatelessWidget {
             children: [
               Text(label,
                   style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.textSecondary,
                       fontWeight: FontWeight.w600)),
-              const SizedBox(height: 2),
+              SizedBox(height: 2),
               Text(value,
                   style: AppTextStyles.titleSmall.copyWith(
                       color: isSet
-                          ? AppColors.textPrimaryLight
-                          : AppColors.textHintLight,
+                          ? context.textPrimary
+                          : context.textHint,
                       fontWeight: isSet
                           ? FontWeight.w700
                           : FontWeight.w400)),
@@ -772,13 +778,13 @@ class _LocationSection extends StatelessWidget {
           Text('الموقع',
               style: AppTextStyles.headlineSmall.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight)),
-          const SizedBox(height: 12),
+                  color: context.textPrimary)),
+          SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Container(
               height: 160,
-              color: const Color(0xFFD6EAD6),
+              color: Color(0xFFD6EAD6),
               child: Stack(
                 children: [
                   Positioned.fill(
@@ -795,14 +801,14 @@ class _LocationSection extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
-                                  color: AppColors.shadowLight,
+                                  color: context.shadow,
                                   blurRadius: 8)
                             ],
                           ),
                           child: Text(
                             '${rental.district}، ${rental.city}',
                             style: AppTextStyles.labelMedium.copyWith(
-                                color: AppColors.textPrimaryLight,
+                                color: context.textPrimary,
                                 fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -816,7 +822,7 @@ class _LocationSection extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -824,10 +830,10 @@ class _LocationSection extends StatelessWidget {
                     duration: Duration(seconds: 1),
                     behavior: SnackBarBehavior.floating)),
             icon: const Icon(Icons.map_rounded, size: 16),
-            label: const Text('فتح الخريطة'),
+            label: Text('فتح الخريطة'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textPrimaryLight,
-              side: const BorderSide(color: AppColors.dividerLight),
+              foregroundColor: context.textPrimary,
+              side: BorderSide(color: context.divider),
               padding: const EdgeInsets.symmetric(
                   horizontal: 20, vertical: 10),
               shape: RoundedRectangleBorder(
@@ -885,7 +891,7 @@ class _OtherUnitsSection extends StatelessWidget {
             'وحدات أخرى قد تعجبك',
             style: AppTextStyles.headlineSmall.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimaryLight),
+                color: context.textPrimary),
           ),
         ),
         SizedBox(
@@ -925,52 +931,52 @@ class _SmallRentalCard extends StatelessWidget {
                 height: 130,
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(
-                    color: AppColors.surfaceLight,
+                    color: context.surface,
                     child: const Center(
                         child: AppLoadingIndicator(color: AppColors.primary))),
                 errorWidget: (_, __, ___) => Container(
-                    color: AppColors.surfaceLight,
+                    color: context.surface,
                     child: const Icon(Icons.home_rounded,
                         size: 40, color: AppColors.primary)),
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               '${rental.city}  ·  ${rental.district}',
               style: AppTextStyles.bodySmall
-                  .copyWith(color: AppColors.textSecondaryLight),
+                  .copyWith(color: context.textSecondary),
             ),
-            const SizedBox(height: 3),
+            SizedBox(height: 3),
             Text(
               rental.name,
               style: AppTextStyles.titleSmall.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight),
+                  color: context.textPrimary),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 3),
+            SizedBox(height: 3),
             Row(
               children: [
                 const Icon(Icons.star_rounded,
                     size: 12, color: AppColors.primary),
-                const SizedBox(width: 3),
+                SizedBox(width: 3),
                 Text(
                   rental.rating.toStringAsFixed(1),
                   style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textPrimaryLight,
+                      color: context.textPrimary,
                       fontWeight: FontWeight.w600),
                 ),
-                const Spacer(),
+                Spacer(),
                 Text(
                   '${rental.pricePerNight.toInt()} ريال',
                   style: AppTextStyles.labelMedium.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimaryLight),
+                      color: context.textPrimary),
                 ),
                 Text(' /ليلة',
                     style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textSecondaryLight)),
+                        color: context.textSecondary)),
               ],
             ),
           ],
@@ -993,9 +999,9 @@ class _BottomBar extends ConsumerWidget {
     final total = rental.pricePerNight * (nights > 0 ? nights : 1);
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.white,
-        border: Border(top: BorderSide(color: AppColors.dividerLight)),
+        border: Border(top: BorderSide(color: context.divider)),
       ),
       child: SafeArea(
         top: false,
@@ -1018,12 +1024,12 @@ class _BottomBar extends ConsumerWidget {
                                 '${rental.pricePerNight.toInt()} ريال',
                             style: AppTextStyles.titleLarge.copyWith(
                                 fontWeight: FontWeight.w800,
-                                color: AppColors.textPrimaryLight),
+                                color: context.textPrimary),
                           ),
                           TextSpan(
                             text: ' / ليلة',
                             style: AppTextStyles.bodySmall.copyWith(
-                                color: AppColors.textSecondaryLight),
+                                color: context.textSecondary),
                           ),
                         ],
                       ),
@@ -1032,7 +1038,7 @@ class _BottomBar extends ConsumerWidget {
                       Text(
                         'الإجمالي: ${total.toInt()} ريال ($nights ليالٍ)',
                         style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondaryLight,
+                            color: context.textSecondary,
                             decoration: TextDecoration.underline),
                       ),
                   ],
@@ -1080,8 +1086,8 @@ class _Divider extends StatelessWidget {
   const _Divider();
 
   @override
-  Widget build(BuildContext context) => const Padding(
+  Widget build(BuildContext context) => Padding(
         padding: EdgeInsets.symmetric(vertical: 20),
-        child: Divider(height: 1, color: AppColors.dividerLight),
+        child: Divider(height: 1, color: context.divider),
       );
 }

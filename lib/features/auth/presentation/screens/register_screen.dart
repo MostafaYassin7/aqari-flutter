@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -48,9 +48,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final auth = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.background,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Text('أكمل ملفك الشخصي',
@@ -72,7 +72,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       Text(
                         'آخر خطوة قبل بدء التصفح',
                         style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondaryLight,
+                          color: context.textSecondary,
                         ),
                       ),
 
@@ -116,11 +116,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Text(
                         'اختر الوصف الأنسب لك',
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondaryLight,
+                          color: context.textSecondary,
                         ),
                       ),
 
@@ -182,10 +182,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _canSubmit
                         ? AppColors.primary
-                        : AppColors.surfaceLight,
+                        : context.surface,
                     foregroundColor: _canSubmit
                         ? AppColors.white
-                        : AppColors.textHintLight,
+                        : context.textHint,
                   ),
                   child: auth.isLoading
                       ? const AppLoadingIndicator(
@@ -257,7 +257,7 @@ class _RoleCard extends StatelessWidget {
           color: selected ? AppColors.primaryLight : AppColors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: selected ? AppColors.primary : AppColors.dividerLight,
+            color: selected ? AppColors.primary : context.divider,
             width: selected ? 2 : 1,
           ),
         ),
@@ -270,7 +270,7 @@ class _RoleCard extends StatelessWidget {
                 Icon(
                   icon,
                   color:
-                      selected ? AppColors.primary : AppColors.iconLight,
+                      selected ? AppColors.primary : context.iconColor,
                   size: 28,
                 ),
                 if (selected)
@@ -278,23 +278,23 @@ class _RoleCard extends StatelessWidget {
                       color: AppColors.primary, size: 20),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Text(
               title,
               style: AppTextStyles.titleMedium.copyWith(
                 color: selected
                     ? AppColors.primary
-                    : AppColors.textPrimaryLight,
+                    : context.textPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               subtitle,
               style: AppTextStyles.bodySmall.copyWith(
                 color: selected
                     ? AppColors.primaryDark
-                    : AppColors.textSecondaryLight,
+                    : context.textSecondary,
               ),
             ),
           ],

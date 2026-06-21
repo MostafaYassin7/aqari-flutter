@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/theme/app_colors.dart';
@@ -71,9 +71,9 @@ class Step0aOwnerInfoScreen extends StatelessWidget {
                     color: AppColors.white,
                     borderRadius:
                         BorderRadius.circular(AppConstants.radiusL),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: AppColors.shadowLight,
+                        color: context.shadow,
                         blurRadius: 12,
                         offset: Offset(0, 3),
                       ),
@@ -103,13 +103,13 @@ class Step0aOwnerInfoScreen extends StatelessWidget {
                         'يقوم عقار بإصدار ترخيص إعلان للملاك والوكلاء',
                         style: AppTextStyles.titleLarge.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimaryLight,
+                          color: context.textPrimary,
                         ),
                         textAlign: TextAlign.center,
                       ),
 
-                      const SizedBox(height: 20),
-                      const Divider(color: AppColors.dividerLight),
+                      SizedBox(height: 20),
+                      Divider(color: context.divider),
                       const SizedBox(height: 16),
 
                       // ── Steps section ─────────────────────
@@ -129,8 +129,8 @@ class Step0aOwnerInfoScreen extends StatelessWidget {
                             'الموافقة على عقد الوساطة من المالك/الوكيل في منصة الهيئة العامة للعقار',
                       ),
 
-                      const SizedBox(height: 16),
-                      const Divider(color: AppColors.dividerLight),
+                      SizedBox(height: 16),
+                      Divider(color: context.divider),
                       const SizedBox(height: 16),
 
                       // ── Requirements section ──────────────
@@ -172,7 +172,7 @@ class _SectionHeader extends StatelessWidget {
           label,
           style: AppTextStyles.titleSmall.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
           ),
         ),
       );
@@ -192,20 +192,20 @@ class _BulletPoint extends StatelessWidget {
               child: Text(
                 text,
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.textSecondary,
                   height: 1.5,
                 ),
                 textAlign: TextAlign.right,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: 8),
             Padding(
               padding: const EdgeInsets.only(top: 6),
               child: Container(
                 width: 5,
                 height: 5,
-                decoration: const BoxDecoration(
-                  color: AppColors.textSecondaryLight,
+                decoration: BoxDecoration(
+                  color: context.textSecondary,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -228,9 +228,9 @@ class _BottomSection extends StatelessWidget {
         AppConstants.spaceM,
         AppConstants.spaceS + MediaQuery.of(context).padding.bottom,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundLight,
-        border: Border(top: BorderSide(color: AppColors.dividerLight)),
+      decoration: BoxDecoration(
+        color: context.background,
+        border: Border(top: BorderSide(color: context.divider)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

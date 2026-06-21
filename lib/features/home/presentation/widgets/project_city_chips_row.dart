@@ -1,4 +1,4 @@
-// import 'package:flutter/material.dart';
+﻿// import 'package:flutter/material.dart';
 // import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // import '../../../../core/theme/app_colors.dart';
@@ -36,7 +36,7 @@
 //                 borderRadius: BorderRadius.circular(24),
 //                 border: Border.all(
 //                   color:
-//                       isActive ? AppColors.primary : AppColors.dividerLight,
+//                       isActive ? AppColors.primary : context.divider,
 //                 ),
 //               ),
 //               child: Text(
@@ -44,7 +44,7 @@
 //                 style: AppTextStyles.labelMedium.copyWith(
 //                   color: isActive
 //                       ? AppColors.white
-//                       : AppColors.textPrimaryLight,
+//                       : context.textPrimary,
 //                   fontWeight:
 //                       isActive ? FontWeight.w700 : FontWeight.w500,
 //                 ),

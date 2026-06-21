@@ -1,3 +1,5 @@
+﻿import 'dart:io';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,14 +36,14 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
     final asyncProject = ref.watch(projectDetailsProvider);
 
     return asyncProject.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.backgroundLight,
+      loading: () => Scaffold(
+        backgroundColor: context.background,
         body: Center(
           child: AppLoadingIndicator(color: AppColors.primary),
         ),
       ),
       error: (err, _) => Scaffold(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.background,
         appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: Center(
           child: Column(
@@ -52,11 +54,11 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
                 size: 48,
                 color: AppColors.error,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Text(
                 'حدث خطأ أثناء تحميل البيانات',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.textSecondary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -72,7 +74,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
       data: (project) {
         return Scaffold(
-          backgroundColor: AppColors.backgroundLight,
+          backgroundColor: context.background,
           extendBodyBehindAppBar: true,
           body: Stack(
             children: [
@@ -166,13 +168,13 @@ class _PhotoSectionState extends State<_PhotoSection> {
                 height: 320,
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.surface,
                   child: const Center(
                     child: AppLoadingIndicator(color: AppColors.primary),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.surface,
                   child: const Center(
                     child: Icon(
                       Icons.apartment_rounded,
@@ -251,28 +253,32 @@ class _TopOverlayBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          children: [
-            _OverlayIconButton(
-              icon: Icons.arrow_back_rounded,
-              onTap: () => Navigator.of(context).pop(),
-            ),
-            const Spacer(),
-            _OverlayIconButton(
-              icon: Icons.share_rounded,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('مشاركة المشروع — قريباً'),
-                    duration: Duration(seconds: 1),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-            ),
-          ],
+      child: Directionality(
+        textDirection:
+            Platform.isIOS ? TextDirection.ltr : TextDirection.rtl,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              _OverlayIconButton(
+                icon: Icons.arrow_back_rounded,
+                onTap: () => Navigator.of(context).pop(),
+              ),
+              const Spacer(),
+              _OverlayIconButton(
+                icon: Icons.share_rounded,
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('مشاركة المشروع — قريباً'),
+                      duration: Duration(seconds: 1),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -297,13 +303,13 @@ class _OverlayIconButton extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowLight,
+              color: context.shadow,
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Icon(icon, size: 18, color: AppColors.textPrimaryLight),
+        child: Icon(icon, size: 18, color: context.textPrimary),
       ),
     );
   }
@@ -322,22 +328,22 @@ class _TitleSection extends StatelessWidget {
       children: [
         // Availability badge
         _AvailabilityBadge(availability: project.availability),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         Text(
           project.name,
           style: AppTextStyles.headlineMedium.copyWith(
             fontWeight: FontWeight.w800,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         Text(
           [
             if (project.district.isNotEmpty) project.district,
             project.city,
           ].join('، '),
           style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.textSecondary,
           ),
         ),
         if (project.developerName.isNotEmpty) ...[
@@ -428,19 +434,19 @@ class _StatsRow extends StatelessWidget {
             child: Column(
               children: [
                 Icon(s['icon'] as IconData, size: 22, color: AppColors.primary),
-                const SizedBox(height: 6),
+                SizedBox(height: 6),
                 Text(
                   s['value'] as String,
                   style: AppTextStyles.headlineSmall.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: 2),
                 Text(
                   s['label'] as String,
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.textSecondary,
                   ),
                 ),
               ],
@@ -478,10 +484,10 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
             'عن المشروع',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           AnimatedCrossFade(
             duration: const Duration(milliseconds: 250),
             crossFadeState: _expanded
@@ -492,20 +498,20 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
                 height: 1.7,
               ),
             ),
             secondChild: Text(
               widget.project.description,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
                 height: 1.7,
               ),
             ),
           ),
           if (widget.project.description.length > 100) ...[
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             GestureDetector(
               onTap: () => setState(() => _expanded = !_expanded),
               child: Row(
@@ -514,18 +520,18 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
                   Text(
                     _expanded ? 'عرض أقل' : 'اقرأ المزيد',
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textPrimaryLight,
+                      color: context.textPrimary,
                       fontWeight: FontWeight.w700,
                       decoration: TextDecoration.underline,
                     ),
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   Icon(
                     _expanded
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
                     size: 18,
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                   ),
                 ],
               ),
@@ -570,7 +576,7 @@ class _UnitsSection extends StatelessWidget {
             'الوحدات المتاحة',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -598,7 +604,7 @@ class _UnitCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.dividerLight),
+        border: Border.all(color: context.divider),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -610,7 +616,7 @@ class _UnitCard extends StatelessWidget {
                   typeLabel,
                   style: AppTextStyles.titleMedium.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                   ),
                 ),
               ),
@@ -674,12 +680,12 @@ class _UnitStat extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: AppColors.textSecondaryLight),
-        const SizedBox(width: 4),
+        Icon(icon, size: 16, color: context.textSecondary),
+        SizedBox(width: 4),
         Text(
           label,
           style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.textSecondary,
           ),
         ),
       ],
@@ -704,15 +710,15 @@ class _LocationSection extends StatelessWidget {
             'الموقع',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Container(
               height: 180,
-              color: const Color(0xFFD6EAD6),
+              color: Color(0xFFD6EAD6),
               child: Stack(
                 children: [
                   Positioned.fill(
@@ -732,7 +738,7 @@ class _LocationSection extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.shadowLight,
+                                color: context.shadow,
                                 blurRadius: 8,
                               ),
                             ],
@@ -743,7 +749,7 @@ class _LocationSection extends StatelessWidget {
                               project.city,
                             ].join('، '),
                             style: AppTextStyles.labelMedium.copyWith(
-                              color: AppColors.textPrimaryLight,
+                              color: context.textPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -762,20 +768,20 @@ class _LocationSection extends StatelessWidget {
             ),
           ),
           if (project.address.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.location_on_outlined,
                   size: 16,
-                  color: AppColors.textSecondaryLight,
+                  color: context.textSecondary,
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     project.address,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.textSecondary,
                     ),
                   ),
                 ),
@@ -837,35 +843,35 @@ class _PriceSection extends StatelessWidget {
             'السعر',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           RichText(
             text: TextSpan(
               children: [
                 TextSpan(
                   text: 'يبدأ من  ',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.textSecondary,
                   ),
                 ),
                 TextSpan(
                   text: formatPrice(project.startingPrice),
                   style: AppTextStyles.headlineLarge.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                   ),
                 ),
               ],
             ),
           ),
           if (project.priceTo != null && project.priceTo! > 0) ...[
-            const SizedBox(height: 4),
+            SizedBox(height: 4),
             Text(
               'حتى  ${formatPrice(project.priceTo!)}',
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
               ),
             ),
           ],
@@ -884,9 +890,9 @@ class _BottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.white,
-        border: Border(top: BorderSide(color: AppColors.dividerLight)),
+        border: Border(top: BorderSide(color: context.divider)),
       ),
       child: SafeArea(
         top: false,
@@ -902,15 +908,15 @@ class _BottomBar extends StatelessWidget {
                     Text(
                       'يبدأ من',
                       style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    SizedBox(height: 2),
                     Text(
                       formatPrice(project.startingPrice),
                       style: AppTextStyles.titleLarge.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimaryLight,
+                        color: context.textPrimary,
                       ),
                     ),
                   ],
@@ -973,7 +979,7 @@ class _BarButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: outlined ? AppColors.white : (color ?? AppColors.primary),
           borderRadius: BorderRadius.circular(10),
-          border: outlined ? Border.all(color: AppColors.dividerLight) : null,
+          border: outlined ? Border.all(color: context.divider) : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -981,13 +987,13 @@ class _BarButton extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: outlined ? AppColors.textPrimaryLight : AppColors.white,
+              color: outlined ? context.textPrimary : AppColors.white,
             ),
-            const SizedBox(width: 5),
+            SizedBox(width: 5),
             Text(
               label,
               style: AppTextStyles.labelMedium.copyWith(
-                color: outlined ? AppColors.textPrimaryLight : AppColors.white,
+                color: outlined ? context.textPrimary : AppColors.white,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1005,9 +1011,9 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.symmetric(vertical: 20),
-      child: Divider(height: 1, color: AppColors.dividerLight),
+      child: Divider(height: 1, color: context.divider),
     );
   }
 }

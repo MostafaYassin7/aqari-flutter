@@ -1,6 +1,8 @@
-import 'dart:ui' as ui;
+﻿import 'dart:ui' as ui;
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart' show Factory;
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -80,7 +82,7 @@ class _MapViewState extends ConsumerState<MapView> {
     final canvas = Canvas(recorder);
 
     final fillColor = selected ? AppColors.primary : Colors.white;
-    final textColor = selected ? Colors.white : AppColors.textPrimaryLight;
+    final textColor = selected ? Colors.white : context.textPrimary;
 
     final paint = Paint()..color = fillColor;
     final borderPaint = Paint()
@@ -225,7 +227,7 @@ class _MapViewState extends ConsumerState<MapView> {
             position: LatLng(listing.lat, listing.lng),
             icon: icon,
             anchor: const Offset(0.5, 1.0),
-            zIndex: selected ? 1.0 : 0.0,
+            zIndexInt: selected ? 1 : 0,
             onTap: () {
               ref.read(mapProvider.notifier).selectListing(listing.id);
               _scrollCardToListing(listing.id);
@@ -333,31 +335,42 @@ class _MapViewState extends ConsumerState<MapView> {
         return Stack(
           children: [
             // ── Google Map ────────────────────────────────────────────────
-            GoogleMap(
-              initialCameraPosition: _initialCamera,
-              markers: markers,
-              myLocationButtonEnabled: false,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
-              onMapCreated: (controller) {
-                _mapController = controller;
-              },
-              onCameraIdle: () async {
-                if (_mapController == null) return;
-                // Reset the programmatic flag so the next user gesture
-                // can mark the search area as dirty again.
-                _programmingCameraMove = false;
-                final bounds = await _mapController!.getVisibleRegion();
-                final zoom = await _mapController!.getZoomLevel();
-                ref
-                    .read(mapProvider.notifier)
-                    .updateBoundsAndZoom(bounds, zoom);
-              },
-              onCameraMove: (_) {
-                if (!_programmingCameraMove) {
-                  ref.read(mapProvider.notifier).markSearchAreaDirty();
-                }
-              },
+            // Directionality(ltr): page-level RTL breaks UiKitView touch
+            // forwarding on iOS. LTR restores correct hit-testing while
+            // Flutter overlays above this widget still inherit RTL.
+            // EagerGestureRecognizer: native GMSMapView wins the gesture
+            // arena over TabBarView's competing horizontal swipe recognizer.
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: GoogleMap(
+                initialCameraPosition: _initialCamera,
+                markers: markers,
+                myLocationButtonEnabled: false,
+                zoomControlsEnabled: false,
+                mapToolbarEnabled: false,
+                gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                  Factory<OneSequenceGestureRecognizer>(
+                    () => EagerGestureRecognizer(),
+                  ),
+                },
+                onMapCreated: (controller) {
+                  _mapController = controller;
+                },
+                onCameraIdle: () async {
+                  if (_mapController == null) return;
+                  _programmingCameraMove = false;
+                  final bounds = await _mapController!.getVisibleRegion();
+                  final zoom = await _mapController!.getZoomLevel();
+                  ref
+                      .read(mapProvider.notifier)
+                      .updateBoundsAndZoom(bounds, zoom);
+                },
+                onCameraMove: (_) {
+                  if (!_programmingCameraMove) {
+                    ref.read(mapProvider.notifier).markSearchAreaDirty();
+                  }
+                },
+              ),
             ),
 
             // ── "Search this area" button ─────────────────────────────────
@@ -427,16 +440,16 @@ class _SearchAreaButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.search_rounded,
               size: 16,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Text(
               'ابحث في هذه المنطقة',
               style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -493,13 +506,13 @@ class _MapCard extends StatelessWidget {
                 height: double.infinity,
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.surface,
                   child: const Center(
                     child: AppLoadingIndicator(color: AppColors.primary),
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.surface,
                   child: const Center(
                     child: Icon(
                       Icons.home_rounded,
@@ -526,28 +539,28 @@ class _MapCard extends StatelessWidget {
                       listing.title,
                       style: AppTextStyles.bodyMedium.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimaryLight,
+                        color: context.textPrimary,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       '${listing.city}  ·  ${listing.district}',
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.textSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 6),
                     Text(
                       formatPrice(listing.price),
                       style: AppTextStyles.titleSmall.copyWith(
                         fontWeight: FontWeight.w800,
                         color: selected
                             ? AppColors.primary
-                            : AppColors.textPrimaryLight,
+                            : context.textPrimary,
                       ),
                     ),
                   ],

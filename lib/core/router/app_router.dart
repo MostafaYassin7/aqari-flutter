@@ -30,7 +30,13 @@ import '../constants/app_constants.dart';
 
 Page<dynamic> _page(GoRouterState state, Widget child) {
   if (Platform.isIOS) {
-    return CupertinoPage(key: state.pageKey, child: child);
+    // Wrap in RTL here because main.dart's builder skips the RTL wrapper on
+    // iOS (so the Navigator context stays LTR for correct transition direction
+    // and left-edge swipe-to-go-back). All page content still sees RTL.
+    return CupertinoPage(
+      key: state.pageKey,
+      child: Directionality(textDirection: TextDirection.rtl, child: child),
+    );
   }
   return MaterialPage(key: state.pageKey, child: child);
 }

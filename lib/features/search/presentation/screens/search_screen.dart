@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/listing.dart';
 import '../../../../shared/widgets/app_loading_indicator.dart';
+import '../../../../shared/widgets/ltr_app_bar.dart';
 import '../../../home/presentation/providers/home_provider.dart';
 import '../../../home/presentation/widgets/listing_card.dart';
 import '../../../home/presentation/widgets/project_card.dart';
@@ -73,15 +74,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final tabLabels = ['عقارات', 'مشاريع', 'إيجار يومي'];
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
+      appBar: LtrAppBar(AppBar(
+        backgroundColor: context.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_rounded,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
             size: 20,
           ),
           onPressed: () => Navigator.of(context).pop(),
@@ -90,7 +91,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           'بحث ${tabLabels[tab]}',
           style: AppTextStyles.titleLarge.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -100,9 +101,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               icon: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.tune_rounded,
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                     size: 22,
                   ),
                   if (hasFilters)
@@ -124,7 +125,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           const SizedBox(width: 4),
         ],
-      ),
+      )),
       body: tab == 1
           ? _buildProjectsSearchBody()
           : (mode == 0
@@ -176,11 +177,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
 
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Divider(
               height: 1,
               thickness: 1,
-              color: AppColors.dividerLight,
+              color: context.divider,
             ),
           ),
 
@@ -196,7 +197,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 child: Text(
                   '${results.length} نتيجة',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.textSecondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -271,26 +272,26 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 onChanged: _onQueryChanged,
                 onSubmitted: _onQuerySubmitted,
                 style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.textPrimaryLight,
+                  color: context.textPrimary,
                 ),
                 decoration: InputDecoration(
                   hintText: _tabHints[tab],
                   hintStyle: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textHintLight,
+                    color: context.textHint,
                   ),
-                  prefixIcon: const Icon(
+                  prefixIcon: Icon(
                     Icons.search_rounded,
-                    color: AppColors.textSecondaryLight,
+                    color: context.textSecondary,
                   ),
                   suffixIcon: ValueListenableBuilder(
                     valueListenable: _queryController,
                     builder: (_, value, __) {
                       if (value.text.isEmpty) return const SizedBox.shrink();
                       return IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.close_rounded,
                           size: 18,
-                          color: AppColors.textSecondaryLight,
+                          color: context.textSecondary,
                         ),
                         onPressed: () {
                           _queryController.clear();
@@ -301,7 +302,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     },
                   ),
                   filled: true,
-                  fillColor: AppColors.surfaceLight,
+                  fillColor: context.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     borderSide: BorderSide.none,
@@ -341,11 +342,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
 
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Divider(
               height: 1,
               thickness: 1,
-              color: AppColors.dividerLight,
+              color: context.divider,
             ),
           ),
 
@@ -362,7 +363,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 child: Text(
                   '${results.length} نتيجة',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.textSecondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -429,7 +430,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   void _showCitySheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppConstants.radiusXL),
@@ -451,7 +452,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   void _showPropertyTypeSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppConstants.radiusXL),
@@ -473,7 +474,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   void _showStatusSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppConstants.radiusXL),
@@ -515,10 +516,10 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? AppColors.primary : AppColors.surfaceLight,
+          color: active ? AppColors.primary : context.surface,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: active ? AppColors.primary : AppColors.dividerLight,
+            color: active ? AppColors.primary : context.divider,
           ),
         ),
         child: Row(
@@ -527,13 +528,13 @@ class _FilterChip extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: active ? AppColors.white : AppColors.textSecondaryLight,
+              color: active ? AppColors.white : context.textSecondary,
             ),
-            const SizedBox(width: 6),
+            SizedBox(width: 6),
             Text(
               label,
               style: AppTextStyles.labelMedium.copyWith(
-                color: active ? AppColors.white : AppColors.textPrimaryLight,
+                color: active ? AppColors.white : context.textPrimary,
                 fontWeight: active ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
@@ -577,7 +578,7 @@ class _OptionSheet extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.dividerLight,
+                    color: context.divider,
                     borderRadius: BorderRadius.circular(100),
                   ),
                 ),
@@ -592,7 +593,7 @@ class _OptionSheet extends StatelessWidget {
             ],
           ),
         ),
-        const Divider(height: 1, color: AppColors.dividerLight),
+        Divider(height: 1, color: context.divider),
         Flexible(
           child: ListView(
             shrinkWrap: true,
@@ -638,7 +639,7 @@ class _OptionTile extends StatelessWidget {
       label,
       style: AppTextStyles.bodyMedium.copyWith(
         fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-        color: selected ? AppColors.primary : AppColors.textPrimaryLight,
+        color: selected ? AppColors.primary : context.textPrimary,
       ),
     ),
     trailing: selected
@@ -668,7 +669,7 @@ class _TabSwitcher extends ConsumerWidget {
       ),
       height: 44,
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
+        color: context.surface,
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
       ),
       child: Row(
@@ -712,7 +713,7 @@ class _Tab extends StatelessWidget {
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: AppColors.shadowLight,
+                    color: context.shadow,
                     blurRadius: 4,
                     offset: const Offset(0, 1),
                   ),
@@ -725,8 +726,8 @@ class _Tab extends StatelessWidget {
             style: AppTextStyles.bodySmall.copyWith(
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               color: selected
-                  ? AppColors.textPrimaryLight
-                  : AppColors.textSecondaryLight,
+                  ? context.textPrimary
+                  : context.textSecondary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -780,7 +781,7 @@ class _AdPhoneSearchBodyState extends ConsumerState<_AdPhoneSearchBody> {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        const SliverToBoxAdapter(child: _TabSwitcher()),
+        SliverToBoxAdapter(child: _TabSwitcher()),
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.all(AppConstants.spaceM),
@@ -794,26 +795,26 @@ class _AdPhoneSearchBodyState extends ConsumerState<_AdPhoneSearchBody> {
                   onChanged: _onChanged,
                   onSubmitted: (_) => _onSearch(),
                   style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                   ),
                   decoration: InputDecoration(
                     hintText: 'أدخل رقم الإعلان أو رقم الهاتف',
                     hintStyle: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textHintLight,
+                      color: context.textHint,
                     ),
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.search_rounded,
-                      color: AppColors.textSecondaryLight,
+                      color: context.textSecondary,
                     ),
                     suffixIcon: ValueListenableBuilder(
                       valueListenable: widget.controller,
                       builder: (_, value, __) {
                         if (value.text.isEmpty) return const SizedBox.shrink();
                         return IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.close_rounded,
                             size: 18,
-                            color: AppColors.textSecondaryLight,
+                            color: context.textSecondary,
                           ),
                           onPressed: () {
                             widget.controller.clear();
@@ -824,7 +825,7 @@ class _AdPhoneSearchBodyState extends ConsumerState<_AdPhoneSearchBody> {
                       },
                     ),
                     filled: true,
-                    fillColor: AppColors.surfaceLight,
+                    fillColor: context.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppConstants.radiusM),
                       borderSide: BorderSide.none,
@@ -868,7 +869,7 @@ class _AdPhoneSearchBodyState extends ConsumerState<_AdPhoneSearchBody> {
               child: Text(
                 '${results.length} نتيجة',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -893,14 +894,14 @@ class _AdPhoneSearchBodyState extends ConsumerState<_AdPhoneSearchBody> {
                   Icon(
                     Icons.manage_search_rounded,
                     size: 72,
-                    color: AppColors.dividerLight,
+                    color: context.divider,
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Text(
                     'ابحث برقم الإعلان أو رقم الهاتف\nللعثور على عقار محدد',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.textSecondary,
                     ),
                   ),
                 ],
@@ -930,20 +931,20 @@ class _EmptyState extends StatelessWidget {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.search_off_rounded, size: 64, color: AppColors.dividerLight),
-        const SizedBox(height: 12),
+        Icon(Icons.search_off_rounded, size: 64, color: context.divider),
+        SizedBox(height: 12),
         Text(
           'لا توجد نتائج',
           style: AppTextStyles.bodyLarge.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.textSecondary,
             fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         Text(
           'جرّب تغيير الفلاتر للعثور على عقارات',
           style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textHintLight,
+            color: context.textHint,
           ),
         ),
       ],

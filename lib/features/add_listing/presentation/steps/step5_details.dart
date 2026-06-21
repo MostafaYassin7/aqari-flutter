@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,17 +46,17 @@ class _Step5DetailsState extends ConsumerState<Step5Details> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'تفاصيل العقار',
             style: AppTextStyles.headlineMedium
-                .copyWith(color: AppColors.textPrimaryLight),
+                .copyWith(color: context.textPrimary),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             'أدخل المواصفات التفصيلية للعقار',
             style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textSecondaryLight),
+                .copyWith(color: context.textSecondary),
           ),
           const SizedBox(height: 24),
 
@@ -84,8 +84,8 @@ class _Step5DetailsState extends ConsumerState<Step5Details> {
             onDecrement: () => notifier.setBathrooms(s.bathrooms - 1),
             onIncrement: () => notifier.setBathrooms(s.bathrooms + 1),
           ),
-          const SizedBox(height: 20),
-          const Divider(color: AppColors.dividerLight),
+          SizedBox(height: 20),
+          Divider(color: context.divider),
           const SizedBox(height: 16),
 
           // ── Facade ───────────────────────────────────────
@@ -111,8 +111,8 @@ class _Step5DetailsState extends ConsumerState<Step5Details> {
                 ))
              .toList(),
           ),
-          const SizedBox(height: 20),
-          const Divider(color: AppColors.dividerLight),
+          SizedBox(height: 20),
+          Divider(color: context.divider),
           const SizedBox(height: 16),
 
           // ── Numeric inputs ───────────────────────────────
@@ -141,8 +141,8 @@ class _Step5DetailsState extends ConsumerState<Step5Details> {
             controller: _ageCtrl,
             onChanged: notifier.setPropertyAge,
           ),
-          const SizedBox(height: 20),
-          const Divider(color: AppColors.dividerLight),
+          SizedBox(height: 20),
+          Divider(color: context.divider),
           const SizedBox(height: 16),
 
           // ── Checklist ────────────────────────────────────
@@ -196,7 +196,7 @@ class _SectionLabel extends StatelessWidget {
         text,
         style: AppTextStyles.titleSmall.copyWith(
           fontWeight: FontWeight.w700,
-          color: AppColors.textPrimaryLight,
+          color: context.textPrimary,
         ),
       );
 }
@@ -219,19 +219,19 @@ class _StepperRow extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.surfaceLight,
+          color: context.surface,
           borderRadius: BorderRadius.circular(AppConstants.radiusM),
-          border: Border.all(color: AppColors.dividerLight),
+          border: Border.all(color: context.divider),
         ),
         child: Row(
           children: [
             Icon(icon,
-                size: 20, color: AppColors.textSecondaryLight),
-            const SizedBox(width: 10),
+                size: 20, color: context.textSecondary),
+            SizedBox(width: 10),
             Expanded(
               child: Text(label,
                   style: AppTextStyles.bodyMedium
-                      .copyWith(color: AppColors.textPrimaryLight)),
+                      .copyWith(color: context.textPrimary)),
             ),
             _CounterButton(
               icon: Icons.remove_rounded,
@@ -244,7 +244,7 @@ class _StepperRow extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: AppTextStyles.titleMedium.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight,
+                  color: context.textPrimary,
                 ),
               ),
             ),
@@ -273,18 +273,18 @@ class _CounterButton extends StatelessWidget {
             border: Border.all(
               color: onTap != null
                   ? AppColors.primary
-                  : AppColors.dividerLight,
+                  : context.divider,
             ),
             color: onTap != null
                 ? AppColors.primaryLight
-                : AppColors.surfaceLight,
+                : context.surface,
           ),
           child: Icon(
             icon,
             size: 18,
             color: onTap != null
                 ? AppColors.primary
-                : AppColors.textHintLight,
+                : context.textHint,
           ),
         ),
       );
@@ -309,13 +309,13 @@ class _FacadePill extends StatelessWidget {
           decoration: BoxDecoration(
             color: selected
                 ? AppColors.primary
-                : AppColors.surfaceLight,
+                : context.surface,
             borderRadius:
                 BorderRadius.circular(AppConstants.radiusCircle),
             border: Border.all(
               color: selected
                   ? AppColors.primary
-                  : AppColors.dividerLight,
+                  : context.divider,
             ),
           ),
           child: Text(
@@ -323,7 +323,7 @@ class _FacadePill extends StatelessWidget {
             style: AppTextStyles.bodySmall.copyWith(
               color: selected
                   ? AppColors.white
-                  : AppColors.textPrimaryLight,
+                  : context.textPrimary,
               fontWeight:
                   selected ? FontWeight.w700 : FontWeight.w400,
             ),
@@ -348,9 +348,9 @@ class _MiniInput extends StatelessWidget {
         children: [
           Text(label,
               style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.textSecondary,
                   fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           TextField(
             controller: controller,
             onChanged: onChanged,
@@ -359,24 +359,24 @@ class _MiniInput extends StatelessWidget {
               FilteringTextInputFormatter.digitsOnly
             ],
             style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textPrimaryLight),
+                .copyWith(color: context.textPrimary),
             decoration: InputDecoration(
               hintText: '0',
               hintStyle: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textHintLight),
+                  .copyWith(color: context.textHint),
               filled: true,
-              fillColor: AppColors.surfaceLight,
+              fillColor: context.surface,
               border: OutlineInputBorder(
                 borderRadius:
                     BorderRadius.circular(AppConstants.radiusM),
                 borderSide:
-                    const BorderSide(color: AppColors.dividerLight),
+                    BorderSide(color: context.divider),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius:
                     BorderRadius.circular(AppConstants.radiusM),
                 borderSide:
-                    const BorderSide(color: AppColors.dividerLight),
+                    BorderSide(color: context.divider),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius:
@@ -413,10 +413,10 @@ class _ToggleRow extends StatelessWidget {
           onChanged: onChanged,
           activeColor: AppColors.primary,
           secondary: Icon(icon,
-              size: 20, color: AppColors.textSecondaryLight),
+              size: 20, color: context.textSecondary),
           title: Text(label,
               style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textPrimaryLight)),
+                  color: context.textPrimary)),
           dense: true,
         ),
       );

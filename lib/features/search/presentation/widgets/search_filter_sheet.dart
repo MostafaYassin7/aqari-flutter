@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,7 +12,7 @@ void showSearchFilterSheet(BuildContext context) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AppColors.backgroundLight,
+    backgroundColor: context.background,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         top: Radius.circular(AppConstants.radiusXL),
@@ -110,13 +110,13 @@ class _FilterSheetContentState extends ConsumerState<_FilterSheetContent> {
       builder: (_, scrollController) => Column(
         children: [
           // ── Handle ───────────────────────────────────────────
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Center(
             child: Container(
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.dividerLight,
+                color: context.divider,
                 borderRadius: BorderRadius.circular(AppConstants.radiusCircle),
               ),
             ),
@@ -151,7 +151,7 @@ class _FilterSheetContentState extends ConsumerState<_FilterSheetContent> {
             ),
           ),
 
-          const Divider(height: 1, color: AppColors.dividerLight),
+          Divider(height: 1, color: context.divider),
 
           // ── Scrollable body ───────────────────────────────────
           Expanded(
@@ -180,8 +180,8 @@ class _FilterSheetContentState extends ConsumerState<_FilterSheetContent> {
                   ],
                 ),
 
-                const SizedBox(height: 8),
-                const Divider(color: AppColors.dividerLight),
+                SizedBox(height: 8),
+                Divider(color: context.divider),
                 const SizedBox(height: 8),
 
                 // ── Area range ─────────────────────────────────
@@ -202,8 +202,8 @@ class _FilterSheetContentState extends ConsumerState<_FilterSheetContent> {
                   ],
                 ),
 
-                const SizedBox(height: 8),
-                const Divider(color: AppColors.dividerLight),
+                SizedBox(height: 8),
+                Divider(color: context.divider),
                 const SizedBox(height: 8),
 
                 // ── Bedrooms ───────────────────────────────────
@@ -232,8 +232,8 @@ class _FilterSheetContentState extends ConsumerState<_FilterSheetContent> {
                   ],
                 ),
 
-                const SizedBox(height: 8),
-                const Divider(color: AppColors.dividerLight),
+                SizedBox(height: 8),
+                Divider(color: context.divider),
                 const SizedBox(height: 8),
 
                 // ── Furnished ──────────────────────────────────
@@ -266,9 +266,9 @@ class _FilterSheetContentState extends ConsumerState<_FilterSheetContent> {
               AppConstants.spaceM,
               AppConstants.spaceM + MediaQuery.of(context).padding.bottom,
             ),
-            decoration: const BoxDecoration(
-              color: AppColors.backgroundLight,
-              border: Border(top: BorderSide(color: AppColors.dividerLight)),
+            decoration: BoxDecoration(
+              color: context.background,
+              border: Border(top: BorderSide(color: context.divider)),
             ),
             child: ElevatedButton(
               onPressed: _apply,
@@ -308,7 +308,7 @@ class _SectionTitle extends StatelessWidget {
     text,
     style: AppTextStyles.bodyLarge.copyWith(
       fontWeight: FontWeight.w700,
-      color: AppColors.textPrimaryLight,
+      color: context.textPrimary,
     ),
   );
 }
@@ -324,14 +324,14 @@ class _NumberField extends StatelessWidget {
     controller: controller,
     keyboardType: TextInputType.number,
     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimaryLight),
+    style: AppTextStyles.bodyMedium.copyWith(color: context.textPrimary),
     decoration: InputDecoration(
       hintText: hint,
       hintStyle: AppTextStyles.bodyMedium.copyWith(
-        color: AppColors.textHintLight,
+        color: context.textHint,
       ),
       filled: true,
-      fillColor: AppColors.surfaceLight,
+      fillColor: context.surface,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
         borderSide: BorderSide.none,
@@ -359,17 +359,17 @@ class _BedroomPill extends StatelessWidget {
       width: 48,
       height: 42,
       decoration: BoxDecoration(
-        color: selected ? AppColors.primary : AppColors.surfaceLight,
+        color: selected ? AppColors.primary : context.surface,
         borderRadius: BorderRadius.circular(AppConstants.radiusS),
         border: Border.all(
-          color: selected ? AppColors.primary : AppColors.dividerLight,
+          color: selected ? AppColors.primary : context.divider,
         ),
       ),
       child: Center(
         child: Text(
           label,
           style: AppTextStyles.bodyMedium.copyWith(
-            color: selected ? AppColors.white : AppColors.textPrimaryLight,
+            color: selected ? AppColors.white : context.textPrimary,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -407,21 +407,21 @@ class _ToggleRow extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
+        color: context.surface,
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
         border: Border.all(
-          color: value != null ? AppColors.primary : AppColors.dividerLight,
+          color: value != null ? AppColors.primary : context.divider,
         ),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppColors.textSecondaryLight),
-          const SizedBox(width: 10),
+          Icon(icon, size: 18, color: context.textSecondary),
+          SizedBox(width: 10),
           Expanded(
             child: Text(
               label,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
               ),
             ),
           ),
@@ -434,7 +434,7 @@ class _ToggleRow extends StatelessWidget {
             style: AppTextStyles.bodySmall.copyWith(
               color: value != null
                   ? AppColors.primary
-                  : AppColors.textHintLight,
+                  : context.textHint,
               fontWeight: FontWeight.w600,
             ),
           ),

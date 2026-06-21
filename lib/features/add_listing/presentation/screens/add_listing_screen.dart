@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -168,7 +168,7 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
               style: AppTextStyles.bodyMedium
                   .copyWith(color: AppColors.white),
             ),
-            backgroundColor: AppColors.textPrimaryLight,
+            backgroundColor: context.textPrimary,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius:
@@ -428,7 +428,7 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
           style:
               AppTextStyles.bodySmall.copyWith(color: AppColors.white),
         ),
-        backgroundColor: AppColors.textPrimaryLight,
+        backgroundColor: context.textPrimary,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 4),
         shape: RoundedRectangleBorder(
@@ -463,7 +463,7 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
     final isLicense = _isLicenseStep(advertiserType);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -473,7 +473,6 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
               totalSteps: total,
               stepLabels: labels,
               onBack: _back,
-              onForward: _currentStep == 0 ? _next : null,
             ),
 
             // ── Step pages ───────────────────────────────────
@@ -510,14 +509,12 @@ class _TopBar extends StatelessWidget {
   final int totalSteps;
   final List<String> stepLabels;
   final VoidCallback onBack;
-  final VoidCallback? onForward;
 
   const _TopBar({
     required this.currentStep,
     required this.totalSteps,
     required this.stepLabels,
     required this.onBack,
-    this.onForward,
   });
 
   @override
@@ -529,49 +526,48 @@ class _TopBar extends StatelessWidget {
 
     return Column(
       children: [
-        // Icon + step label row
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 16, 4),
-          child: Row(
-            children: [
-              if (Platform.isIOS)
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: onBack,
-                  child: const Icon(
-                    CupertinoIcons.chevron_back,
-                    color: AppColors.primary,
-                    size: 28,
+        // Navigation row: wrapped in LTR on iOS so back button stays on the
+        // visual LEFT regardless of the page-level RTL Directionality.
+        Directionality(
+          textDirection:
+              Platform.isIOS ? TextDirection.ltr : TextDirection.rtl,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(4, 8, 16, 4),
+            child: Row(
+              children: [
+                if (Platform.isIOS)
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    onPressed: onBack,
+                    child: const Icon(
+                      CupertinoIcons.chevron_back,
+                      color: AppColors.primary,
+                      size: 28,
+                    ),
+                  )
+                else
+                  IconButton(
+                    icon: Icon(Icons.arrow_back_ios_rounded,
+                        size: 20, color: context.textPrimary),
+                    onPressed: onBack,
                   ),
-                )
-              else
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_rounded,
-                      size: 20, color: AppColors.textPrimaryLight),
-                  onPressed: onBack,
-                ),
-              Expanded(
-                child: Text(
-                  label,
-                  style: AppTextStyles.titleLarge.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimaryLight,
+                Expanded(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.titleLarge.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: context.textPrimary,
+                    ),
                   ),
                 ),
-              ),
-              if (onForward != null)
-                IconButton(
-                  icon: const Icon(Icons.arrow_forward_ios_rounded,
-                      size: 20, color: AppColors.textPrimaryLight),
-                  onPressed: onForward,
-                )
-              else
                 Text(
                   '${currentStep + 1} / $totalSteps',
                   style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight),
+                      color: context.textSecondary),
                 ),
-            ],
+              ],
+            ),
           ),
         ),
 
@@ -585,7 +581,7 @@ class _TopBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 4,
-              backgroundColor: AppColors.dividerLight,
+              backgroundColor: context.divider,
               valueColor:
                   const AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
@@ -593,7 +589,7 @@ class _TopBar extends StatelessWidget {
         ),
 
         // Step dots
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
@@ -606,15 +602,15 @@ class _TopBar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: i <= currentStep
                     ? AppColors.primary
-                    : AppColors.dividerLight,
+                    : context.divider,
                 borderRadius:
                     BorderRadius.circular(AppConstants.radiusCircle),
               ),
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        const Divider(height: 1, color: AppColors.dividerLight),
+        SizedBox(height: 8),
+        Divider(height: 1, color: context.divider),
       ],
     );
   }
@@ -648,15 +644,15 @@ class _BottomBar extends StatelessWidget {
         AppConstants.spaceM,
         AppConstants.spaceS + MediaQuery.of(context).padding.bottom,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundLight,
-        border: Border(top: BorderSide(color: AppColors.dividerLight)),
+      decoration: BoxDecoration(
+        color: context.background,
+        border: Border(top: BorderSide(color: context.divider)),
       ),
       child: ElevatedButton(
         onPressed: canProceed ? onNext : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          disabledBackgroundColor: AppColors.dividerLight,
+          disabledBackgroundColor: context.divider,
           minimumSize:
               const Size(double.infinity, AppConstants.buttonHeight),
           shape: RoundedRectangleBorder(
@@ -665,13 +661,13 @@ class _BottomBar extends StatelessWidget {
           elevation: 0,
         ),
         child: isPublishing
-            ? const AppLoadingIndicator(size: 24, color: AppColors.white)
+            ? AppLoadingIndicator(size: 24, color: AppColors.white)
             : Text(
                 isLastStep ? 'نشر الإعلان' : 'التالي',
                 style: AppTextStyles.bodyLarge.copyWith(
                   color: canProceed
                       ? AppColors.white
-                      : AppColors.textSecondaryLight,
+                      : context.textSecondary,
                   fontWeight: FontWeight.w700,
                 ),
               ),

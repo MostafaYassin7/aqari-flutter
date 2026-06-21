@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +7,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_loading_indicator.dart';
+import '../../../../shared/widgets/ltr_app_bar.dart';
 import '../providers/auth_provider.dart';
 
 // ── Country model ─────────────────────────────────────────────────────────────
@@ -67,7 +68,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
   void _showCountryPicker() {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -86,15 +87,15 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
     final auth = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
+      appBar: LtrAppBar(AppBar(
+        backgroundColor: context.background,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => context.go(AppRoutes.login),
         ),
         elevation: 0,
-      ),
+      )),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -110,11 +111,11 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Text(
                 'سنرسل لك رمز تحقق للتأكيد',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.textSecondary,
                 ),
               ),
 
@@ -132,24 +133,24 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 15),
                         decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.dividerLight),
+                          border: Border.all(color: context.divider),
                           borderRadius: BorderRadius.circular(12),
-                          color: AppColors.surfaceLight,
+                          color: context.surface,
                         ),
                         child: Row(
                           children: [
                             Text(_selected.flag,
                                 style: const TextStyle(fontSize: 20)),
-                            const SizedBox(width: 6),
+                            SizedBox(width: 6),
                             Text(
                               _selected.code,
                               style: AppTextStyles.titleMedium.copyWith(
-                                color: AppColors.textPrimaryLight,
+                                color: context.textPrimary,
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.keyboard_arrow_down_rounded,
-                                size: 18, color: AppColors.iconLight),
+                            SizedBox(width: 4),
+                            Icon(Icons.keyboard_arrow_down_rounded,
+                                size: 18, color: context.iconColor),
                           ],
                         ),
                       ),
@@ -171,7 +172,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                         decoration: InputDecoration(
                           hintText: '5XXXXXXXX',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textHintLight,
+                            color: context.textHint,
                           ),
                         ),
                         onChanged: (_) => setState(() {}),
@@ -188,7 +189,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
               Text(
                 'مثال: ${_selected.code} 5XXXXXXXX',
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.textSecondary,
                 ),
               ),
 
@@ -199,9 +200,9 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                 onPressed: (_isValid && !auth.isLoading) ? _send : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor:
-                      _isValid ? AppColors.primary : AppColors.surfaceLight,
+                      _isValid ? AppColors.primary : context.surface,
                   foregroundColor:
-                      _isValid ? AppColors.white : AppColors.textHintLight,
+                      _isValid ? AppColors.white : context.textHint,
                 ),
                 child: auth.isLoading
                     ? const AppLoadingIndicator(
@@ -239,7 +240,7 @@ class _CountryPickerSheet extends StatelessWidget {
           width: 40,
           height: 4,
           decoration: BoxDecoration(
-            color: AppColors.dividerLight,
+            color: context.divider,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
@@ -250,7 +251,7 @@ class _CountryPickerSheet extends StatelessWidget {
             style: AppTextStyles.headlineSmall,
           ),
         ),
-        const Divider(height: 1, color: AppColors.dividerLight),
+        Divider(height: 1, color: context.divider),
         ConstrainedBox(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * 0.5,
@@ -259,7 +260,7 @@ class _CountryPickerSheet extends StatelessWidget {
             shrinkWrap: true,
             itemCount: _kCountries.length,
             separatorBuilder: (_, __) =>
-                const Divider(height: 1, color: AppColors.dividerLight),
+                Divider(height: 1, color: context.divider),
             itemBuilder: (_, i) {
               final c = _kCountries[i];
               final isSelected = c.code == selected.code;
@@ -273,7 +274,7 @@ class _CountryPickerSheet extends StatelessWidget {
                     Text(
                       c.code,
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.textSecondary,
                       ),
                     ),
                     if (isSelected) ...[

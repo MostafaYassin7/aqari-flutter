@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/constants/app_constants.dart';
@@ -39,18 +39,18 @@ class Step4Features extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'ما الذي يوفره العقار؟',
             style: AppTextStyles.headlineMedium.copyWith(
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Text(
             'اختر المميزات المتوفرة في عقارك',
             style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textSecondaryLight),
+                .copyWith(color: context.textSecondary),
           ),
           const SizedBox(height: 24),
 
@@ -72,17 +72,17 @@ class Step4Features extends ConsumerWidget {
                     .read(addListingProvider.notifier)
                     .toggleFeature(f.name),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
+                  duration: Duration(milliseconds: 180),
                   decoration: BoxDecoration(
                     color: isOn
                         ? AppColors.primary
-                        : AppColors.surfaceLight,
+                        : context.surface,
                     borderRadius:
                         BorderRadius.circular(AppConstants.radiusM),
                     border: Border.all(
                       color: isOn
                           ? AppColors.primary
-                          : AppColors.dividerLight,
+                          : context.divider,
                     ),
                   ),
                   child: Column(
@@ -93,15 +93,15 @@ class Step4Features extends ConsumerWidget {
                         size: 26,
                         color: isOn
                             ? AppColors.white
-                            : AppColors.textSecondaryLight,
+                            : context.textSecondary,
                       ),
-                      const SizedBox(height: 6),
+                      SizedBox(height: 6),
                       Text(
                         f.name,
                         style: AppTextStyles.labelMedium.copyWith(
                           color: isOn
                               ? AppColors.white
-                              : AppColors.textPrimaryLight,
+                              : context.textPrimary,
                           fontWeight: isOn
                               ? FontWeight.w700
                               : FontWeight.w500,

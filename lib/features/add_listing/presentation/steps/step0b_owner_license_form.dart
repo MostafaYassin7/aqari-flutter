@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -177,7 +177,7 @@ class _Step0bOwnerLicenseFormState
                   'أنت:',
                   style: AppTextStyles.titleSmall.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimaryLight,
+                    color: context.textPrimary,
                   ),
                   textAlign: TextAlign.right,
                 ),
@@ -365,8 +365,8 @@ class _Step0bOwnerLicenseFormState
                           key: const ValueKey('agentFields'),
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            const SizedBox(height: 16),
-                            const Divider(color: AppColors.dividerLight),
+                            SizedBox(height: 16),
+                            Divider(color: context.divider),
                             const SizedBox(height: 16),
 
                             // رقم الوكالة الرسمية — power of attorney number
@@ -529,7 +529,7 @@ class _TogglePills extends StatelessWidget {
                   border: Border.all(
                     color: isSelected
                         ? AppColors.primary
-                        : AppColors.dividerLight,
+                        : context.divider,
                   ),
                 ),
                 child: Text(
@@ -537,7 +537,7 @@ class _TogglePills extends StatelessWidget {
                   style: AppTextStyles.bodySmall.copyWith(
                     color: isSelected
                         ? AppColors.white
-                        : AppColors.textSecondaryLight,
+                        : context.textSecondary,
                     fontWeight: isSelected
                         ? FontWeight.w700
                         : FontWeight.w500,
@@ -572,7 +572,7 @@ class _FieldLabel extends StatelessWidget {
             label,
             style: AppTextStyles.bodySmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.textPrimary,
             ),
           ),
         ],
@@ -607,7 +607,7 @@ class _FormTextField extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _FieldLabel(label: label, required: required),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           TextField(
             controller: controller,
             keyboardType: keyboardType,
@@ -615,13 +615,13 @@ class _FormTextField extends StatelessWidget {
             textAlign: TextAlign.right,
             textDirection: TextDirection.rtl,
             style: AppTextStyles.bodySmall
-                .copyWith(color: AppColors.textPrimaryLight),
+                .copyWith(color: context.textPrimary),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: AppTextStyles.bodySmall
-                  .copyWith(color: AppColors.textHintLight),
+                  .copyWith(color: context.textHint),
               filled: true,
-              fillColor: AppColors.surfaceLight,
+              fillColor: context.surface,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 14,
                 vertical: 14,
@@ -629,7 +629,7 @@ class _FormTextField extends StatelessWidget {
               border: OutlineInputBorder(
                 borderRadius:
                     BorderRadius.circular(AppConstants.radiusM),
-                borderSide: const BorderSide(color: AppColors.dividerLight),
+                borderSide: BorderSide(color: context.divider),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius:
@@ -637,7 +637,7 @@ class _FormTextField extends StatelessWidget {
                 borderSide: BorderSide(
                   color: error != null
                       ? AppColors.error
-                      : AppColors.dividerLight,
+                      : context.divider,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
@@ -676,18 +676,18 @@ class _ReadOnlyPhoneField extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _FieldLabel(label: label, required: false),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             decoration: BoxDecoration(
-              color: AppColors.dividerLight,
+              color: context.divider,
               borderRadius: BorderRadius.circular(AppConstants.radiusM),
-              border: Border.all(color: AppColors.dividerLight),
+              border: Border.all(color: context.divider),
             ),
             child: Text(
               value.isEmpty ? '—' : value,
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
               ),
               textAlign: TextAlign.right,
             ),
@@ -724,62 +724,69 @@ class _BirthDateFieldState extends State<_BirthDateField> {
 
   void _showDatePicker() {
     DateTime tempDate = _pickerDate;
+    final isDark =
+        MediaQuery.platformBrightnessOf(context) == Brightness.dark;
     showCupertinoModalPopup<void>(
       context: context,
-      builder: (ctx) => Container(
-        height: 300,
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CupertinoButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text(
-                      'إلغاء',
-                      style: TextStyle(color: CupertinoColors.systemGrey),
-                    ),
-                  ),
-                  CupertinoButton(
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      final formatted =
-                          '${tempDate.day.toString().padLeft(2, '0')}/'
-                          '${tempDate.month.toString().padLeft(2, '0')}/'
-                          '${tempDate.year}';
-                      widget.controller.text = formatted;
-                      widget.onDateChanged(formatted);
-                      setState(() => _pickerDate = tempDate);
-                    },
-                    child: const Text(
-                      'تم',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
+      builder: (ctx) => CupertinoTheme(
+        data: CupertinoThemeData(
+            brightness: isDark ? Brightness.dark : Brightness.light),
+        child: Container(
+          height: 300,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF2C2C2E) : AppColors.white,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CupertinoButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text(
+                        'إلغاء',
+                        style: TextStyle(color: CupertinoColors.systemGrey),
                       ),
                     ),
-                  ),
-                ],
+                    CupertinoButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        final formatted =
+                            '${tempDate.day.toString().padLeft(2, '0')}/'
+                            '${tempDate.month.toString().padLeft(2, '0')}/'
+                            '${tempDate.year}';
+                        widget.controller.text = formatted;
+                        widget.onDateChanged(formatted);
+                        setState(() => _pickerDate = tempDate);
+                      },
+                      child: const Text(
+                        'تم',
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: CupertinoDatePicker(
-                mode: CupertinoDatePickerMode.date,
-                initialDateTime: _pickerDate,
-                maximumDate: DateTime.now(),
-                minimumDate: DateTime(1900),
-                onDateTimeChanged: (date) {
-                  tempDate = date;
-                },
+              Expanded(
+                child: CupertinoDatePicker(
+                  mode: CupertinoDatePickerMode.date,
+                  initialDateTime: _pickerDate,
+                  maximumDate: DateTime.now(),
+                  minimumDate: DateTime(1900),
+                  onDateTimeChanged: (date) {
+                    tempDate = date;
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -795,9 +802,9 @@ class _BirthDateFieldState extends State<_BirthDateField> {
                 Text(
                   'هجري',
                   style: AppTextStyles.bodySmall
-                      .copyWith(color: AppColors.textPrimaryLight),
+                      .copyWith(color: context.textPrimary),
                 ),
-                const SizedBox(width: 4),
+                SizedBox(width: 4),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   width: 20,
@@ -809,7 +816,7 @@ class _BirthDateFieldState extends State<_BirthDateField> {
                     border: Border.all(
                       color: widget.isHijri
                           ? AppColors.primary
-                          : AppColors.dividerLight,
+                          : context.divider,
                       width: 1.5,
                     ),
                   ),
@@ -820,7 +827,7 @@ class _BirthDateFieldState extends State<_BirthDateField> {
               ],
             ),
           ),
-          const Spacer(),
+          Spacer(),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -832,7 +839,7 @@ class _BirthDateFieldState extends State<_BirthDateField> {
                 widget.label,
                 style: AppTextStyles.bodySmall.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight,
+                  color: context.textPrimary,
                 ),
               ),
             ],
@@ -847,25 +854,25 @@ class _BirthDateFieldState extends State<_BirthDateField> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildLabelRow(),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           GestureDetector(
             onTap: _showDatePicker,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
               decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
+                color: context.surface,
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 border: Border.all(
                   color: widget.error != null
                       ? AppColors.error
-                      : AppColors.dividerLight,
+                      : context.divider,
                 ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(CupertinoIcons.calendar,
-                      size: 18, color: AppColors.textHintLight),
+                  Icon(CupertinoIcons.calendar,
+                      size: 18, color: context.textHint),
                   Expanded(
                     child: Text(
                       widget.controller.text.isEmpty
@@ -875,8 +882,8 @@ class _BirthDateFieldState extends State<_BirthDateField> {
                           : widget.controller.text,
                       style: AppTextStyles.bodySmall.copyWith(
                         color: widget.controller.text.isEmpty
-                            ? AppColors.textHintLight
-                            : AppColors.textPrimaryLight,
+                            ? context.textHint
+                            : context.textPrimary,
                       ),
                       textAlign: TextAlign.right,
                     ),
@@ -902,7 +909,7 @@ class _BirthDateFieldState extends State<_BirthDateField> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildLabelRow(),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         TextField(
           controller: widget.controller,
           keyboardType: TextInputType.number,
@@ -913,29 +920,29 @@ class _BirthDateFieldState extends State<_BirthDateField> {
           textAlign: TextAlign.right,
           textDirection: TextDirection.rtl,
           style: AppTextStyles.bodySmall
-              .copyWith(color: AppColors.textPrimaryLight),
+              .copyWith(color: context.textPrimary),
           decoration: InputDecoration(
             hintText: widget.isHijri
                 ? 'يوم/شهر/سنة (هجري)'
                 : 'يوم/شهر/سنة (ميلادي)',
             hintStyle:
-                AppTextStyles.bodySmall.copyWith(color: AppColors.textHintLight),
+                AppTextStyles.bodySmall.copyWith(color: context.textHint),
             filled: true,
-            fillColor: AppColors.surfaceLight,
+            fillColor: context.surface,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 14,
               vertical: 14,
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppConstants.radiusM),
-              borderSide: const BorderSide(color: AppColors.dividerLight),
+              borderSide: BorderSide(color: context.divider),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppConstants.radiusM),
               borderSide: BorderSide(
                 color: widget.error != null
                     ? AppColors.error
-                    : AppColors.dividerLight,
+                    : context.divider,
               ),
             ),
             focusedBorder: OutlineInputBorder(
@@ -1002,9 +1009,9 @@ class _BottomButtons extends StatelessWidget {
           AppConstants.spaceM,
           AppConstants.spaceS + MediaQuery.of(context).padding.bottom,
         ),
-        decoration: const BoxDecoration(
-          color: AppColors.backgroundLight,
-          border: Border(top: BorderSide(color: AppColors.dividerLight)),
+        decoration: BoxDecoration(
+          color: context.background,
+          border: Border(top: BorderSide(color: context.divider)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1039,7 +1046,7 @@ class _BottomButtons extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(
                     double.infinity, AppConstants.buttonHeight),
-                side: const BorderSide(color: AppColors.dividerLight),
+                side: BorderSide(color: context.divider),
                 shape: RoundedRectangleBorder(
                   borderRadius:
                       BorderRadius.circular(AppConstants.radiusM),
@@ -1048,7 +1055,7 @@ class _BottomButtons extends StatelessWidget {
               child: Text(
                 'إدخال البيانات لاحقاً',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1095,7 +1102,7 @@ class _SkipWarningSheet extends StatelessWidget {
               'تنبيه',
               style: AppTextStyles.headlineSmall.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimaryLight,
+                color: context.textPrimary,
               ),
             ),
 
@@ -1104,7 +1111,7 @@ class _SkipWarningSheet extends StatelessWidget {
             Text(
               'لن يتم نشر إعلانك حتى تكتمل بيانات الترخيص.\nسيتم حفظ إعلانك كمسودة.',
               style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondaryLight),
+                  color: context.textSecondary),
               textAlign: TextAlign.center,
             ),
 
@@ -1137,8 +1144,8 @@ class _SkipWarningSheet extends StatelessWidget {
               onPressed: onCancel,
               style: OutlinedButton.styleFrom(
                 minimumSize:
-                    const Size(double.infinity, AppConstants.buttonHeight),
-                side: const BorderSide(color: AppColors.dividerLight),
+                    Size(double.infinity, AppConstants.buttonHeight),
+                side: BorderSide(color: context.divider),
                 shape: RoundedRectangleBorder(
                   borderRadius:
                       BorderRadius.circular(AppConstants.radiusM),
@@ -1147,7 +1154,7 @@ class _SkipWarningSheet extends StatelessWidget {
               child: Text(
                 'إلغاء',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -38,9 +38,9 @@ class AppBottomNav extends ConsumerWidget {
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.white,
-          border: Border(top: BorderSide(color: AppColors.dividerLight)),
+          border: Border(top: BorderSide(color: context.divider)),
         ),
         child: SafeArea(
           top: false,
@@ -150,7 +150,7 @@ class _NavItem extends StatelessWidget {
                 Icon(
                   isActive ? activeIcon : icon,
                   size: 24,
-                  color: isActive ? AppColors.primary : AppColors.iconLight,
+                  color: isActive ? AppColors.primary : context.iconColor,
                 ),
                 if (badgeCount > 0)
                   PositionedDirectional(
@@ -178,13 +178,13 @@ class _NavItem extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 3),
+            SizedBox(height: 3),
             Text(
               label,
               style: AppTextStyles.labelSmall.copyWith(
                 color: isActive
                     ? AppColors.primary
-                    : AppColors.textSecondaryLight,
+                    : context.textSecondary,
                 fontWeight:
                     isActive ? FontWeight.w600 : FontWeight.w400,
               ),

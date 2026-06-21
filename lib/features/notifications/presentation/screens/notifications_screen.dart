@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +7,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_loading_indicator.dart';
+import '../../../../shared/widgets/ltr_app_bar.dart';
 import '../providers/notifications_provider.dart';
 
 class NotificationsScreen extends ConsumerStatefulWidget {
@@ -46,16 +47,16 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final notifications = state.notifications;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.background,
+      appBar: LtrAppBar(AppBar(
+        backgroundColor: context.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_rounded,
             size: 20,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
           ),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
@@ -63,7 +64,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           'الإشعارات',
           style: AppTextStyles.titleLarge.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimaryLight,
+            color: context.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -81,11 +82,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               ),
             ),
         ],
-        bottom: const PreferredSize(
+        bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.dividerLight),
+          child: Divider(height: 1, color: context.divider),
         ),
-      ),
+      )),
       body: state.isLoading && notifications.isEmpty
           ? const Center(child: AppLoadingIndicator())
           : state.error != null && notifications.isEmpty
@@ -117,7 +118,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 itemCount: notifications.length + (state.hasMore ? 1 : 0),
                 separatorBuilder: (_, __) =>
-                    const Divider(height: 1, color: AppColors.dividerLight),
+                    Divider(height: 1, color: context.divider),
                 itemBuilder: (_, i) {
                   if (i >= notifications.length) {
                     return const Padding(
@@ -161,7 +162,7 @@ class _NotificationRow extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        color: isUnread ? const Color(0xFFFFF8EC) : AppColors.backgroundLight,
+        color: isUnread ? Color(0xFFFFF8EC) : context.background,
         padding: const EdgeInsets.symmetric(
           horizontal: AppConstants.spaceM,
           vertical: 14,
@@ -188,7 +189,7 @@ class _NotificationRow extends StatelessWidget {
                             fontWeight: isUnread
                                 ? FontWeight.w700
                                 : FontWeight.w600,
-                            color: AppColors.textPrimaryLight,
+                            color: context.textPrimary,
                           ),
                         ),
                       ),
@@ -197,16 +198,16 @@ class _NotificationRow extends StatelessWidget {
                       Text(
                         _formatTime(n.timestamp),
                         style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textHintLight,
+                          color: context.textHint,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: 4),
                   Text(
                     n.body,
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.textSecondary,
                       height: 1.4,
                     ),
                   ),
@@ -326,11 +327,11 @@ class _EmptyState extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: 8),
             Text(
               'أنت على اطلاع بكل شيء!',
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
