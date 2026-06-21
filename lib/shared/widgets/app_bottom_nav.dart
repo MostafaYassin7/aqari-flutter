@@ -25,9 +25,9 @@ class AppBottomNav extends ConsumerWidget {
       case 2:
         context.push(AppRoutes.addListing);
       case 3:
-        context.push(AppRoutes.chat);
+        context.go(AppRoutes.chat);
       case 4:
-        context.push(AppRoutes.account);
+        context.go(AppRoutes.account);
     }
   }
 
@@ -39,7 +39,7 @@ class AppBottomNav extends ConsumerWidget {
       textDirection: TextDirection.ltr,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: context.card,
           border: Border(top: BorderSide(color: context.divider)),
         ),
         child: SafeArea(

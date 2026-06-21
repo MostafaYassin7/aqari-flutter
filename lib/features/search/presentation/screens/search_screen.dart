@@ -708,26 +708,15 @@ class _Tab extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: selected ? AppColors.white : AppColors.transparent,
+          color: selected ? AppColors.primary : AppColors.transparent,
           borderRadius: BorderRadius.circular(AppConstants.radiusS),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: context.shadow,
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
-              : null,
         ),
         child: Center(
           child: Text(
             label,
             style: AppTextStyles.bodySmall.copyWith(
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: selected
-                  ? context.textPrimary
-                  : context.textSecondary,
+              color: selected ? AppColors.white : context.textSecondary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

@@ -299,7 +299,7 @@ class _OverlayIconButton extends StatelessWidget {
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: context.card,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
@@ -602,7 +602,7 @@ class _UnitCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: context.card,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: context.divider),
       ),
@@ -891,7 +891,7 @@ class _BottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: context.card,
         border: Border(top: BorderSide(color: context.divider)),
       ),
       child: SafeArea(
@@ -977,7 +977,7 @@ class _BarButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: outlined ? AppColors.white : (color ?? AppColors.primary),
+          color: outlined ? context.card : (color ?? AppColors.primary),
           borderRadius: BorderRadius.circular(10),
           border: outlined ? Border.all(color: context.divider) : null,
         ),

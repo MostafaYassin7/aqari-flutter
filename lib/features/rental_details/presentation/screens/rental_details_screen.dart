@@ -1000,7 +1000,7 @@ class _BottomBar extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: context.card,
         border: Border(top: BorderSide(color: context.divider)),
       ),
       child: SafeArea(

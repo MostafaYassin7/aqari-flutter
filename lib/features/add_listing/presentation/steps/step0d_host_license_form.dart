@@ -128,7 +128,7 @@ class _Step0dHostLicenseFormState
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppColors.white,
+                    color: context.card,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(

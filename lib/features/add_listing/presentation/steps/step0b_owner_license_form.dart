@@ -523,7 +523,7 @@ class _TogglePills extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 11),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : AppColors.white,
+                  color: isSelected ? AppColors.primary : context.card,
                   borderRadius:
                       BorderRadius.circular(AppConstants.radiusS),
                   border: Border.all(
@@ -810,7 +810,7 @@ class _BirthDateFieldState extends State<_BirthDateField> {
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(
-                    color: widget.isHijri ? AppColors.primary : AppColors.white,
+                    color: widget.isHijri ? AppColors.primary : context.card,
                     borderRadius:
                         BorderRadius.circular(AppConstants.radiusS / 2),
                     border: Border.all(

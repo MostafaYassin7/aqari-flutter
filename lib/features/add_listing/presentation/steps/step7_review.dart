@@ -203,7 +203,7 @@ class _ReviewSection extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: context.card,
           borderRadius: BorderRadius.circular(AppConstants.radiusL),
           border: Border.all(color: context.divider),
         ),

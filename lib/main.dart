@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
 import 'core/services/fcm_service.dart';
 import 'core/theme/app_theme.dart';
+import 'features/settings/presentation/providers/settings_provider.dart';
 
 // Runs in a separate isolate — must be a top-level function.
 // Firebase must be re-initialized here because isolates don't share state.
@@ -36,11 +37,14 @@ void main() async {
   );
 }
 
-class AqarApp extends StatelessWidget {
+class AqarApp extends ConsumerWidget {
   const AqarApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(
+      settingsProvider.select((s) => s.themeMode),
+    );
     return MaterialApp.router(
       title: 'عقار',
       debugShowCheckedModeBanner: false,
@@ -48,7 +52,7 @@ class AqarApp extends StatelessWidget {
       // ── Theme ─────────────────────────────────────────
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      themeMode: themeMode.flutterMode,
 
       // ── iOS-style bouncy scroll everywhere ────────────
       scrollBehavior: const ScrollBehavior().copyWith(

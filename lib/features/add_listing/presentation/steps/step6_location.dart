@@ -279,7 +279,7 @@ class _MapFab extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: context.card,
           borderRadius: BorderRadius.circular(AppConstants.radiusS),
           boxShadow: [
             BoxShadow(

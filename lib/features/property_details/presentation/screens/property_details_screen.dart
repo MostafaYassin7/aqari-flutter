@@ -977,7 +977,7 @@ class _BottomBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: context.card,
         border: Border(top: BorderSide(color: context.divider)),
       ),
       child: SafeArea(
@@ -1087,7 +1087,7 @@ class _BarButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: outlined ? AppColors.white : (color ?? AppColors.primary),
+          color: outlined ? context.card : (color ?? AppColors.primary),
           borderRadius: BorderRadius.circular(10),
           border: outlined ? Border.all(color: context.divider) : null,
         ),

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
@@ -26,6 +27,14 @@ extension AppThemeModeX on AppThemeMode {
         return 'داكن';
       case AppThemeMode.system:
         return 'تلقائي';
+    }
+  }
+
+  ThemeMode get flutterMode {
+    switch (this) {
+      case AppThemeMode.light:  return ThemeMode.light;
+      case AppThemeMode.dark:   return ThemeMode.dark;
+      case AppThemeMode.system: return ThemeMode.system;
     }
   }
 }
@@ -77,7 +86,7 @@ class SettingsNotifier extends Notifier<SettingsState> {
   @override
   SettingsState build() => const SettingsState(
         language: AppLanguage.arabic,
-        themeMode: AppThemeMode.system,
+        themeMode: AppThemeMode.light,
         pushNotifications: true,
         newMessages: true,
         bookingUpdates: true,

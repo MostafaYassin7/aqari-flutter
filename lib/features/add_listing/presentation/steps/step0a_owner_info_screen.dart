@@ -68,7 +68,7 @@ class Step0aOwnerInfoScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(AppConstants.spaceM),
                   decoration: BoxDecoration(
-                    color: AppColors.white,
+                    color: context.card,
                     borderRadius:
                         BorderRadius.circular(AppConstants.radiusL),
                     boxShadow: [

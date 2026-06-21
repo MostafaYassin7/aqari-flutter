@@ -326,7 +326,7 @@ class _Slide1Illustration extends StatelessWidget {
               width: 130,
               height: 130,
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: context.card,
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [
                   BoxShadow(
@@ -415,7 +415,7 @@ class _MiniCard extends StatelessWidget {
       width: 88,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: highlighted ? AppColors.primary : AppColors.white,
+        color: highlighted ? AppColors.primary : context.card,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
@@ -532,7 +532,7 @@ class _Slide2Illustration extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.white,
+                    color: context.card,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
@@ -606,7 +606,7 @@ class _ChatRow extends StatelessWidget {
     final bubble = Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
       decoration: BoxDecoration(
-        color: isMe ? AppColors.primary : AppColors.white,
+        color: isMe ? AppColors.primary : context.card,
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(16),
           topRight: const Radius.circular(16),
@@ -688,7 +688,7 @@ class _Slide3Illustration extends StatelessWidget {
               width: 114,
               height: 114,
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: context.card,
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
@@ -764,7 +764,7 @@ class _FeatureBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
       decoration: BoxDecoration(
-        color: highlighted ? AppColors.primary : AppColors.white,
+        color: highlighted ? AppColors.primary : context.card,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(

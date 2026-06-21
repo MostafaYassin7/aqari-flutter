@@ -30,7 +30,7 @@ class HomeSearchBar extends ConsumerWidget {
         margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: context.card,
           borderRadius: BorderRadius.circular(36),
           border: Border.all(color: context.divider),
           boxShadow: [

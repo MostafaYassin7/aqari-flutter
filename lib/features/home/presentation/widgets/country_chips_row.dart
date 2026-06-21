@@ -70,7 +70,7 @@ class _CityChip extends StatelessWidget {
         margin: const EdgeInsetsDirectional.only(end: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary : AppColors.white,
+          color: isActive ? AppColors.primary : context.card,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isActive ? AppColors.primary : context.divider,
