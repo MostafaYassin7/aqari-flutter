@@ -73,13 +73,6 @@ class _PaymentCardScreenState extends State<PaymentCardScreen> {
     });
 
     try {
-      // Validate card fields in the native view before executing.
-      final validationError = await MFSDK.validate('');
-      if (validationError.isNotEmpty) {
-        if (mounted) setState(() { _isExecuting = false; _error = validationError; });
-        return;
-      }
-
       final result = await PaymentService.executePayment(
         sessionId: widget.sessionId,
         invoiceValue: widget.invoiceValue,
