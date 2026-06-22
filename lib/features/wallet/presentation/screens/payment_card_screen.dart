@@ -73,6 +73,21 @@ class _PaymentCardScreenState extends State<PaymentCardScreen> {
       _error = null;
     });
 
+    // Commit card data to MF session before calling backend execute.
+    // validate() returns the card type ("visa", "mastercard", etc.) — not an error.
+    try {
+      await MFSDK.validate(MFLanguage.ENGLISH);
+    } catch (e) {
+      dev.log('Card validation error: $e', name: 'PaymentCardScreen');
+      if (mounted) {
+        setState(() {
+          _isExecuting = false;
+          _error = 'تحقق من بيانات البطاقة وأعد المحاولة';
+        });
+      }
+      return;
+    }
+
     try {
       final result = await PaymentService.executePayment(
         sessionId: widget.sessionId,
