@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as dev;
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -91,11 +92,12 @@ class _PaymentCardScreenState extends State<PaymentCardScreen> {
         // Direct processing — FCM PAYMENT_CONFIRMED will trigger navigation.
         setState(() => _isWaiting = true);
       }
-    } catch (e) {
+    } catch (e, st) {
+      dev.log('Payment execute error: $e', stackTrace: st, name: 'PaymentCardScreen');
       if (mounted) {
         setState(() {
           _isExecuting = false;
-          _error = 'حدث خطأ في الدفع. يرجى المحاولة مرة أخرى.';
+          _error = e.toString();
         });
       }
     }

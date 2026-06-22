@@ -27,8 +27,10 @@ void main() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await FcmService().initListeners();
 
-  // swap "MYFATOORAH_TEST_TOKEN" for the live token in release builds
-  MFSDK.init("MYFATOORAH_TEST_TOKEN", MFCountry.KUWAIT, MFEnvironment.TEST);
+  // Token not needed here — card form uses the sessionId created by the backend.
+  // Only country + environment are required so the native view knows which MF
+  // environment to point at.
+  MFSDK.init("", MFCountry.KUWAIT, MFEnvironment.TEST);
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
