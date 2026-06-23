@@ -88,6 +88,8 @@ class MyListing {
         return 'منتهي الصلاحية';
       case 'pending':
         return 'قيد المراجعة';
+      case 'draft':
+        return 'مسودة';
       default:
         return status;
     }
@@ -101,6 +103,7 @@ const statusFilters = <String, String>{
   'published': 'منشور',
   'paused_temp': 'موقوف مؤقتاً',
   'paused': 'موقوف',
+  'draft': 'مسودة',
   'expired': 'منتهي',
   'pending': 'قيد المراجعة',
 };

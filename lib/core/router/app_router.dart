@@ -17,6 +17,8 @@ import '../../features/project_details/presentation/screens/project_details_scre
 import '../../features/rental_details/presentation/screens/rental_details_screen.dart';
 import '../../features/account/presentation/screens/account_screen.dart';
 import '../../features/my_listings/presentation/screens/my_listings_screen.dart';
+import '../../features/my_listings/presentation/screens/complete_license_screen.dart';
+import '../../features/my_listings/presentation/providers/my_listings_provider.dart';
 import '../../features/add_listing/presentation/screens/add_listing_screen.dart';
 import '../../features/chat/presentation/screens/chat_detail_screen.dart';
 import '../../features/chat/presentation/screens/chats_screen.dart';
@@ -129,6 +131,13 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.myListings,
       pageBuilder: (context, state) => _page(state, const MyListingsScreen()),
+    ),
+    GoRoute(
+      path: '/complete-license',
+      pageBuilder: (context, state) => _page(
+        state,
+        CompleteLicenseScreen(listing: state.extra as MyListing),
+      ),
     ),
     GoRoute(
       path: AppRoutes.chat,

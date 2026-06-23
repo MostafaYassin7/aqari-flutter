@@ -272,7 +272,7 @@ class _MyListingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final card = GestureDetector(
       onTap: () => context.push('/property/${listing.id}'),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: AppConstants.spaceM),
@@ -447,6 +447,63 @@ class _MyListingCard extends StatelessWidget {
         ),
       ),
     );
+    if (listing.status != 'draft') return card;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        card,
+        Container(
+          margin: const EdgeInsets.only(
+            top: 4,
+            left: AppConstants.spaceM,
+            right: AppConstants.spaceM,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFF8EC),
+            border: Border.all(color: AppColors.primary),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.primary,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'أكمل بيانات الترخيص لنشر هذا الإعلان',
+                  style: AppTextStyles.bodySmall,
+                ),
+              ),
+              TextButton(
+                onPressed: () =>
+                    context.push('/complete-license', extra: listing),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'إكمال الترخيص',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -479,6 +536,8 @@ class _StatusBadge extends StatelessWidget {
         return AppColors.error.withAlpha(25);
       case 'pending':
         return AppColors.warning.withAlpha(20);
+      case 'draft':
+        return const Color(0xFF999999).withAlpha(40);
       default:
         return context.textHint.withAlpha(40);
     }
@@ -496,6 +555,8 @@ class _StatusBadge extends StatelessWidget {
         return AppColors.error;
       case 'pending':
         return AppColors.warning;
+      case 'draft':
+        return const Color(0xFF999999);
       default:
         return context.textSecondary;
     }
@@ -513,6 +574,8 @@ class _StatusBadge extends StatelessWidget {
         return 'منتهي';
       case 'pending':
         return 'قيد المراجعة';
+      case 'draft':
+        return 'مسودة';
       default:
         return status;
     }

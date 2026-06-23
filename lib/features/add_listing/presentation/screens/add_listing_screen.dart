@@ -250,7 +250,7 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
         // POST /listings without licenseId; backend sets status = DRAFT
         await _createListing(s, allPhotoUrls, licenseId: null);
         if (!mounted) return;
-        _showDraftMessage();
+        await _showDraftMessage();
       } else if (s.advertiserType == AdvertiserType.owner ||
           s.advertiserType == AdvertiserType.agent) {
         // ── CASE 3: مالك أو وكيل — create license then listing ─
@@ -419,23 +419,15 @@ class _AddListingScreenState extends ConsumerState<AddListingScreen> {
   }
 
   // Case 4 (skipLicenseInfo): listing saved as DRAFT
-  void _showDraftMessage() {
+  Future<void> _showDraftMessage() async {
     ref.read(addListingProvider.notifier).reset();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'تم حفظ إعلانك كمسودة. أكمل بيانات الترخيص من صفحة إعلاناتي لنشر إعلانك.',
-          style:
-              AppTextStyles.bodySmall.copyWith(color: AppColors.white),
-        ),
-        backgroundColor: context.textPrimary,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 4),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusM),
-        ),
-      ),
+    await AppDialog.showInfo(
+      context: context,
+      title: 'تم حفظ إعلانك كمسودة',
+      message: 'أكمل بيانات الترخيص من صفحة إعلاناتي لنشر إعلانك على المنصة.',
+      buttonText: 'حسناً',
     );
+    if (!mounted) return;
     context.go(AppRoutes.myListings);
   }
 
