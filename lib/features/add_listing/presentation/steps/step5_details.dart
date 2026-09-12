@@ -2,19 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../core/constants/app_constants.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../providers/add_listing_provider.dart';
+import '../widgets/listing_flow_steps.dart' show serviceLabels;
 
 class Step5Details extends ConsumerStatefulWidget {
-  const Step5Details({super.key});
+  final bool bookingSettings;
+  const Step5Details({super.key, this.bookingSettings = false});
 
   @override
   ConsumerState<Step5Details> createState() => _Step5DetailsState();
 }
 
 class _Step5DetailsState extends ConsumerState<Step5Details> {
+  final _extraControllers = <String, TextEditingController>{};
   late TextEditingController _streetWidthCtrl;
   late TextEditingController _floorCtrl;
   late TextEditingController _ageCtrl;
@@ -23,6 +26,9 @@ class _Step5DetailsState extends ConsumerState<Step5Details> {
   void initState() {
     super.initState();
     final s = ref.read(addListingProvider);
+    for (final key in ['capacity', 'halfDay', 'minNights']) {
+      _extraControllers[key] = TextEditingController(text: s.value(key));
+    }
     _streetWidthCtrl = TextEditingController(text: s.streetWidth);
     _floorCtrl = TextEditingController(text: s.floorNumber);
     _ageCtrl = TextEditingController(text: s.propertyAge);
@@ -30,6 +36,9 @@ class _Step5DetailsState extends ConsumerState<Step5Details> {
 
   @override
   void dispose() {
+    for (final c in _extraControllers.values) {
+      c.dispose();
+    }
     _streetWidthCtrl.dispose();
     _floorCtrl.dispose();
     _ageCtrl.dispose();
@@ -41,6 +50,9 @@ class _Step5DetailsState extends ConsumerState<Step5Details> {
     final s = ref.watch(addListingProvider);
     final notifier = ref.read(addListingProvider.notifier);
 
+    if (s.group == 'hall' || widget.bookingSettings) {
+      return _rentalDetails(s, notifier);
+    }
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppConstants.spaceM),
       child: Column(
@@ -49,127 +61,265 @@ class _Step5DetailsState extends ConsumerState<Step5Details> {
           const SizedBox(height: 8),
           Text(
             'تفاصيل العقار',
-            style: AppTextStyles.headlineMedium
-                .copyWith(color: AppColors.textPrimaryLight),
+            style: AppTextStyles.headlineMedium.copyWith(
+              color: context.appColors.textPrimary,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             'أدخل المواصفات التفصيلية للعقار',
-            style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textSecondaryLight),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: context.appColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 24),
 
-          // ── Steppers ─────────────────────────────────────
-          _StepperRow(
-            label: 'غرف النوم',
-            icon: Icons.bed_rounded,
-            value: s.bedrooms,
-            onDecrement: () => notifier.setBedrooms(s.bedrooms - 1),
-            onIncrement: () => notifier.setBedrooms(s.bedrooms + 1),
-          ),
-          const SizedBox(height: 12),
-          _StepperRow(
-            label: 'غرف الجلوس',
-            icon: Icons.weekend_rounded,
-            value: s.livingRooms,
-            onDecrement: () => notifier.setLivingRooms(s.livingRooms - 1),
-            onIncrement: () => notifier.setLivingRooms(s.livingRooms + 1),
-          ),
-          const SizedBox(height: 12),
-          _StepperRow(
-            label: 'الحمامات / دورات المياه',
-            icon: Icons.bathroom_rounded,
-            value: s.bathrooms,
-            onDecrement: () => notifier.setBathrooms(s.bathrooms - 1),
-            onIncrement: () => notifier.setBathrooms(s.bathrooms + 1),
-          ),
-          const SizedBox(height: 20),
-          const Divider(color: AppColors.dividerLight),
-          const SizedBox(height: 16),
+          if (s.group == 'residential') ...[
+            // ── Steppers ─────────────────────────────────────
+            _StepperRow(
+              label: 'غرف النوم',
+              icon: Icons.bed_rounded,
+              value: s.bedrooms,
+              onDecrement: () => notifier.setBedrooms(s.bedrooms - 1),
+              onIncrement: () => notifier.setBedrooms(s.bedrooms + 1),
+            ),
+            const SizedBox(height: 12),
+            _StepperRow(
+              label: 'غرف الجلوس',
+              icon: Icons.weekend_rounded,
+              value: s.livingRooms,
+              onDecrement: () => notifier.setLivingRooms(s.livingRooms - 1),
+              onIncrement: () => notifier.setLivingRooms(s.livingRooms + 1),
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (s.group == 'residential' || s.group == 'commercial') ...[
+            _StepperRow(
+              label: 'الحمامات / دورات المياه',
+              icon: Icons.bathroom_rounded,
+              value: s.bathrooms,
+              onDecrement: () => notifier.setBathrooms(s.bathrooms - 1),
+              onIncrement: () => notifier.setBathrooms(s.bathrooms + 1),
+            ),
+            const SizedBox(height: 20),
+            Divider(color: context.appColors.divider),
+            const SizedBox(height: 16),
+          ],
+          if (['residential', 'commercial', 'land'].contains(s.group)) ...[
+            // ── Facade ───────────────────────────────────────
+            _SectionLabel('الواجهة'),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children:
+                  [
+                        'شمال',
+                        'جنوب',
+                        'شرق',
+                        'غرب',
+                        'شمال شرق',
+                        'شمال غرب',
+                        'جنوب شرق',
+                        'جنوب غرب',
+                      ]
+                      .map(
+                        (d) => _FacadePill(
+                          label: d,
+                          selected: s.facade == d,
+                          onTap: () =>
+                              notifier.setFacade(s.facade == d ? null : d),
+                        ),
+                      )
+                      .toList(),
+            ),
+            const SizedBox(height: 20),
+            Divider(color: context.appColors.divider),
+            const SizedBox(height: 16),
 
-          // ── Facade ───────────────────────────────────────
-          _SectionLabel('الواجهة'),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: ['شمال', 'جنوب', 'شرق', 'غرب', 'شمال شرق', 'شمال غرب', 'جنوب شرق', 'جنوب غرب']
-                .map((d) => _FacadePill(
-                      label: d,
-                      selected: s.facade == d,
-                      onTap: () => notifier.setFacade(
-                          s.facade == d ? null : d),
-                    ))
-                .toList(),
-          ),
-          const SizedBox(height: 20),
-          const Divider(color: AppColors.dividerLight),
-          const SizedBox(height: 16),
+            // ── Numeric inputs ───────────────────────────────
+            Row(
+              children: [
+                Expanded(
+                  child: _MiniInput(
+                    label: 'عرض الشارع (م)',
+                    controller: _streetWidthCtrl,
+                    onChanged: notifier.setStreetWidth,
+                  ),
+                ),
+                if (s.group != 'land') ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _MiniInput(
+                      label: 'رقم الدور',
+                      controller: _floorCtrl,
+                      onChanged: notifier.setFloorNumber,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (s.group != 'land')
+              _MiniInput(
+                label: 'عمر العقار (سنة)',
+                controller: _ageCtrl,
+                onChanged: notifier.setPropertyAge,
+              ),
+            const SizedBox(height: 20),
+            Divider(color: context.appColors.divider),
+            const SizedBox(height: 16),
+          ],
+          if (s.group == 'residential') ...[
+            // ── Checklist ────────────────────────────────────
+            _SectionLabel('التجهيزات والخصائص'),
+            const SizedBox(height: 12),
+            _ToggleRow(
+              label: 'مفروش',
+              icon: Icons.chair_rounded,
+              value: s.isFurnished,
+              onChanged: notifier.setIsFurnished,
+            ),
+            _ToggleRow(
+              label: 'مطبخ',
+              icon: Icons.kitchen_rounded,
+              value: s.hasKitchen,
+              onChanged: notifier.setHasKitchen,
+            ),
+            _ToggleRow(
+              label: 'وحدة إضافية',
+              icon: Icons.add_home_rounded,
+              value: s.hasExtraUnit,
+              onChanged: notifier.setHasExtraUnit,
+            ),
+            _ToggleRow(
+              label: 'مدخل سيارة',
+              icon: Icons.garage_rounded,
+              value: s.hasCarEntrance,
+              onChanged: notifier.setHasCarEntrance,
+            ),
+            _ToggleRow(
+              label: 'مصعد',
+              icon: Icons.elevator_rounded,
+              value: s.hasElevator,
+              onChanged: notifier.setHasElevator,
+            ),
+            const SizedBox(height: 24),
+          ],
+          if (s.group == 'other')
+            Text(
+              'لا توجد تفاصيل إضافية لهذا النوع.',
+              style: AppTextStyles.bodyMedium,
+            ),
+        ],
+      ),
+    );
+  }
 
-          // ── Numeric inputs ───────────────────────────────
-          Row(
-            children: [
-              Expanded(
-                child: _MiniInput(
-                  label: 'عرض الشارع (م)',
-                  controller: _streetWidthCtrl,
-                  onChanged: notifier.setStreetWidth,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _MiniInput(
-                  label: 'رقم الدور',
-                  controller: _floorCtrl,
-                  onChanged: notifier.setFloorNumber,
-                ),
-              ),
-            ],
+  Widget _rentalDetails(AddListingState s, AddListingNotifier n) {
+    final booking = widget.bookingSettings;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppConstants.spaceM),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 8),
+          Text(
+            booking ? 'إعدادات الحجز' : 'تفاصيل القاعة',
+            style: AppTextStyles.headlineMedium.copyWith(
+              color: context.appColors.textPrimary,
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 6),
+          Text(
+            booking
+                ? 'حدد تفاصيل إقامة الضيوف'
+                : 'أضف سعة القاعة والخدمات التي توفرها',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: context.appColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 24),
           _MiniInput(
-            label: 'عمر العقار (سنة)',
-            controller: _ageCtrl,
-            onChanged: notifier.setPropertyAge,
+            label: 'الحد الأقصى للضيوف (اختياري)',
+            controller: _extraControllers['capacity']!,
+            onChanged: (v) => n.field('capacity', v),
           ),
-          const SizedBox(height: 20),
-          const Divider(color: AppColors.dividerLight),
           const SizedBox(height: 16),
-
-          // ── Checklist ────────────────────────────────────
-          _SectionLabel('التجهيزات والخصائص'),
-          const SizedBox(height: 12),
-          _ToggleRow(
-            label: 'مفروش',
-            icon: Icons.chair_rounded,
-            value: s.isFurnished,
-            onChanged: notifier.setIsFurnished,
-          ),
-          _ToggleRow(
-            label: 'مطبخ',
-            icon: Icons.kitchen_rounded,
-            value: s.hasKitchen,
-            onChanged: notifier.setHasKitchen,
-          ),
-          _ToggleRow(
-            label: 'وحدة إضافية',
-            icon: Icons.add_home_rounded,
-            value: s.hasExtraUnit,
-            onChanged: notifier.setHasExtraUnit,
-          ),
-          _ToggleRow(
-            label: 'مدخل سيارة',
-            icon: Icons.garage_rounded,
-            value: s.hasCarEntrance,
-            onChanged: notifier.setHasCarEntrance,
-          ),
-          _ToggleRow(
-            label: 'مصعد',
-            icon: Icons.elevator_rounded,
-            value: s.hasElevator,
-            onChanged: notifier.setHasElevator,
-          ),
+          if (booking) ...[
+            _MiniInput(
+              label: 'الحد الأدنى لليالي *',
+              controller: _extraControllers['minNights']!,
+              onChanged: (v) => n.field('minNights', v),
+            ),
+            const SizedBox(height: 20),
+            for (final key in ['checkIn', 'checkOut'])
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: context.appColors.surface,
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
+                  border: Border.all(color: context.appColors.divider),
+                ),
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: ListTile(
+                    leading: Icon(
+                      Icons.schedule_rounded,
+                      color: context.appColors.icon,
+                    ),
+                    title: Text(
+                      key == 'checkIn'
+                          ? 'وقت الوصول (اختياري)'
+                          : 'وقت المغادرة (اختياري)',
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                    subtitle: Text(
+                      s.value(key).isEmpty ? 'اختر الوقت' : s.value(key),
+                    ),
+                    trailing: const Icon(Icons.chevron_left_rounded),
+                    onTap: () async {
+                      final t = await showTimePicker(
+                        context: context,
+                        initialTime: const TimeOfDay(hour: 14, minute: 0),
+                      );
+                      if (t != null) {
+                        n.field(
+                          key,
+                          '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}',
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ),
+          ] else ...[
+            _MiniInput(
+              label: 'سعر نصف يوم (ريال، اختياري)',
+              controller: _extraControllers['halfDay']!,
+              onChanged: (v) => n.field('halfDay', v),
+            ),
+            const SizedBox(height: 20),
+            Divider(color: context.appColors.divider),
+            const SizedBox(height: 16),
+            const _SectionLabel('الخدمات المشمولة (اختياري)'),
+            const SizedBox(height: 12),
+            ...serviceLabels.entries.map(
+              (e) => _ToggleRow(
+                label: e.value,
+                icon: switch (e.key) {
+                  'catering' => Icons.restaurant_rounded,
+                  'sound_system' => Icons.speaker_rounded,
+                  'projector' => Icons.videocam_outlined,
+                  'decoration' => Icons.celebration_outlined,
+                  'security' => Icons.shield_outlined,
+                  _ => Icons.local_parking_rounded,
+                },
+                value: s.value(e.key) == 'true',
+                onChanged: (v) => n.field(e.key, '$v'),
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
         ],
       ),
@@ -185,12 +335,12 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        style: AppTextStyles.titleSmall.copyWith(
-          fontWeight: FontWeight.w700,
-          color: AppColors.textPrimaryLight,
-        ),
-      );
+    text,
+    style: AppTextStyles.titleSmall.copyWith(
+      fontWeight: FontWeight.w700,
+      color: context.appColors.textPrimary,
+    ),
+  );
 }
 
 class _StepperRow extends StatelessWidget {
@@ -209,44 +359,43 @@ class _StepperRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceLight,
-          borderRadius: BorderRadius.circular(AppConstants.radiusM),
-          border: Border.all(color: AppColors.dividerLight),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    decoration: BoxDecoration(
+      color: context.appColors.surface,
+      borderRadius: BorderRadius.circular(AppConstants.radiusM),
+      border: Border.all(color: context.appColors.divider),
+    ),
+    child: Row(
+      children: [
+        Icon(icon, size: 20, color: context.appColors.textSecondary),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: context.appColors.textPrimary,
+            ),
+          ),
         ),
-        child: Row(
-          children: [
-            Icon(icon,
-                size: 20, color: AppColors.textSecondaryLight),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(label,
-                  style: AppTextStyles.bodyMedium
-                      .copyWith(color: AppColors.textPrimaryLight)),
-            ),
-            _CounterButton(
-              icon: Icons.remove_rounded,
-              onTap: value > 0 ? onDecrement : null,
-            ),
-            SizedBox(
-              width: 40,
-              child: Text(
-                '$value',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.titleMedium.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight,
-                ),
-              ),
-            ),
-            _CounterButton(
-              icon: Icons.add_rounded,
-              onTap: onIncrement,
-            ),
-          ],
+        _CounterButton(
+          icon: Icons.remove_rounded,
+          onTap: value > 0 ? onDecrement : null,
         ),
-      );
+        SizedBox(
+          width: 40,
+          child: Text(
+            '$value',
+            textAlign: TextAlign.center,
+            style: AppTextStyles.titleMedium.copyWith(
+              fontWeight: FontWeight.w700,
+              color: context.appColors.textPrimary,
+            ),
+          ),
+        ),
+        _CounterButton(icon: Icons.add_rounded, onTap: onIncrement),
+      ],
+    ),
+  );
 }
 
 class _CounterButton extends StatelessWidget {
@@ -256,72 +405,60 @@ class _CounterButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: onTap != null
-                  ? AppColors.primary
-                  : AppColors.dividerLight,
-            ),
-            color: onTap != null
-                ? AppColors.primaryLight
-                : AppColors.surfaceLight,
-          ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: onTap != null
-                ? AppColors.primary
-                : AppColors.textHintLight,
-          ),
+    onTap: onTap,
+    child: Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: onTap != null ? AppColors.primary : context.appColors.divider,
         ),
-      );
+        color: onTap != null
+            ? context.appColors.primaryTint
+            : context.appColors.surface,
+      ),
+      child: Icon(
+        icon,
+        size: 18,
+        color: onTap != null ? AppColors.primary : context.appColors.textHint,
+      ),
+    ),
+  );
 }
 
 class _FacadePill extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  const _FacadePill(
-      {required this.label,
-      required this.selected,
-      required this.onTap});
+  const _FacadePill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: selected
-                ? AppColors.primary
-                : AppColors.surfaceLight,
-            borderRadius:
-                BorderRadius.circular(AppConstants.radiusCircle),
-            border: Border.all(
-              color: selected
-                  ? AppColors.primary
-                  : AppColors.dividerLight,
-            ),
-          ),
-          child: Text(
-            label,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: selected
-                  ? AppColors.white
-                  : AppColors.textPrimaryLight,
-              fontWeight:
-                  selected ? FontWeight.w700 : FontWeight.w400,
-            ),
-          ),
+    onTap: onTap,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: selected ? AppColors.primary : context.appColors.surface,
+        borderRadius: BorderRadius.circular(AppConstants.radiusCircle),
+        border: Border.all(
+          color: selected ? AppColors.primary : context.appColors.divider,
         ),
-      );
+      ),
+      child: Text(
+        label,
+        style: AppTextStyles.bodySmall.copyWith(
+          color: selected ? AppColors.onPrimary : context.appColors.textPrimary,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+        ),
+      ),
+    ),
+  );
 }
 
 class _MiniInput extends StatelessWidget {
@@ -336,52 +473,51 @@ class _MiniInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.textSecondaryLight,
-                  fontWeight: FontWeight.w600)),
-          const SizedBox(height: 6),
-          TextField(
-            controller: controller,
-            onChanged: onChanged,
-            keyboardType: TextInputType.number,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly
-            ],
-            style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textPrimaryLight),
-            decoration: InputDecoration(
-              hintText: '0',
-              hintStyle: AppTextStyles.bodyMedium
-                  .copyWith(color: AppColors.textHintLight),
-              filled: true,
-              fillColor: AppColors.surfaceLight,
-              border: OutlineInputBorder(
-                borderRadius:
-                    BorderRadius.circular(AppConstants.radiusM),
-                borderSide:
-                    const BorderSide(color: AppColors.dividerLight),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius:
-                    BorderRadius.circular(AppConstants.radiusM),
-                borderSide:
-                    const BorderSide(color: AppColors.dividerLight),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius:
-                    BorderRadius.circular(AppConstants.radiusM),
-                borderSide: const BorderSide(
-                    color: AppColors.primary, width: 1.5),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 12),
-            ),
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: AppTextStyles.labelMedium.copyWith(
+          color: context.appColors.textSecondary,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      const SizedBox(height: 6),
+      TextField(
+        controller: controller,
+        onChanged: onChanged,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        style: AppTextStyles.bodyMedium.copyWith(
+          color: context.appColors.textPrimary,
+        ),
+        decoration: InputDecoration(
+          hintText: '0',
+          hintStyle: AppTextStyles.bodyMedium.copyWith(
+            color: context.appColors.textHint,
           ),
-        ],
-      );
+          filled: true,
+          fillColor: context.appColors.surface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+            borderSide: BorderSide(color: context.appColors.divider),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+            borderSide: BorderSide(color: context.appColors.divider),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusM),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
+        ),
+      ),
+    ],
+  );
 }
 
 class _ToggleRow extends StatelessWidget {
@@ -398,18 +534,20 @@ class _ToggleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          value: value,
-          onChanged: onChanged,
-          activeColor: AppColors.primary,
-          secondary: Icon(icon,
-              size: 20, color: AppColors.textSecondaryLight),
-          title: Text(label,
-              style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textPrimaryLight)),
-          dense: true,
+    padding: const EdgeInsets.only(bottom: 4),
+    child: SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      value: value,
+      onChanged: onChanged,
+      activeThumbColor: AppColors.primary,
+      secondary: Icon(icon, size: 20, color: context.appColors.textSecondary),
+      title: Text(
+        label,
+        style: AppTextStyles.bodyMedium.copyWith(
+          color: context.appColors.textPrimary,
         ),
-      );
+      ),
+      dense: true,
+    ),
+  );
 }

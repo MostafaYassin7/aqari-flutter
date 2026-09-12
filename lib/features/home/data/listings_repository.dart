@@ -1,3 +1,7 @@
+import '../../../core/preview/ui_preview.dart';
+import 'mock_listings.dart';
+import 'mock_rentals.dart';
+import 'mock_projects.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../../../shared/models/listing.dart';
@@ -21,7 +25,7 @@ class ListingsRepository {
     if (raw is List) {
       items = raw;
     } else if (raw is Map) {
-      final m = Map<String, dynamic>.from(raw as Map);
+      final m = Map<String, dynamic>.from(raw);
       final rawItems = m['hits'] ?? m['data'] ?? m['items'];
       items = (rawItems as List?) ?? [];
     } else {
@@ -49,6 +53,13 @@ class ListingsRepository {
     bool? isFurnished,
     bool? hasElevator,
   }) async {
+    if (uiPreview) {
+      return page > 1
+          ? []
+          : mockListings
+                .where((l) => (city == null || city.isEmpty || l.city == city))
+                .toList();
+    }
     try {
       final response = await apiClient.get(
         ApiEndpoints.search,
@@ -81,6 +92,7 @@ class ListingsRepository {
     String? city,
     String? status,
   }) async {
+    if (uiPreview) return page > 1 ? [] : mockProjects;
     try {
       final response = await apiClient.get(
         ApiEndpoints.projects,
@@ -109,6 +121,7 @@ class ListingsRepository {
 
   /// Fetch a single listing by ID.
   Future<Listing> getListingById(String id) async {
+    if (uiPreview) return mockListings.firstWhere((l) => l.id == id);
     final response = await apiClient.get('${ApiEndpoints.listings}/$id');
     final raw = response.data;
     if (raw is Map) {
@@ -183,24 +196,57 @@ class ListingsRepository {
     String? query,
     String? city,
     String? propertyType,
+  }) async => (await getDailyRentalPage(
+    page: page,
+    limit: limit,
+    query: query,
+    city: city,
+    propertyType: propertyType,
+  )).items;
+
+  Future<({List<DailyRental> items, bool hasMore})> getDailyRentalPage({
+    int page = 1,
+    int limit = 20,
+    String? query,
+    String? city,
+    String? propertyType,
   }) async {
-    try {
-      final response = await apiClient.get(
-        ApiEndpoints.search,
-        queryParameters: {
-          'page': page,
-          'limit': limit,
-          'listingType': 'rent_short',
-          if (query != null && query.isNotEmpty) 'query': query,
-          if (city != null && city.isNotEmpty) 'city': city,
-          if (propertyType != null && propertyType.isNotEmpty)
-            'propertyType': propertyType,
-        },
+    if (uiPreview) {
+      return (
+        items: page > 1
+            ? <DailyRental>[]
+            : mockRentals
+                  .where(
+                    (r) => (city == null || city.isEmpty || r.city == city),
+                  )
+                  .toList(),
+        hasMore: false,
       );
-      return _parseItems<DailyRental>(response.data, DailyRental.fromJson);
-    } catch (_) {
-      return [];
     }
+    final response = await apiClient.get(
+      ApiEndpoints.search,
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        'listingType': 'rent_short',
+        'excludePropertyType': 'event_hall',
+        if (query != null && query.isNotEmpty) 'query': query,
+        if (city != null && city.isNotEmpty) 'city': city,
+        if (propertyType != null && propertyType.isNotEmpty)
+          'propertyType': propertyType,
+      },
+    );
+    final rawItems = _parseItems<DailyRental>(
+      response.data,
+      DailyRental.fromJson,
+    );
+    final pages = response.data is Map
+        ? int.tryParse('${response.data['pages']}')
+        : null;
+    return (
+      items: rawItems.where((r) => r.rules.isDailyRental).toList(),
+      hasMore: pages != null ? page < pages : rawItems.length >= limit,
+    );
   }
 
   Future<List<Listing>> searchByReference(String q) async {

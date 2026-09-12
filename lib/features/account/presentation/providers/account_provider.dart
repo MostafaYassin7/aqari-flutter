@@ -1,3 +1,4 @@
+import '../../../../core/preview/ui_preview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_enums.dart';
@@ -55,6 +56,17 @@ class UserProfile {
 
 /// Returns the logged-in user's profile, or null if not authenticated.
 final userProfileProvider = Provider<UserProfile?>((ref) {
+  if (uiPreview) {
+    return UserProfile(
+      id: 'preview-user',
+      name: 'حساب تجريبي',
+      phone: '—',
+      role: 'host',
+      isVerified: false,
+      isActive: true,
+      createdAt: DateTime(2026),
+    );
+  }
   final user = ref.watch(authProvider.select((state) => state.user));
   if (user == null) {
     return null;

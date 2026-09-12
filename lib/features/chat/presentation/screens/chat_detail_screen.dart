@@ -90,14 +90,14 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     final chat = ref.watch(chatByIdProvider(widget.chatId));
     if (chat == null) {
       return Scaffold(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.appColors.background,
         appBar: AppBar(
-          backgroundColor: AppColors.backgroundLight,
+          backgroundColor: context.appColors.background,
           leading: IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_rounded,
               size: 20,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
@@ -112,7 +112,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
         (chatsState.typingExpiry?.isAfter(DateTime.now()) ?? false);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       appBar: _buildAppBar(context, chat),
       body: Column(
         children: [
@@ -137,7 +137,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                 child: Text(
                   'يكتب...',
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ),
@@ -157,14 +157,14 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
   AppBar _buildAppBar(BuildContext context, Chat chat) {
     return AppBar(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       elevation: 0,
       scrolledUnderElevation: 0,
       leading: IconButton(
-        icon: const Icon(
+        icon: Icon(
           Icons.arrow_back_ios_rounded,
           size: 20,
-          color: AppColors.textPrimaryLight,
+          color: context.appColors.textPrimary,
         ),
         onPressed: () => Navigator.of(context).maybePop(),
       ),
@@ -180,7 +180,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               placeholder: (_, __) => Container(
                 width: 38,
                 height: 38,
-                color: AppColors.primaryLight,
+                color: context.appColors.primaryTint,
                 child: const Icon(
                   Icons.person_rounded,
                   color: AppColors.primary,
@@ -190,7 +190,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               errorWidget: (_, __, ___) => Container(
                 width: 38,
                 height: 38,
-                color: AppColors.primaryLight,
+                color: context.appColors.primaryTint,
                 child: const Icon(
                   Icons.person_rounded,
                   color: AppColors.primary,
@@ -206,7 +206,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
               chat.contact.name,
               style: AppTextStyles.titleSmall.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
             ),
           ),
@@ -215,17 +215,17 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
       actions: [
         if (chat.listingId != null && chat.listingId!.isNotEmpty)
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.home_rounded,
-              color: AppColors.textSecondaryLight,
+              color: context.appColors.textSecondary,
               size: 22,
             ),
             onPressed: () => context.push('/property/${chat.listingId}'),
           ),
       ],
-      bottom: const PreferredSize(
+      bottom: PreferredSize(
         preferredSize: Size.fromHeight(1),
-        child: Divider(height: 1, color: AppColors.dividerLight),
+        child: Divider(height: 1, color: context.appColors.divider),
       ),
     );
   }
@@ -250,7 +250,7 @@ class _MessagesList extends StatelessWidget {
         child: Text(
           'ابدأ المحادثة',
           style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.appColors.textSecondary,
           ),
         ),
       );
@@ -338,17 +338,17 @@ class _TimeSeparator extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
-          const Expanded(child: Divider(color: AppColors.dividerLight)),
+          Expanded(child: Divider(color: context.appColors.divider)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               label,
               style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
               ),
             ),
           ),
-          const Expanded(child: Divider(color: AppColors.dividerLight)),
+          Expanded(child: Divider(color: context.appColors.divider)),
         ],
       ),
     );
@@ -379,7 +379,7 @@ class _Bubble extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: isSent ? AppColors.primary : AppColors.surfaceLight,
+              color: isSent ? AppColors.primary : context.appColors.surface,
               borderRadius: BorderRadiusDirectional.only(
                 topStart: const Radius.circular(18),
                 topEnd: const Radius.circular(18),
@@ -390,7 +390,7 @@ class _Bubble extends StatelessWidget {
             child: Text(
               message.text,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: isSent ? AppColors.white : AppColors.textPrimaryLight,
+                color: isSent ? AppColors.white : context.appColors.textPrimary,
                 height: 1.4,
               ),
             ),
@@ -405,7 +405,7 @@ class _Bubble extends StatelessWidget {
                 Text(
                   _formatTime(message.timestamp),
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textHintLight,
+                    color: context.appColors.textHint,
                   ),
                 ),
                 if (isSent) ...[
@@ -417,7 +417,7 @@ class _Bubble extends StatelessWidget {
                     size: 14,
                     color: message.isRead
                         ? AppColors.primary
-                        : AppColors.textHintLight,
+                        : context.appColors.textHint,
                   ),
                 ],
               ],
@@ -460,9 +460,9 @@ class _InputBar extends StatelessWidget {
         AppConstants.spaceM,
         AppConstants.spaceS + MediaQuery.of(context).padding.bottom,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundLight,
-        border: Border(top: BorderSide(color: AppColors.dividerLight)),
+      decoration: BoxDecoration(
+        color: context.appColors.background,
+        border: Border(top: BorderSide(color: context.appColors.divider)),
       ),
       child: Row(
         children: [
@@ -474,17 +474,17 @@ class _InputBar extends StatelessWidget {
               onSubmitted: (_) => onSend(),
               onChanged: (_) => onChanged?.call(),
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
               maxLines: 4,
               minLines: 1,
               decoration: InputDecoration(
                 hintText: 'اكتب رسالة...',
                 hintStyle: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textHintLight,
+                  color: context.appColors.textHint,
                 ),
                 filled: true,
-                fillColor: AppColors.surfaceLight,
+                fillColor: context.appColors.surface,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 10,
@@ -506,7 +506,7 @@ class _InputBar extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: canSend ? AppColors.primary : AppColors.dividerLight,
+              color: canSend ? AppColors.primary : context.appColors.divider,
               shape: BoxShape.circle,
             ),
             child: IconButton(

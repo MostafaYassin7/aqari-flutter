@@ -7,10 +7,7 @@ class AuthRepository {
   final _dio = apiClient;
 
   Future<String> sendOtp(String phone) async {
-    final res = await _dio.post(
-      ApiEndpoints.sendOtp,
-      data: {'phone': phone},
-    );
+    final res = await _dio.post(ApiEndpoints.sendOtp, data: {'phone': phone});
     final data = res.data as Map<String, dynamic>?;
     // Dev mode: backend returns the code in the response
     return data?['code'] as String? ?? '';

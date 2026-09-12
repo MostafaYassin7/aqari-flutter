@@ -51,11 +51,11 @@ class _ProjectsTabState extends ConsumerState<ProjectsTab> {
           child: CountryChipsRow(cityProvider: selectedProjectCityProvider),
         ),
 
-        const SliverToBoxAdapter(
+        SliverToBoxAdapter(
           child: Divider(
             height: 1,
             thickness: 1,
-            color: AppColors.dividerLight,
+            color: context.appColors.divider,
           ),
         ),
 
@@ -76,16 +76,16 @@ class _ProjectsTabState extends ConsumerState<ProjectsTab> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.apartment_outlined,
                     size: 64,
-                    color: AppColors.iconLight,
+                    color: context.appColors.icon,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'لا توجد مشاريع في هذه المدينة',
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                 ],

@@ -1,3 +1,4 @@
+import '../../../../core/router/auth_return.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,12 +18,12 @@ class LoginScreen extends ConsumerWidget {
     // Navigate to home when social sign-in completes
     ref.listen<AuthState>(authProvider, (_, next) {
       if (next.step == AuthStep.authenticated) {
-        context.go(AppRoutes.home);
+        context.go(authDestination(context));
       }
     });
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       body: SafeArea(
         child: Stack(
           children: [
@@ -46,7 +47,7 @@ class LoginScreen extends ConsumerWidget {
                             width: 64,
                             height: 64,
                             decoration: BoxDecoration(
-                              color: AppColors.primaryLight,
+                              color: context.appColors.primaryTint,
                               borderRadius: BorderRadius.circular(18),
                             ),
                             child: const Icon(
@@ -72,7 +73,7 @@ class LoginScreen extends ConsumerWidget {
                           'سجّل دخولك أو أنشئ حساباً جديداً',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textSecondaryLight,
+                            color: context.appColors.textSecondary,
                           ),
                         ),
 
@@ -82,7 +83,9 @@ class LoginScreen extends ConsumerWidget {
                         ElevatedButton.icon(
                           onPressed: auth.isLoading
                               ? null
-                              : () => context.go(AppRoutes.phoneInput),
+                              : () => context.go(
+                                  nextAuthRoute(context, AppRoutes.phoneInput),
+                                ),
                           icon: const Icon(Icons.phone_rounded, size: 20),
                           label: const Text('متابعة برقم الهاتف'),
                         ),
@@ -98,8 +101,9 @@ class LoginScreen extends ConsumerWidget {
                         OutlinedButton(
                           onPressed: auth.isLoading
                               ? null
-                              : () =>
-                                  ref.read(authProvider.notifier).socialSignIn(),
+                              : () => ref
+                                    .read(authProvider.notifier)
+                                    .socialSignIn(),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -116,8 +120,9 @@ class LoginScreen extends ConsumerWidget {
                         OutlinedButton(
                           onPressed: auth.isLoading
                               ? null
-                              : () =>
-                                  ref.read(authProvider.notifier).socialSignIn(),
+                              : () => ref
+                                    .read(authProvider.notifier)
+                                    .socialSignIn(),
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -147,8 +152,9 @@ class LoginScreen extends ConsumerWidget {
                   color: AppColors.overlay,
                   child: Center(
                     child: CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(AppColors.white),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -169,9 +175,9 @@ class _TopBar extends StatelessWidget {
       alignment: AlignmentDirectional.centerStart,
       child: IconButton(
         icon: const Icon(Icons.close_rounded),
-        color: AppColors.textPrimaryLight,
+        color: context.appColors.textPrimary,
         onPressed: () {
-          context.go(AppRoutes.onboarding);
+          context.go(nextAuthRoute(context, AppRoutes.onboarding));
         },
       ),
     );
@@ -187,17 +193,17 @@ class _OrDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Expanded(child: Divider(color: AppColors.dividerLight)),
+        Expanded(child: Divider(color: context.appColors.divider)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'أو',
             style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.appColors.textSecondary,
             ),
           ),
         ),
-        const Expanded(child: Divider(color: AppColors.dividerLight)),
+        Expanded(child: Divider(color: context.appColors.divider)),
       ],
     );
   }
@@ -213,7 +219,7 @@ class _GoogleIcon extends StatelessWidget {
       height: 22,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.dividerLight),
+        border: Border.all(color: context.appColors.divider),
       ),
       child: const Center(
         child: Text(
@@ -243,13 +249,13 @@ class _TermsText extends StatelessWidget {
         TextSpan(
           text: 'بالمتابعة أنت توافق على ',
           style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.appColors.textSecondary,
           ),
           children: [
             TextSpan(
               text: 'شروط الخدمة',
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
                 decoration: TextDecoration.underline,
               ),
             ),
@@ -257,7 +263,7 @@ class _TermsText extends StatelessWidget {
             TextSpan(
               text: ' سياسة الخصوصية',
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
                 decoration: TextDecoration.underline,
               ),
             ),

@@ -87,7 +87,10 @@ List<RentalAmenity> getAmenitiesForRental(DailyRental rental) {
     const RentalAmenity(label: 'واي فاي', icon: Icons.wifi_rounded),
     const RentalAmenity(label: 'تكييف', icon: Icons.ac_unit_rounded),
     const RentalAmenity(label: 'مطبخ راكب', icon: Icons.kitchen_rounded),
-    const RentalAmenity(label: 'غسالة', icon: Icons.local_laundry_service_rounded),
+    const RentalAmenity(
+      label: 'غسالة',
+      icon: Icons.local_laundry_service_rounded,
+    ),
     const RentalAmenity(label: 'تلفاز', icon: Icons.tv_rounded),
     const RentalAmenity(label: 'موقف سيارة', icon: Icons.local_parking_rounded),
   ];
@@ -104,9 +107,15 @@ List<RentalAmenity> getAmenitiesForRental(DailyRental rental) {
     case 'شاليه':
       return [
         ...base,
-        const RentalAmenity(label: 'شواء خارجي', icon: Icons.outdoor_grill_rounded),
+        const RentalAmenity(
+          label: 'شواء خارجي',
+          icon: Icons.outdoor_grill_rounded,
+        ),
         const RentalAmenity(label: 'حديقة', icon: Icons.yard_rounded),
-        const RentalAmenity(label: 'ملعب أطفال', icon: Icons.sports_soccer_rounded),
+        const RentalAmenity(
+          label: 'ملعب أطفال',
+          icon: Icons.sports_soccer_rounded,
+        ),
       ];
     case 'استراحة':
       return [
@@ -161,14 +170,16 @@ const _reviewPool = [
     reviewerPhoto: 'https://picsum.photos/seed/rev1/100/100',
     rating: 5.0,
     date: 'مارس 2025',
-    comment: 'إقامة رائعة جداً! المكان نظيف ومجهز بالكامل. المضيف كان متجاوباً وسريع الرد. سأعود بالتأكيد.',
+    comment:
+        'إقامة رائعة جداً! المكان نظيف ومجهز بالكامل. المضيف كان متجاوباً وسريع الرد. سأعود بالتأكيد.',
   ),
   RentalReview(
     reviewerName: 'نوف الحربي',
     reviewerPhoto: 'https://picsum.photos/seed/rev2/100/100',
     rating: 5.0,
     date: 'فبراير 2025',
-    comment: 'تجربة لا تُنسى! الموقع ممتاز والمرافق نظيفة. ننصح به بشدة للعائلات.',
+    comment:
+        'تجربة لا تُنسى! الموقع ممتاز والمرافق نظيفة. ننصح به بشدة للعائلات.',
   ),
   RentalReview(
     reviewerName: 'عمر البقمي',
@@ -201,10 +212,28 @@ List<RentalReview> getReviewsForRental(String rentalId) {
 
 RatingBreakdown getBreakdownForRating(double rating) {
   if (rating >= 4.9) {
-    return const RatingBreakdown(five: 0.85, four: 0.10, three: 0.03, two: 0.01, one: 0.01);
+    return const RatingBreakdown(
+      five: 0.85,
+      four: 0.10,
+      three: 0.03,
+      two: 0.01,
+      one: 0.01,
+    );
   } else if (rating >= 4.7) {
-    return const RatingBreakdown(five: 0.75, four: 0.18, three: 0.05, two: 0.01, one: 0.01);
+    return const RatingBreakdown(
+      five: 0.75,
+      four: 0.18,
+      three: 0.05,
+      two: 0.01,
+      one: 0.01,
+    );
   } else {
-    return const RatingBreakdown(five: 0.60, four: 0.25, three: 0.10, two: 0.03, one: 0.02);
+    return const RatingBreakdown(
+      five: 0.60,
+      four: 0.25,
+      three: 0.10,
+      two: 0.03,
+      one: 0.02,
+    );
   }
 }

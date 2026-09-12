@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/network/api_failure.dart';
 import '../providers/rentals_provider.dart';
 import 'category_chips_row.dart';
 import 'country_chips_row.dart';
@@ -17,102 +18,143 @@ class DailyRentTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final rentals = ref.watch(filteredRentalsProvider);
-    final isLoading = ref.watch(rentalsNotifierProvider).isLoading;
+    final rentalState = ref.watch(rentalsNotifierProvider);
+    final isLoading = rentalState.isLoading;
 
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         if (notification is ScrollEndNotification &&
             notification.metrics.pixels >=
                 notification.metrics.maxScrollExtent - 200) {
-          ref.read(rentalsNotifierProvider.notifier).loadMore();
+          ref.read(rentalsNotifierProvider.notifier).loadMore().catchError((
+            Object error,
+          ) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(ApiFailure.fromError(error).message)),
+              );
+            }
+          });
         }
         return false;
       },
-      child: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // Date picker bar
-          const SliverToBoxAdapter(child: _DateBar()),
-
-          // Guest count selector
-          const SliverToBoxAdapter(child: _GuestSelector()),
-
-          // Country filter
-          SliverToBoxAdapter(
-            child: CountryChipsRow(cityProvider: selectedRentalCityProvider),
+      child: RefreshIndicator(
+        onRefresh: () async {
+          try {
+            await ref.read(rentalsNotifierProvider.notifier).refresh();
+          } catch (_) {
+            // The provider retains the error for the retry state below.
+          }
+        },
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
           ),
+          slivers: [
+            // Date picker bar
+            const SliverToBoxAdapter(child: _DateBar()),
 
-          // Property type filter
-          SliverToBoxAdapter(
-            child: CategoryChipsRow(
-              propertyTypeProvider: selectedRentalPropertyTypeProvider,
+            // Guest count selector
+            const SliverToBoxAdapter(child: _GuestSelector()),
+
+            // Country filter
+            SliverToBoxAdapter(
+              child: CountryChipsRow(cityProvider: selectedRentalCityProvider),
             ),
-          ),
 
-          const SliverToBoxAdapter(
-            child: Divider(
-              height: 1,
-              thickness: 1,
-              color: AppColors.dividerLight,
-            ),
-          ),
-
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-          // Loading state
-          if (isLoading && rentals.isEmpty)
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+            // Property type filter
+            SliverToBoxAdapter(
+              child: CategoryChipsRow(
+                propertyTypeProvider: selectedRentalPropertyTypeProvider,
               ),
-            )
-          else if (rentals.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.home_work_outlined,
-                      size: 64,
-                      color: AppColors.iconLight,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'لا توجد وحدات في هذه الفئة',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondaryLight,
+            ),
+
+            SliverToBoxAdapter(
+              child: Divider(
+                height: 1,
+                thickness: 1,
+                color: context.appColors.divider,
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+            // Loading state
+            if (isLoading && rentals.isEmpty)
+              const SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
+              )
+            else if (rentalState.hasError)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        ApiFailure.fromError(rentalState.error!).message,
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.bodyMedium,
                       ),
-                    ),
-                  ],
+                      TextButton(
+                        onPressed: () =>
+                            ref.invalidate(rentalsNotifierProvider),
+                        child: const Text('إعادة المحاولة'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else if (rentals.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.home_work_outlined,
+                        size: 64,
+                        color: context.appColors.icon,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'لا توجد وحدات في هذه الفئة',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: context.appColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, i) => RentalCard(rental: rentals[i]),
+                  childCount: rentals.length,
                 ),
               ),
-            )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, i) => RentalCard(rental: rentals[i]),
-                childCount: rentals.length,
-              ),
-            ),
 
-          if (isLoading && rentals.isNotEmpty)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Center(
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.primary,
+            if (isLoading && rentals.isNotEmpty)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ),
-            ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-        ],
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+          ],
+        ),
       ),
     );
   }
@@ -161,12 +203,12 @@ class _DateBar extends ConsumerWidget {
         onTap: openCalendar,
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.white,
+            color: context.appColors.card,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.dividerLight),
+            border: Border.all(color: context.appColors.divider),
             boxShadow: [
               BoxShadow(
-                color: AppColors.shadowLight,
+                color: context.appColors.shadow,
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -188,7 +230,7 @@ class _DateBar extends ConsumerWidget {
               ),
 
               // Divider
-              Container(width: 1, height: 44, color: AppColors.dividerLight),
+              Container(width: 1, height: 44, color: context.appColors.divider),
 
               // Check-out
               Expanded(
@@ -238,7 +280,7 @@ class _DateCell extends StatelessWidget {
             Text(
               label,
               style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -247,8 +289,8 @@ class _DateCell extends StatelessWidget {
               value,
               style: AppTextStyles.titleSmall.copyWith(
                 color: isSet
-                    ? AppColors.textPrimaryLight
-                    : AppColors.textHintLight,
+                    ? context.appColors.textPrimary
+                    : context.appColors.textHint,
                 fontWeight: isSet ? FontWeight.w700 : FontWeight.w400,
               ),
             ),
@@ -273,16 +315,16 @@ class _GuestSelector extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.person_outline_rounded,
             size: 20,
-            color: AppColors.textSecondaryLight,
+            color: context.appColors.textSecondary,
           ),
           const SizedBox(width: 8),
           Text(
             'الضيوف',
             style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.appColors.textSecondary,
             ),
           ),
           const Spacer(),
@@ -297,7 +339,7 @@ class _GuestSelector extends ConsumerWidget {
             child: Text(
               '$count ضيف',
               style: AppTextStyles.titleSmall.copyWith(
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -336,14 +378,16 @@ class _CounterButton extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(
             color: enabled
-                ? AppColors.textSecondaryLight
-                : AppColors.dividerLight,
+                ? context.appColors.textSecondary
+                : context.appColors.divider,
           ),
         ),
         child: Icon(
           icon,
           size: 16,
-          color: enabled ? AppColors.textPrimaryLight : AppColors.dividerLight,
+          color: enabled
+              ? context.appColors.textPrimary
+              : context.appColors.divider,
         ),
       ),
     );

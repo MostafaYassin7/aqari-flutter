@@ -1,159 +1,16 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../../core/network/api_client.dart';
-import '../../../../core/network/api_endpoints.dart';
-
-// ── Transaction type ──────────────────────────────────────────────────────────
-
-enum TransactionType { topUp, promotion, subscription, booking, refund }
-
-extension TransactionTypeX on TransactionType {
-  IconData get icon {
-    switch (this) {
-      case TransactionType.topUp:
-        return Icons.add_card_rounded;
-      case TransactionType.promotion:
-        return Icons.rocket_launch_rounded;
-      case TransactionType.subscription:
-        return Icons.workspace_premium_rounded;
-      case TransactionType.booking:
-        return Icons.calendar_month_rounded;
-      case TransactionType.refund:
-        return Icons.undo_rounded;
-    }
-  }
-
-  Color get color {
-    switch (this) {
-      case TransactionType.topUp:
-        return const Color(0xFF00A699);
-      case TransactionType.promotion:
-        return const Color(0xFFF5A623);
-      case TransactionType.subscription:
-        return const Color(0xFF9C27B0);
-      case TransactionType.booking:
-        return const Color(0xFF2196F3);
-      case TransactionType.refund:
-        return const Color(0xFF00A699);
-    }
-  }
-}
-
-// ── Filter ────────────────────────────────────────────────────────────────────
-
-enum TransactionFilter { all, topUps, promotions, subscriptions, bookings }
-
-extension TransactionFilterX on TransactionFilter {
-  String get label {
-    switch (this) {
-      case TransactionFilter.all:
-        return 'الكل';
-      case TransactionFilter.topUps:
-        return 'الشحن';
-      case TransactionFilter.promotions:
-        return 'التمييز';
-      case TransactionFilter.subscriptions:
-        return 'الاشتراكات';
-      case TransactionFilter.bookings:
-        return 'الحجوزات';
-    }
-  }
-
-  /// Maps to the `referenceType` query param the API expects.
-  String? get referenceType {
-    switch (this) {
-      case TransactionFilter.all:
-        return null;
-      case TransactionFilter.topUps:
-        return 'top_up';
-      case TransactionFilter.promotions:
-        return 'promotion';
-      case TransactionFilter.subscriptions:
-        return 'subscription';
-      case TransactionFilter.bookings:
-        return 'booking';
-    }
-  }
-}
-
-// ── Model ─────────────────────────────────────────────────────────────────────
-
-class WalletTransaction {
-  final String id;
-  final TransactionType type;
-  final String description;
-  final double amount; // positive = credit, negative = debit
-  final DateTime dateTime;
-
-  const WalletTransaction({
-    required this.id,
-    required this.type,
-    required this.description,
-    required this.amount,
-    required this.dateTime,
-  });
-
-  bool get isCredit => amount > 0;
-
-  factory WalletTransaction.fromJson(Map<String, dynamic> json) {
-    final rawType = (json['referenceType'] ?? json['type'] ?? '').toString();
-    final type = _parseTransactionType(rawType);
-    final rawAmount = double.tryParse(json['amount']?.toString() ?? '0') ?? 0.0;
-    // Negative for debits (promotion, subscription, booking), positive for credits
-    final txType = (json['type'] ?? '').toString();
-    final amount = txType == 'debit' ? -rawAmount.abs() : rawAmount.abs();
-
-    return WalletTransaction(
-      id: (json['id'] ?? '').toString(),
-      type: type,
-      description: (json['description'] ?? _defaultDescription(type))
-          .toString(),
-      amount: amount,
-      dateTime:
-          DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
-          DateTime.now(),
-    );
-  }
-
-  static TransactionType _parseTransactionType(String raw) {
-    switch (raw) {
-      case 'top_up':
-        return TransactionType.topUp;
-      case 'promotion':
-        return TransactionType.promotion;
-      case 'subscription':
-        return TransactionType.subscription;
-      case 'booking':
-        return TransactionType.booking;
-      case 'refund':
-        return TransactionType.refund;
-      default:
-        return TransactionType.topUp;
-    }
-  }
-
-  static String _defaultDescription(TransactionType type) {
-    switch (type) {
-      case TransactionType.topUp:
-        return 'شحن محفظة';
-      case TransactionType.promotion:
-        return 'تمييز إعلان';
-      case TransactionType.subscription:
-        return 'اشتراك';
-      case TransactionType.booking:
-        return 'حجز';
-      case TransactionType.refund:
-        return 'استرداد';
-    }
-  }
-}
-
-// ── State ─────────────────────────────────────────────────────────────────────
+import '../../../../core/preview/ui_preview.dart';
+import '../../../../core/network/api_failure.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/wallet_repository.dart';
+import '../../domain/wallet.dart';
+export '../../domain/wallet.dart';
 
 class WalletState {
+  final double heldBalance, pendingEarnings;
   final double balance;
   final String currency;
+  final String direction;
   final bool isLoading;
   final bool isLoadingMore;
   final String? error;
@@ -163,8 +20,11 @@ class WalletState {
   final bool hasMore;
 
   const WalletState({
+    this.heldBalance = 0,
+    this.pendingEarnings = 0,
     required this.balance,
     this.currency = 'SAR',
+    this.direction = 'all',
     this.isLoading = false,
     this.isLoadingMore = false,
     this.error,
@@ -175,8 +35,11 @@ class WalletState {
   });
 
   WalletState copyWith({
+    double? heldBalance,
+    double? pendingEarnings,
     double? balance,
     String? currency,
+    String? direction,
     bool? isLoading,
     bool? isLoadingMore,
     String? error,
@@ -185,8 +48,11 @@ class WalletState {
     int? currentPage,
     bool? hasMore,
   }) => WalletState(
+    heldBalance: heldBalance ?? this.heldBalance,
+    pendingEarnings: pendingEarnings ?? this.pendingEarnings,
     balance: balance ?? this.balance,
     currency: currency ?? this.currency,
+    direction: direction ?? this.direction,
     isLoading: isLoading ?? this.isLoading,
     isLoadingMore: isLoadingMore ?? this.isLoadingMore,
     error: error,
@@ -197,16 +63,25 @@ class WalletState {
   );
 }
 
-// ── Notifier ──────────────────────────────────────────────────────────────────
-
 class WalletNotifier extends Notifier<WalletState> {
-  static const _limit = 20;
-
+  int _generation = 0, _summaryGeneration = 0;
   @override
   WalletState build() {
-    Future.microtask(() async {
-      await fetchWallet();
-      await fetchTransactions();
+    ref.watch(authProvider.select((s) => (s.user?.id, s.step)));
+    ++_generation;
+    ++_summaryGeneration;
+    if (uiPreview) {
+      return WalletState(
+        balance: 2400,
+        heldBalance: 900,
+        pendingEarnings: 1800,
+        transactions: sampleTransactions,
+        filter: TransactionFilter.all,
+        hasMore: false,
+      );
+    }
+    Future.microtask(() {
+      if (ref.mounted) refresh();
     });
     return const WalletState(
       balance: 0,
@@ -216,84 +91,97 @@ class WalletNotifier extends Notifier<WalletState> {
     );
   }
 
+  Future<void> refresh() async {
+    await Future.wait([fetchWallet(), fetchTransactions()]);
+  }
+
   Future<void> fetchWallet() async {
-    state = state.copyWith(isLoading: true, error: null);
+    if (uiPreview) return;
+    final generation = ++_summaryGeneration;
     try {
-      final response = await apiClient.get(ApiEndpoints.wallet);
-      final raw = response.data;
-      if (raw is Map) {
-        final data = Map<String, dynamic>.from(raw);
-        final balance =
-            double.tryParse(data['balance']?.toString() ?? '0') ?? 0.0;
-        final currency = (data['currency'] ?? 'SAR').toString();
-        state = state.copyWith(
-          balance: balance,
-          currency: currency,
-          isLoading: false,
-        );
-      } else {
-        state = state.copyWith(isLoading: false);
-      }
+      final data = await ref.read(walletRepositoryProvider).summary();
+      if (!ref.mounted || generation != _summaryGeneration) return;
+      state = state.copyWith(
+        balance: data.balance,
+        heldBalance: data.held,
+        pendingEarnings: data.pending,
+        currency: data.currency,
+        error: state.error,
+      );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      if (ref.mounted && generation == _summaryGeneration) {
+        state = state.copyWith(error: ApiFailure.fromError(e).message);
+      }
     }
   }
 
   Future<void> fetchTransactions({bool reset = true}) async {
-    if (reset) {
+    final generation = ++_generation;
+    final page = reset ? 1 : state.currentPage;
+    final purpose = state.filter;
+    final direction = state.direction;
+    if (uiPreview) {
       state = state.copyWith(
-        isLoading: true,
-        error: null,
-        currentPage: 1,
-        hasMore: true,
-        transactions: [],
-      );
-    }
-
-    try {
-      final refType = state.filter.referenceType;
-      final response = await apiClient.get(
-        ApiEndpoints.walletTransactions,
-        queryParameters: {
-          'page': reset ? 1 : state.currentPage,
-          'limit': _limit,
-          if (refType != null) 'referenceType': refType,
-        },
-      );
-
-      final raw = response.data;
-      List<dynamic> items = [];
-      if (raw is List) {
-        items = raw;
-      } else if (raw is Map) {
-        final m = Map<String, dynamic>.from(raw);
-        items = (m['data'] ?? m['items'] ?? m['hits'] ?? []) as List;
-      }
-
-      final newTx = items
-          .whereType<Map>()
-          .map((j) => WalletTransaction.fromJson(Map<String, dynamic>.from(j)))
-          .toList();
-
-      state = state.copyWith(
-        transactions: reset ? newTx : [...state.transactions, ...newTx],
-        currentPage: (reset ? 1 : state.currentPage) + 1,
-        hasMore: newTx.length >= _limit,
+        transactions: sampleTransactions
+            .where(
+              (t) =>
+                  (direction == 'all' || t.direction == direction) &&
+                  (purpose == TransactionFilter.all ||
+                      t.type.name ==
+                          switch (purpose) {
+                            TransactionFilter.topUps => 'topUp',
+                            TransactionFilter.promotions => 'promotion',
+                            TransactionFilter.subscriptions => 'subscription',
+                            TransactionFilter.bookings => 'booking',
+                            _ => '',
+                          }),
+            )
+            .toList(),
+        hasMore: false,
         isLoading: false,
         isLoadingMore: false,
+      );
+      return;
+    }
+    state = state.copyWith(
+      isLoading: reset,
+      isLoadingMore: !reset,
+      transactions: reset ? [] : state.transactions,
+      currentPage: page,
+    );
+    try {
+      final result = await ref
+          .read(walletRepositoryProvider)
+          .transactions(page: page, purpose: purpose, direction: direction);
+      if (!ref.mounted || generation != _generation) return;
+      final unique = {
+        for (final t in [
+          ...(reset ? <WalletTransaction>[] : state.transactions),
+          ...result.items,
+        ])
+          t.id: t,
+      };
+      state = state.copyWith(
+        transactions: unique.values.toList(),
+        currentPage: page + 1,
+        hasMore: result.hasMore,
+        isLoading: false,
+        isLoadingMore: false,
+        error: state.error,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        isLoadingMore: false,
-        error: e.toString(),
-      );
+      if (ref.mounted && generation == _generation) {
+        state = state.copyWith(
+          isLoading: false,
+          isLoadingMore: false,
+          error: ApiFailure.fromError(e).message,
+        );
+      }
     }
   }
 
   Future<void> loadMore() async {
-    if (state.isLoadingMore || !state.hasMore) return;
-    state = state.copyWith(isLoadingMore: true);
+    if (state.isLoading || state.isLoadingMore || !state.hasMore) return;
     await fetchTransactions(reset: false);
   }
 
@@ -303,23 +191,44 @@ class WalletNotifier extends Notifier<WalletState> {
     fetchTransactions();
   }
 
-  Future<bool> topUp(double amount) async {
-    state = state.copyWith(isLoading: true, error: null);
-    try {
-      await apiClient.post(
-        ApiEndpoints.walletTopUp,
-        data: {'amount': amount, 'paymentMethod': 'card'},
-      );
-      await fetchWallet();
-      await fetchTransactions();
-      return true;
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-      return false;
-    }
+  void setDirection(String direction) {
+    if (direction == state.direction) return;
+    state = state.copyWith(direction: direction);
+    fetchTransactions();
   }
 }
 
 final walletProvider = NotifierProvider<WalletNotifier, WalletState>(
   WalletNotifier.new,
 );
+
+List<WalletTransaction> get sampleTransactions => [
+  WalletTransaction(
+    id: 'preview-topup',
+    type: TransactionType.topUp,
+    description: 'شحن المحفظة',
+    amount: 2000,
+    dateTime: DateTime.now(),
+  ),
+  WalletTransaction(
+    id: 'preview-booking',
+    type: TransactionType.booking,
+    description: 'حجز شاليه النخيل',
+    amount: -900,
+    dateTime: DateTime.now().subtract(const Duration(days: 1)),
+  ),
+  WalletTransaction(
+    id: 'preview-earning',
+    type: TransactionType.booking,
+    description: 'إيراد حجز مكتمل',
+    amount: 1300,
+    dateTime: DateTime.now().subtract(const Duration(days: 4)),
+  ),
+  WalletTransaction(
+    id: 'preview-promotion',
+    type: TransactionType.promotion,
+    description: 'تمييز إعلان',
+    amount: -100,
+    dateTime: DateTime.now().subtract(const Duration(days: 10)),
+  ),
+];

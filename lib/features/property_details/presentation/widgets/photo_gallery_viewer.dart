@@ -13,10 +13,8 @@ void showPhotoGallery({
   Navigator.of(context).push(
     MaterialPageRoute(
       fullscreenDialog: true,
-      builder: (_) => _GalleryScreen(
-        imageUrls: imageUrls,
-        initialIndex: initialIndex,
-      ),
+      builder: (_) =>
+          _GalleryScreen(imageUrls: imageUrls, initialIndex: initialIndex),
     ),
   );
 }
@@ -25,10 +23,7 @@ class _GalleryScreen extends StatefulWidget {
   final List<String> imageUrls;
   final int initialIndex;
 
-  const _GalleryScreen({
-    required this.imageUrls,
-    required this.initialIndex,
-  });
+  const _GalleryScreen({required this.imageUrls, required this.initialIndex});
 
   @override
   State<_GalleryScreen> createState() => _GalleryScreenState();
@@ -81,8 +76,7 @@ class _GalleryScreenState extends State<_GalleryScreen> {
           // Top bar: close + counter
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
                   // Close
@@ -95,8 +89,11 @@ class _GalleryScreenState extends State<_GalleryScreen> {
                         color: AppColors.overlay,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.close_rounded,
-                          color: AppColors.white, size: 22),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        color: AppColors.white,
+                        size: 22,
+                      ),
                     ),
                   ),
 
@@ -105,7 +102,9 @@ class _GalleryScreenState extends State<_GalleryScreen> {
                   // Counter
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 7),
+                      horizontal: 14,
+                      vertical: 7,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.overlay,
                       borderRadius: BorderRadius.circular(20),
@@ -140,7 +139,7 @@ class _GalleryScreenState extends State<_GalleryScreen> {
                   decoration: BoxDecoration(
                     color: i == _current
                         ? AppColors.primary
-                        : AppColors.white.withValues(alpha: 0.5),
+                        : context.appColors.card.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),

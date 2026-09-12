@@ -43,9 +43,7 @@ class ParseHelpers {
 
   // Strip null values before sending to backend
   static Map<String, dynamic> buildBody(Map<String, dynamic> data) {
-    return Map.fromEntries(
-      data.entries.where((e) => e.value != null),
-    );
+    return Map.fromEntries(data.entries.where((e) => e.value != null));
   }
 
   // Format price for display: 750000 → "750K SAR"

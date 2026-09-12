@@ -14,6 +14,7 @@ import '../widgets/home_search_bar.dart';
 import '../widgets/listing_card.dart';
 import '../widgets/daily_rent_tab.dart';
 import '../widgets/projects_tab.dart';
+import '../../../event_halls/presentation/event_halls_ui.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -31,12 +32,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     'المدينة  ·  الفئة  ·  المزيد من الفلاتر',
     'المدينة  ·  نوع المشروع',
     'المدينة  ·  التاريخ  ·  عدد الضيوف',
+    'المدينة  ·  السعر  ·  قاعات المناسبات',
   ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() {
       if (_currentTab != _tabController.index) {
         setState(() => _currentTab = _tabController.index);
@@ -53,7 +55,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -67,6 +69,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             // ── Tab bar ───────────────────────────────────
             TabBar(
               controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
               labelStyle: AppTextStyles.labelMedium.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -74,15 +78,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 fontWeight: FontWeight.w500,
               ),
               labelColor: AppColors.primary,
-              unselectedLabelColor: AppColors.textSecondaryLight,
+              unselectedLabelColor: context.appColors.textSecondary,
               indicatorColor: AppColors.primary,
               indicatorWeight: 2.5,
               indicatorSize: TabBarIndicatorSize.label,
-              dividerColor: AppColors.dividerLight,
+              dividerColor: context.appColors.divider,
               tabs: const [
                 Tab(text: 'عقارات'),
                 Tab(text: 'مشاريع'),
                 Tab(text: 'إيجار يومي'),
+                Tab(text: 'قاعات المناسبات'),
               ],
             ),
 
@@ -94,13 +99,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   _RealEstateTab(),
                   const ProjectsTab(),
                   const DailyRentTab(),
+                  const EventHallsTab(),
                 ],
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
+      bottomNavigationBar: AppBottomNav(
+        currentIndex: 0,
+        addPreset: _currentTab == 3
+            ? 'event_hall'
+            : _currentTab == 2
+            ? 'daily'
+            : null,
+      ),
     );
   }
 }
@@ -168,11 +181,11 @@ class _ListContent extends ConsumerWidget {
             ),
           ),
 
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Divider(
               height: 1,
               thickness: 1,
-              color: AppColors.dividerLight,
+              color: context.appColors.divider,
             ),
           ),
 
@@ -192,16 +205,16 @@ class _ListContent extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.home_work_outlined,
                       size: 64,
-                      color: AppColors.iconLight,
+                      color: context.appColors.icon,
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'لا توجد عقارات في هذه الفئة',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                   ],
@@ -236,4 +249,3 @@ class _ListContent extends ConsumerWidget {
     );
   }
 }
-  

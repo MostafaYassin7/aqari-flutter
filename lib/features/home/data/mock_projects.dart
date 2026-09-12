@@ -9,7 +9,8 @@ const List<Project> mockProjects = [
     projectType: 'سكني',
     imageUrls: ['https://picsum.photos/seed/proj01/600/400'],
     startingPrice: 2500000,
-    description: 'مدينة المستقبل على ساحل البحر الأحمر، حياة متكاملة بلا سيارات',
+    description:
+        'مدينة المستقبل على ساحل البحر الأحمر، حياة متكاملة بلا سيارات',
     availability: ProjectAvailability.offPlan,
   ),
   Project(

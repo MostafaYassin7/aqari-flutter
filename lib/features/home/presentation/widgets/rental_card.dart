@@ -30,15 +30,14 @@ class RentalCard extends ConsumerWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(AppConstants.radiusM),
+                  borderRadius: BorderRadius.circular(AppConstants.radiusM),
                   child: CachedNetworkImage(
                     imageUrl: rental.imageUrls.first,
                     width: double.infinity,
                     height: AppConstants.listingCardImageHeight,
                     fit: BoxFit.cover,
                     placeholder: (_, __) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.appColors.surface,
                       child: const Center(
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
@@ -47,7 +46,7 @@ class RentalCard extends ConsumerWidget {
                       ),
                     ),
                     errorWidget: (_, __, ___) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.appColors.surface,
                       child: const Center(
                         child: Icon(
                           Icons.home_rounded,
@@ -68,8 +67,8 @@ class RentalCard extends ConsumerWidget {
                     child: Container(
                       width: 36,
                       height: 36,
-                      decoration: const BoxDecoration(
-                        color: AppColors.white,
+                      decoration: BoxDecoration(
+                        color: context.appColors.card,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -79,7 +78,7 @@ class RentalCard extends ConsumerWidget {
                         size: 20,
                         color: isFav
                             ? AppColors.error
-                            : AppColors.textSecondaryLight,
+                            : context.appColors.textSecondary,
                       ),
                     ),
                   ),
@@ -96,26 +95,29 @@ class RentalCard extends ConsumerWidget {
                 Text(
                   '${rental.city}  ·  ${rental.district}',
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
                 // Star rating
                 Row(
                   children: [
-                    const Icon(Icons.star_rounded,
-                        size: 13, color: AppColors.primary),
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 13,
+                      color: AppColors.primary,
+                    ),
                     const SizedBox(width: 3),
                     Text(
                       rental.rating.toStringAsFixed(1),
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textPrimaryLight,
+                        color: context.appColors.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
                       '  (${rental.reviewCount})',
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                   ],
@@ -130,7 +132,7 @@ class RentalCard extends ConsumerWidget {
               rental.name,
               style: AppTextStyles.titleLarge.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
             ),
 
@@ -140,14 +142,20 @@ class RentalCard extends ConsumerWidget {
             Wrap(
               spacing: 12,
               children: [
-                _Stat(icon: Icons.straighten_rounded,
-                    label: '${rental.area.toInt()} م²'),
+                _Stat(
+                  icon: Icons.straighten_rounded,
+                  label: '${rental.area.toInt()} م²',
+                ),
                 if (rental.bedrooms > 0)
-                  _Stat(icon: Icons.bed_rounded,
-                      label: '${rental.bedrooms} غرف'),
+                  _Stat(
+                    icon: Icons.bed_rounded,
+                    label: '${rental.bedrooms} غرف',
+                  ),
                 if (rental.bathrooms > 0)
-                  _Stat(icon: Icons.shower_rounded,
-                      label: '${rental.bathrooms} حمامات'),
+                  _Stat(
+                    icon: Icons.shower_rounded,
+                    label: '${rental.bathrooms} حمامات',
+                  ),
               ],
             ),
 
@@ -158,17 +166,16 @@ class RentalCard extends ConsumerWidget {
               text: TextSpan(
                 children: [
                   TextSpan(
-                    text:
-                        '${rental.pricePerNight.toStringAsFixed(0)} ريال',
+                    text: '${rental.pricePerNight.toStringAsFixed(0)} ريال',
                     style: AppTextStyles.titleLarge.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimaryLight,
+                      color: context.appColors.textPrimary,
                     ),
                   ),
                   TextSpan(
                     text: ' / ليلة',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                 ],
@@ -191,11 +198,14 @@ class _Stat extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: AppColors.textSecondaryLight),
+        Icon(icon, size: 14, color: context.appColors.textSecondary),
         const SizedBox(width: 4),
-        Text(label,
-            style: AppTextStyles.bodySmall
-                .copyWith(color: AppColors.textSecondaryLight)),
+        Text(
+          label,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: context.appColors.textSecondary,
+          ),
+        ),
       ],
     );
   }

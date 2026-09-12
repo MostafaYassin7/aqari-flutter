@@ -1,3 +1,4 @@
+import '../../../../core/router/auth_return.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -31,13 +32,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   @override
   void initState() {
     super.initState();
-    _controllers =
-        List.generate(_length, (_) => TextEditingController());
+    _controllers = List.generate(_length, (_) => TextEditingController());
     _focusNodes = List.generate(_length, (_) => FocusNode());
     _startTimer();
     // Auto-focus first box
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _focusNodes[0].requestFocus());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _focusNodes[0].requestFocus(),
+    );
   }
 
   @override
@@ -77,14 +78,15 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     }
     _focusNodes[0].requestFocus();
     setState(() => _startTimer());
-    ref.read(authProvider.notifier).sendOtp(
+    ref
+        .read(authProvider.notifier)
+        .sendOtp(
           phone: ref.read(authProvider).phoneNumber,
           countryCode: ref.read(authProvider).countryCode,
         );
   }
 
-  String get _otp =>
-      _controllers.map((c) => c.text).join();
+  String get _otp => _controllers.map((c) => c.text).join();
 
   bool get _isFull => _otp.length == _length;
 
@@ -94,7 +96,11 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     if (!success || !mounted) return;
     // Route based on whether this is a new or returning user
     final isNewUser = ref.read(authProvider).isNewUser;
-    context.go(isNewUser ? AppRoutes.register : AppRoutes.home);
+    context.go(
+      isNewUser
+          ? nextAuthRoute(context, AppRoutes.register)
+          : authDestination(context),
+    );
   }
 
   void _onBoxChanged(int index, String value) {
@@ -120,12 +126,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     final auth = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.appColors.background,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.go(AppRoutes.phoneInput),
+          onPressed: () =>
+              context.go(nextAuthRoute(context, AppRoutes.phoneInput)),
         ),
         elevation: 0,
       ),
@@ -149,14 +156,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                 TextSpan(
                   text: 'أرسلنا رمزاً من $_length أرقام إلى ',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.appColors.textSecondary,
                   ),
                   children: [
                     TextSpan(
-                      text:
-                          '${auth.countryCode} ${auth.phoneNumber}',
+                      text: '${auth.countryCode} ${auth.phoneNumber}',
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textPrimaryLight,
+                        color: context.appColors.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -214,7 +220,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                     : Text(
                         'إعادة الإرسال بعد $_secondsLeft ثانية',
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondaryLight,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
               ),
@@ -225,10 +231,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
               ElevatedButton(
                 onPressed: (_isFull && !auth.isLoading) ? _verify : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      _isFull ? AppColors.primary : AppColors.surfaceLight,
-                  foregroundColor:
-                      _isFull ? AppColors.white : AppColors.textHintLight,
+                  backgroundColor: _isFull
+                      ? AppColors.primary
+                      : context.appColors.surface,
+                  foregroundColor: _isFull
+                      ? AppColors.white
+                      : context.appColors.textHint,
                 ),
                 child: auth.isLoading
                     ? const SizedBox(
@@ -236,8 +244,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                         height: 22,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(AppColors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.white,
+                          ),
                         ),
                       )
                     : const Text('تحقق'),
@@ -293,7 +302,7 @@ class _OtpBoxState extends State<_OtpBox> {
     } else if (isFilled) {
       borderColor = AppColors.primary;
     } else {
-      borderColor = AppColors.dividerLight;
+      borderColor = context.appColors.divider;
     }
 
     return Focus(
@@ -313,12 +322,9 @@ class _OtpBoxState extends State<_OtpBox> {
         decoration: BoxDecoration(
           color: isFilled
               ? AppColors.primary.withValues(alpha: 0.06)
-              : AppColors.surfaceLight,
+              : context.appColors.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: borderColor,
-            width: isFocused ? 2 : 1.5,
-          ),
+          border: Border.all(color: borderColor, width: isFocused ? 2 : 1.5),
         ),
         child: TextField(
           controller: widget.controller,

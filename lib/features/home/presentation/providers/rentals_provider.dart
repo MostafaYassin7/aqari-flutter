@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/models/rental.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/listings_repository.dart';
 
 // ── Date range ────────────────────────────────────────────────────────────────
@@ -15,7 +16,9 @@ class RentalDateRange {
 
   int get nights {
     if (!hasRange) return 0;
-    return checkOut!.difference(checkIn!).inDays;
+    return DateTime.utc(checkOut!.year, checkOut!.month, checkOut!.day)
+        .difference(DateTime.utc(checkIn!.year, checkIn!.month, checkIn!.day))
+        .inDays;
   }
 
   RentalDateRange copyWith({
@@ -55,7 +58,12 @@ final selectedRentalPropertyTypeProvider =
 
 class RentalDateRangeNotifier extends Notifier<RentalDateRange> {
   @override
-  RentalDateRange build() => const RentalDateRange();
+  RentalDateRange build() {
+    ref.listen(authProvider.select((s) => s.user?.id), (previous, next) {
+      if (previous != null && previous != next) clear();
+    });
+    return const RentalDateRange();
+  }
 
   void setRange(DateTime checkIn, DateTime checkOut) =>
       state = RentalDateRange(checkIn: checkIn, checkOut: checkOut);
@@ -84,56 +92,62 @@ final rentalGuestCountProvider =
 
 // ── Rentals async loader with server-side filters ─────────────────────────────
 
+final rentalListingsRepositoryProvider = Provider(
+  (ref) => ListingsRepository(),
+);
+
 class RentalsNotifier extends AsyncNotifier<List<DailyRental>> {
-  final _repo = ListingsRepository();
-  int _page = 1;
+  int _page = 1, _generation = 0;
+  bool _loadingMore = false;
   bool hasMore = true;
 
   @override
-  Future<List<DailyRental>> build() {
+  Future<List<DailyRental>> build() async {
+    final generation = ++_generation;
     _page = 1;
+    _loadingMore = false;
     hasMore = true;
+    final repo = ref.watch(rentalListingsRepositoryProvider);
     final city = ref.watch(selectedRentalCityProvider);
     final propertyType = ref.watch(selectedRentalPropertyTypeProvider);
-    return _repo.getDailyRentals(
-      page: _page,
-      limit: 20,
+    final result = await repo.getDailyRentalPage(
       city: city,
       propertyType: propertyType,
     );
+    if (ref.mounted && generation == _generation) hasMore = result.hasMore;
+    return result.items;
   }
 
   Future<void> loadMore() async {
-    if (!hasMore) return;
+    if (!hasMore || _loadingMore || state.isLoading) return;
     final current = state.value;
     if (current == null) return;
-    _page++;
-    final city = ref.read(selectedRentalCityProvider);
-    final propertyType = ref.read(selectedRentalPropertyTypeProvider);
-    final newItems = await _repo.getDailyRentals(
-      page: _page,
-      limit: 20,
-      city: city,
-      propertyType: propertyType,
-    );
-    if (newItems.length < 20) hasMore = false;
-    state = AsyncData([...current, ...newItems]);
+    final generation = _generation;
+    _loadingMore = true;
+    try {
+      final result = await ref
+          .read(rentalListingsRepositoryProvider)
+          .getDailyRentalPage(
+            page: _page + 1,
+            city: ref.read(selectedRentalCityProvider),
+            propertyType: ref.read(selectedRentalPropertyTypeProvider),
+          );
+      if (!ref.mounted || generation != _generation) return;
+      _page++;
+      hasMore = result.hasMore;
+      state = AsyncData(
+        {
+          for (final item in [...current, ...result.items]) item.id: item,
+        }.values.toList(),
+      );
+    } finally {
+      if (ref.mounted && generation == _generation) _loadingMore = false;
+    }
   }
 
   Future<void> refresh() async {
-    _page = 1;
-    hasMore = true;
-    final city = ref.read(selectedRentalCityProvider);
-    final propertyType = ref.read(selectedRentalPropertyTypeProvider);
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(
-      () => _repo.getDailyRentals(
-        page: _page,
-        limit: 20,
-        city: city,
-        propertyType: propertyType,
-      ),
-    );
+    ref.invalidateSelf();
+    await future;
   }
 }
 

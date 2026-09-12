@@ -13,13 +13,22 @@ import 'package:go_router/go_router.dart';
 /// Airbnb-style property listing card.
 class ListingCard extends ConsumerWidget {
   final Listing listing;
+  final VoidCallback? onTap;
+  final String? statsLabel;
+  final String priceSuffix;
 
-  const ListingCard({required this.listing, super.key});
+  const ListingCard({
+    required this.listing,
+    this.onTap,
+    this.statsLabel,
+    this.priceSuffix = '',
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: () => context.push('/property/${listing.id}'),
+      onTap: onTap ?? () => context.push('/property/${listing.id}'),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 28),
         child: Column(
@@ -37,7 +46,7 @@ class ListingCard extends ConsumerWidget {
                     height: AppConstants.listingCardImageHeight,
                     fit: BoxFit.cover,
                     placeholder: (_, __) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.appColors.surface,
                       child: const Center(
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
@@ -46,7 +55,7 @@ class ListingCard extends ConsumerWidget {
                       ),
                     ),
                     errorWidget: (_, __, ___) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.appColors.surface,
                       child: const Center(
                         child: Icon(
                           Icons.home_rounded,
@@ -66,7 +75,7 @@ class ListingCard extends ConsumerWidget {
             Text(
               '${listing.city}  ·  ${listing.category}',
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
               ),
             ),
 
@@ -74,17 +83,19 @@ class ListingCard extends ConsumerWidget {
 
             // ── Price ────────────────────────────────────
             Text(
-              formatPrice(listing.price),
+              '${formatPrice(listing.price)}$priceSuffix',
               style: AppTextStyles.titleLarge.copyWith(
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
             ),
 
             const SizedBox(height: 6),
 
             // ── Stats row ────────────────────────────────
-            _StatsRow(listing: listing),
+            statsLabel != null
+                ? Text(statsLabel!, style: AppTextStyles.bodySmall)
+                : _StatsRow(listing: listing),
 
             const SizedBox(height: 6),
 
@@ -92,7 +103,7 @@ class ListingCard extends ConsumerWidget {
             Text(
               listing.description,
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -145,12 +156,12 @@ class _Stat extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: AppColors.textSecondaryLight),
+        Icon(icon, size: 14, color: context.appColors.textSecondary),
         const SizedBox(width: 4),
         Text(
           label,
           style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.appColors.textSecondary,
           ),
         ),
       ],

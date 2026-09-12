@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../core/constants/app_constants.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../providers/add_listing_provider.dart';
+import '../../../../core/preview/ui_preview.dart';
 
 class Step3Info extends ConsumerStatefulWidget {
   const Step3Info({super.key});
@@ -52,38 +53,50 @@ class _Step3InfoState extends ConsumerState<Step3Info> {
           Text(
             'المعلومات الأساسية',
             style: AppTextStyles.headlineMedium.copyWith(
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             'أدخل تفاصيل العقار الأساسية',
             style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight),
+              color: context.appColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 24),
 
+          PreviewField(
+            label: 'عنوان الإعلان *',
+            value: s.value('title'),
+            maxLength: 100,
+            onChanged: (v) =>
+                ref.read(addListingProvider.notifier).field('title', v),
+          ),
           // ── Price ────────────────────────────────────────
-          _FieldLabel('السعر الإجمالي'),
+          _FieldLabel(
+            s.isDaily
+                ? 'السعر لكل ليلة *'
+                : s.group == 'hall'
+                ? 'السعر ليوم كامل *'
+                : 'السعر الإجمالي *',
+          ),
           const SizedBox(height: 6),
           _NumberField(
             controller: _priceCtrl,
             hint: '0',
             suffix: 'ريال',
-            onChanged: (v) =>
-                ref.read(addListingProvider.notifier).setPrice(v),
+            onChanged: (v) => ref.read(addListingProvider.notifier).setPrice(v),
           ),
           const SizedBox(height: 16),
 
           // ── Area ─────────────────────────────────────────
-          _FieldLabel('المساحة'),
+          _FieldLabel('المساحة *'),
           const SizedBox(height: 6),
           _NumberField(
             controller: _areaCtrl,
             hint: '0',
             suffix: 'م²',
-            onChanged: (v) =>
-                ref.read(addListingProvider.notifier).setArea(v),
+            onChanged: (v) => ref.read(addListingProvider.notifier).setArea(v),
           ),
           const SizedBox(height: 16),
 
@@ -119,12 +132,11 @@ class _Step3InfoState extends ConsumerState<Step3Info> {
 
           // ── Commission toggle ─────────────────────────────
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
+              color: context.appColors.surface,
               borderRadius: BorderRadius.circular(AppConstants.radiusM),
-              border: Border.all(color: AppColors.dividerLight),
+              border: Border.all(color: context.appColors.divider),
             ),
             child: Row(
               children: [
@@ -132,15 +144,15 @@ class _Step3InfoState extends ConsumerState<Step3Info> {
                   child: Text(
                     'يوجد عمولة',
                     style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textPrimaryLight),
+                      color: context.appColors.textPrimary,
+                    ),
                   ),
                 ),
                 Switch(
                   value: s.hasCommission,
-                  onChanged: (v) => ref
-                      .read(addListingProvider.notifier)
-                      .setHasCommission(v),
-                  activeColor: AppColors.primary,
+                  onChanged: (v) =>
+                      ref.read(addListingProvider.notifier).setHasCommission(v),
+                  activeThumbColor: AppColors.primary,
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ],
@@ -154,42 +166,46 @@ class _Step3InfoState extends ConsumerState<Step3Info> {
               controller: _commissionCtrl,
               hint: '2.5',
               suffix: '٪',
-              onChanged: (v) => ref
-                  .read(addListingProvider.notifier)
-                  .setCommissionPercent(v),
+              onChanged: (v) =>
+                  ref.read(addListingProvider.notifier).setCommissionPercent(v),
             ),
           ],
           const SizedBox(height: 16),
 
           // ── Description ───────────────────────────────────
-          _FieldLabel('وصف العقار'),
+          _FieldLabel('وصف العقار (اختياري)'),
           const SizedBox(height: 6),
           TextField(
             controller: _descCtrl,
             onChanged: (v) =>
                 ref.read(addListingProvider.notifier).setDescription(v),
             maxLines: 5,
+            maxLength: 2000,
             keyboardType: TextInputType.multiline,
             style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textPrimaryLight),
+              color: context.appColors.textPrimary,
+            ),
             decoration: InputDecoration(
               hintText: 'اكتب وصفاً تفصيلياً للعقار...',
               hintStyle: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textHintLight),
+                color: context.appColors.textHint,
+              ),
               filled: true,
-              fillColor: AppColors.surfaceLight,
+              fillColor: context.appColors.surface,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                borderSide: const BorderSide(color: AppColors.dividerLight),
+                borderSide: BorderSide(color: context.appColors.divider),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                borderSide: const BorderSide(color: AppColors.dividerLight),
+                borderSide: BorderSide(color: context.appColors.divider),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 borderSide: const BorderSide(
-                    color: AppColors.primary, width: 1.5),
+                  color: AppColors.primary,
+                  width: 1.5,
+                ),
               ),
               contentPadding: const EdgeInsets.all(14),
             ),
@@ -207,12 +223,12 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        text,
-        style: AppTextStyles.titleSmall.copyWith(
-          color: AppColors.textPrimaryLight,
-          fontWeight: FontWeight.w600,
-        ),
-      );
+    text,
+    style: AppTextStyles.titleSmall.copyWith(
+      color: context.appColors.textPrimary,
+      fontWeight: FontWeight.w600,
+    ),
+  );
 }
 
 class _NumberField extends StatelessWidget {
@@ -229,46 +245,39 @@ class _NumberField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => TextField(
-        controller: controller,
-        onChanged: onChanged,
-        keyboardType:
-            const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))
-        ],
-        style: AppTextStyles.bodyLarge.copyWith(
-            color: AppColors.textPrimaryLight),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textHintLight),
-          suffixText: suffix,
-          suffixStyle: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondaryLight),
-          filled: true,
-          fillColor: AppColors.surfaceLight,
-          border: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(AppConstants.radiusM),
-            borderSide:
-                const BorderSide(color: AppColors.dividerLight),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(AppConstants.radiusM),
-            borderSide:
-                const BorderSide(color: AppColors.dividerLight),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(AppConstants.radiusM),
-            borderSide: const BorderSide(
-                color: AppColors.primary, width: 1.5),
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        ),
-      );
+    controller: controller,
+    onChanged: onChanged,
+    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+    style: AppTextStyles.bodyLarge.copyWith(
+      color: context.appColors.textPrimary,
+    ),
+    decoration: InputDecoration(
+      hintText: hint,
+      hintStyle: AppTextStyles.bodyMedium.copyWith(
+        color: context.appColors.textHint,
+      ),
+      suffixText: suffix,
+      suffixStyle: AppTextStyles.bodyMedium.copyWith(
+        color: context.appColors.textSecondary,
+      ),
+      filled: true,
+      fillColor: context.appColors.surface,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        borderSide: BorderSide(color: context.appColors.divider),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        borderSide: BorderSide(color: context.appColors.divider),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+    ),
+  );
 }
 
 class _UseTypeChip extends StatelessWidget {
@@ -285,44 +294,42 @@ class _UseTypeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
+    onTap: onTap,
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        color: selected
+            ? context.appColors.primaryTint
+            : context.appColors.surface,
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        border: Border.all(
+          color: selected ? AppColors.primary : context.appColors.divider,
+          width: selected ? 2 : 1,
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 20,
             color: selected
-                ? AppColors.primaryLight
-                : AppColors.surfaceLight,
-            borderRadius:
-                BorderRadius.circular(AppConstants.radiusM),
-            border: Border.all(
-              color:
-                  selected ? AppColors.primary : AppColors.dividerLight,
-              width: selected ? 2 : 1,
+                ? AppColors.primary
+                : context.appColors.textSecondary,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: selected
+                  ? AppColors.primary
+                  : context.appColors.textPrimary,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
             ),
           ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon,
-                  size: 20,
-                  color: selected
-                      ? AppColors.primary
-                      : AppColors.textSecondaryLight),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: selected
-                      ? AppColors.primary
-                      : AppColors.textPrimaryLight,
-                  fontWeight: selected
-                      ? FontWeight.w700
-                      : FontWeight.w400,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+        ],
+      ),
+    ),
+  );
 }

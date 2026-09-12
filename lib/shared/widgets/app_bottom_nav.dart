@@ -10,8 +10,9 @@ import '../../core/theme/app_text_styles.dart';
 ///   0 = Home, 1 = Search, 2 = Add (center), 3 = Chats, 4 = Account
 class AppBottomNav extends StatelessWidget {
   final int currentIndex;
+  final String? addPreset;
 
-  const AppBottomNav({required this.currentIndex, super.key});
+  const AppBottomNav({required this.currentIndex, this.addPreset, super.key});
 
   void _onTap(BuildContext context, int index) {
     if (index == currentIndex) return;
@@ -21,7 +22,11 @@ class AppBottomNav extends StatelessWidget {
       case 1:
         context.push(AppRoutes.search);
       case 2:
-        context.push(AppRoutes.addListing);
+        context.push(
+          addPreset == null
+              ? AppRoutes.addListing
+              : '${AppRoutes.addListing}?preset=$addPreset',
+        );
       case 3:
         context.push(AppRoutes.chat);
       case 4:
@@ -29,26 +34,14 @@ class AppBottomNav extends StatelessWidget {
     }
   }
 
-  void _showComingSoon(BuildContext context, String name) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('$name — قريباً'),
-        duration: const Duration(seconds: 1),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.ltr, // keep visual order consistent
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          border: Border(
-            top: BorderSide(color: AppColors.dividerLight),
-          ),
+        decoration: BoxDecoration(
+          color: context.appColors.card,
+          border: Border(top: BorderSide(color: context.appColors.divider)),
         ),
         child: SafeArea(
           top: false,
@@ -152,13 +145,15 @@ class _NavItem extends StatelessWidget {
             Icon(
               isActive ? activeIcon : icon,
               size: 24,
-              color: isActive ? AppColors.primary : AppColors.iconLight,
+              color: isActive ? AppColors.primary : context.appColors.icon,
             ),
             const SizedBox(height: 3),
             Text(
               label,
               style: AppTextStyles.labelSmall.copyWith(
-                color: isActive ? AppColors.primary : AppColors.textSecondaryLight,
+                color: isActive
+                    ? AppColors.primary
+                    : context.appColors.textSecondary,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
               ),
             ),

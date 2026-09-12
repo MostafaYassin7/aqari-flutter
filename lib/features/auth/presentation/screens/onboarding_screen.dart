@@ -1,3 +1,4 @@
+import '../../../../core/router/auth_return.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -79,13 +80,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Future<void> _finish() async {
     await markOnboardingSeen();
-    if (mounted) context.go(AppRoutes.login);
+    if (mounted) context.go(nextAuthRoute(context, AppRoutes.login));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -136,13 +137,13 @@ class _TopBar extends StatelessWidget {
               child: TextButton(
                 onPressed: isLastPage ? null : onSkip,
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.textSecondaryLight,
+                  foregroundColor: context.appColors.textSecondary,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                 ),
                 child: Text(
                   'تخطي',
                   style: AppTextStyles.titleMedium.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ),
@@ -185,7 +186,7 @@ class _SlidePage extends StatelessWidget {
                   data.title,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.headlineLarge.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.appColors.textPrimary,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -194,7 +195,7 @@ class _SlidePage extends StatelessWidget {
                   data.subtitle,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.appColors.textSecondary,
                     height: 1.7,
                   ),
                 ),
@@ -266,7 +267,7 @@ class _PageDots extends StatelessWidget {
           width: active ? 24 : 8,
           height: 8,
           decoration: BoxDecoration(
-            color: active ? AppColors.primary : AppColors.dividerLight,
+            color: active ? AppColors.primary : context.appColors.divider,
             borderRadius: BorderRadius.circular(4),
           ),
         );
@@ -297,8 +298,8 @@ class _Slide1Illustration extends StatelessWidget {
           child: Container(
             width: 210,
             height: 210,
-            decoration: const BoxDecoration(
-              color: AppColors.primaryLight,
+            decoration: BoxDecoration(
+              color: context.appColors.primaryTint,
               shape: BoxShape.circle,
             ),
           ),
@@ -326,7 +327,7 @@ class _Slide1Illustration extends StatelessWidget {
               width: 130,
               height: 130,
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: context.appColors.card,
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [
                   BoxShadow(
@@ -353,7 +354,11 @@ class _Slide1Illustration extends StatelessWidget {
                 children: const [
                   _MiniCard(price: '٥٠٠ ألف', type: 'شقة'),
                   SizedBox(width: 10),
-                  _MiniCard(price: '١.٢ مليون', type: 'فيلا', highlighted: true),
+                  _MiniCard(
+                    price: '١.٢ مليون',
+                    type: 'فيلا',
+                    highlighted: true,
+                  ),
                   SizedBox(width: 10),
                   _MiniCard(price: '٣٠٠ ألف', type: 'أرض'),
                 ],
@@ -386,8 +391,9 @@ class _Slide1Illustration extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   'الرياض',
-                  style: AppTextStyles.labelSmall
-                      .copyWith(color: AppColors.white),
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.white,
+                  ),
                 ),
               ],
             ),
@@ -415,11 +421,11 @@ class _MiniCard extends StatelessWidget {
       width: 88,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: highlighted ? AppColors.primary : AppColors.white,
+        color: highlighted ? AppColors.primary : context.appColors.card,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
+            color: context.appColors.shadow,
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -434,7 +440,7 @@ class _MiniCard extends StatelessWidget {
             style: AppTextStyles.labelSmall.copyWith(
               color: highlighted
                   ? AppColors.white.withValues(alpha: 0.8)
-                  : AppColors.textSecondaryLight,
+                  : context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 3),
@@ -443,7 +449,7 @@ class _MiniCard extends StatelessWidget {
             style: AppTextStyles.labelMedium.copyWith(
               color: highlighted
                   ? AppColors.white
-                  : AppColors.textPrimaryLight,
+                  : context.appColors.textPrimary,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -486,8 +492,8 @@ class _Slide2Illustration extends StatelessWidget {
             child: Container(
               width: 130,
               height: 130,
-              decoration: const BoxDecoration(
-                color: AppColors.primaryLight,
+              decoration: BoxDecoration(
+                color: context.appColors.primaryTint,
                 shape: BoxShape.circle,
               ),
             ),
@@ -530,13 +536,15 @@ class _Slide2Illustration extends StatelessWidget {
                 // Online status badge
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 8),
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppColors.white,
+                    color: context.appColors.card,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.shadowLight,
+                        color: context.appColors.shadow,
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -557,7 +565,7 @@ class _Slide2Illustration extends StatelessWidget {
                       Text(
                         '+٢٤,٠٠٠ مالك متاح الآن',
                         style: AppTextStyles.labelMedium.copyWith(
-                          color: AppColors.textPrimaryLight,
+                          color: context.appColors.textPrimary,
                         ),
                         textDirection: TextDirection.rtl,
                       ),
@@ -606,18 +614,20 @@ class _ChatRow extends StatelessWidget {
     final bubble = Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
       decoration: BoxDecoration(
-        color: isMe ? AppColors.primary : AppColors.white,
+        color: isMe ? AppColors.primary : context.appColors.card,
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(16),
           topRight: const Radius.circular(16),
-          bottomLeft:
-              isMe ? const Radius.circular(16) : const Radius.circular(4),
-          bottomRight:
-              isMe ? const Radius.circular(4) : const Radius.circular(16),
+          bottomLeft: isMe
+              ? const Radius.circular(16)
+              : const Radius.circular(4),
+          bottomRight: isMe
+              ? const Radius.circular(4)
+              : const Radius.circular(16),
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
+            color: context.appColors.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -627,15 +637,14 @@ class _ChatRow extends StatelessWidget {
         message,
         textDirection: TextDirection.rtl,
         style: AppTextStyles.bodySmall.copyWith(
-          color: isMe ? AppColors.white : AppColors.textPrimaryLight,
+          color: isMe ? AppColors.white : context.appColors.textPrimary,
         ),
       ),
     );
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisAlignment:
-          isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+      mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
       children: isMe
           ? [Flexible(child: bubble), const SizedBox(width: 8), avatar]
           : [avatar, const SizedBox(width: 8), Flexible(child: bubble)],
@@ -660,8 +669,8 @@ class _Slide3Illustration extends StatelessWidget {
           child: Container(
             width: 230,
             height: 230,
-            decoration: const BoxDecoration(
-              color: AppColors.primaryLight,
+            decoration: BoxDecoration(
+              color: context.appColors.primaryTint,
               shape: BoxShape.circle,
             ),
           ),
@@ -688,7 +697,7 @@ class _Slide3Illustration extends StatelessWidget {
               width: 114,
               height: 114,
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: context.appColors.card,
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
@@ -716,12 +725,15 @@ class _Slide3Illustration extends StatelessWidget {
                   _FeatureBadge(label: 'آمن', icon: Icons.lock_rounded),
                   SizedBox(width: 8),
                   _FeatureBadge(
-                      label: 'سريع',
-                      icon: Icons.bolt_rounded,
-                      highlighted: true),
+                    label: 'سريع',
+                    icon: Icons.bolt_rounded,
+                    highlighted: true,
+                  ),
                   SizedBox(width: 8),
                   _FeatureBadge(
-                      label: 'موثوق', icon: Icons.verified_user_rounded),
+                    label: 'موثوق',
+                    icon: Icons.verified_user_rounded,
+                  ),
                 ],
               ),
             ),
@@ -737,8 +749,11 @@ class _Slide3Illustration extends StatelessWidget {
             child: Row(
               children: List.generate(
                 5,
-                (_) => const Icon(Icons.star_rounded,
-                    color: AppColors.primary, size: 18),
+                (_) => const Icon(
+                  Icons.star_rounded,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
               ),
             ),
           ),
@@ -764,11 +779,11 @@ class _FeatureBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
       decoration: BoxDecoration(
-        color: highlighted ? AppColors.primary : AppColors.white,
+        color: highlighted ? AppColors.primary : context.appColors.card,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
+            color: context.appColors.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -788,7 +803,7 @@ class _FeatureBadge extends StatelessWidget {
             style: AppTextStyles.labelMedium.copyWith(
               color: highlighted
                   ? AppColors.white
-                  : AppColors.textPrimaryLight,
+                  : context.appColors.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -797,4 +812,3 @@ class _FeatureBadge extends StatelessWidget {
     );
   }
 }
-

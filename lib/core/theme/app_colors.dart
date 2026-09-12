@@ -9,6 +9,7 @@ class AppColors {
   static const Color primary = Color(0xFFF5A623);
   static const Color primaryDark = Color(0xFFE09400);
   static const Color primaryLight = Color(0xFFFFF3E0);
+  static const Color onPrimary = Color(0xFF222222);
 
   // ── Semantic ───────────────────────────────────────────
   static const Color error = Color(0xFFFF5A5F);
@@ -43,4 +44,34 @@ class AppColors {
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
   static const Color overlay = Color(0x80000000);
+}
+
+/// Colors follow the app's selected theme, independently of device brightness.
+extension AppColorContext on BuildContext {
+  AppPalette get appColors => AppPalette(Theme.of(this).brightness);
+}
+
+class AppPalette {
+  final Brightness brightness;
+  const AppPalette(this.brightness);
+  bool get isDark => brightness == Brightness.dark;
+  Color get background =>
+      isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+  Color get surface => isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+  Color get card => isDark ? AppColors.cardDark : AppColors.cardLight;
+  Color get divider => isDark ? AppColors.dividerDark : AppColors.dividerLight;
+  Color get textPrimary =>
+      isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+  Color get textSecondary =>
+      isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
+  Color get textHint => textSecondary;
+  Color get icon => isDark ? AppColors.iconDark : AppColors.iconLight;
+  Color get shadow => isDark ? AppColors.shadowDark : AppColors.shadowLight;
+  Color get primaryTint =>
+      isDark ? const Color(0xFF3B2B16) : AppColors.primaryLight;
+  Color get accentText => isDark ? AppColors.primary : const Color(0xFF885400);
+  Color get successSurface =>
+      isDark ? const Color(0xFF142F28) : const Color(0xFFF0FDF4);
+  Color get successText =>
+      isDark ? const Color(0xFF8AD8AC) : const Color(0xFF28683D);
 }

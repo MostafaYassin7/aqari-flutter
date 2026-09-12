@@ -5,9 +5,9 @@ import 'user_model.dart';
 export 'user_model.dart';
 
 enum AuthStep {
-  initial,       // Login options screen
-  otpPending,    // Waiting for OTP entry
-  registering,   // New user completing profile
+  initial, // Login options screen
+  otpPending, // Waiting for OTP entry
+  registering, // New user completing profile
   authenticated, // Fully logged in
 }
 
@@ -32,13 +32,13 @@ class AuthState {
   });
 
   const AuthState.initial()
-      : step = AuthStep.initial,
-        phoneNumber = '',
-        countryCode = '+966',
-        isLoading = false,
-        error = null,
-        user = null,
-        isNewUser = false;
+    : step = AuthStep.initial,
+      phoneNumber = '',
+      countryCode = '+966',
+      isLoading = false,
+      error = null,
+      user = null,
+      isNewUser = false;
 
   AuthState copyWith({
     AuthStep? step,

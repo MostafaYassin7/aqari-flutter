@@ -37,7 +37,7 @@ class ProjectCard extends ConsumerWidget {
                     height: AppConstants.listingCardImageHeight,
                     fit: BoxFit.cover,
                     placeholder: (_, __) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.appColors.surface,
                       child: const Center(
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
@@ -46,7 +46,7 @@ class ProjectCard extends ConsumerWidget {
                       ),
                     ),
                     errorWidget: (_, __, ___) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.appColors.surface,
                       child: const Center(
                         child: Icon(
                           Icons.apartment_rounded,
@@ -73,7 +73,7 @@ class ProjectCard extends ConsumerWidget {
             Text(
               '${project.developerName}  ·  ${project.projectType}',
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
               ),
             ),
 
@@ -84,7 +84,7 @@ class ProjectCard extends ConsumerWidget {
               project.name,
               style: AppTextStyles.titleLarge.copyWith(
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
             ),
 
@@ -93,16 +93,16 @@ class ProjectCard extends ConsumerWidget {
             // ── City ─────────────────────────────────────
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.location_on_rounded,
                   size: 14,
-                  color: AppColors.textSecondaryLight,
+                  color: context.appColors.textSecondary,
                 ),
                 const SizedBox(width: 3),
                 Text(
                   project.city,
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ],
@@ -117,7 +117,7 @@ class ProjectCard extends ConsumerWidget {
                   TextSpan(
                     text: 'يبدأ من  ',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                   TextSpan(
@@ -137,7 +137,7 @@ class ProjectCard extends ConsumerWidget {
             Text(
               project.description,
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

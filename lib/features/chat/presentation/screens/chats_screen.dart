@@ -18,22 +18,22 @@ class ChatsScreen extends ConsumerWidget {
     final chats = chatsState.chats;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.appColors.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Text(
           'الرسائل',
           style: AppTextStyles.titleLarge.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimaryLight,
+            color: context.appColors.textPrimary,
           ),
         ),
         centerTitle: true,
-        bottom: const PreferredSize(
+        bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.dividerLight),
+          child: Divider(height: 1, color: context.appColors.divider),
         ),
       ),
       body: chatsState.isLoading && chats.isEmpty
@@ -42,11 +42,11 @@ class ChatsScreen extends ConsumerWidget {
           ? const _EmptyState()
           : ListView.separated(
               itemCount: chats.length,
-              separatorBuilder: (_, __) => const Padding(
+              separatorBuilder: (_, __) => Padding(
                 padding: EdgeInsetsDirectional.only(
                   start: AppConstants.spaceM + 60,
                 ),
-                child: Divider(height: 1, color: AppColors.dividerLight),
+                child: Divider(height: 1, color: context.appColors.divider),
               ),
               itemBuilder: (_, i) => _SwipeableChatRow(
                 chat: chats[i],
@@ -132,7 +132,7 @@ class _SwipeableChatRow extends StatelessWidget {
         onLongPress: onDelete,
         child: Container(
           height: 80,
-          color: AppColors.backgroundLight,
+          color: context.appColors.background,
           padding: const EdgeInsets.symmetric(
             horizontal: AppConstants.spaceM,
             vertical: 12,
@@ -164,7 +164,7 @@ class _ChatRowContent extends StatelessWidget {
                 placeholder: (_, __) => Container(
                   width: 52,
                   height: 52,
-                  color: AppColors.primaryLight,
+                  color: context.appColors.primaryTint,
                   child: const Icon(
                     Icons.person_rounded,
                     color: AppColors.primary,
@@ -174,7 +174,7 @@ class _ChatRowContent extends StatelessWidget {
                 errorWidget: (_, __, ___) => Container(
                   width: 52,
                   height: 52,
-                  color: AppColors.primaryLight,
+                  color: context.appColors.primaryTint,
                   child: const Icon(
                     Icons.person_rounded,
                     color: AppColors.primary,
@@ -202,7 +202,7 @@ class _ChatRowContent extends StatelessWidget {
                         fontWeight: chat.unreadCount > 0
                             ? FontWeight.w700
                             : FontWeight.w600,
-                        color: AppColors.textPrimaryLight,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                   ),
@@ -211,7 +211,7 @@ class _ChatRowContent extends StatelessWidget {
                     style: AppTextStyles.labelSmall.copyWith(
                       color: chat.unreadCount > 0
                           ? AppColors.primary
-                          : AppColors.textSecondaryLight,
+                          : context.appColors.textSecondary,
                       fontWeight: chat.unreadCount > 0
                           ? FontWeight.w700
                           : FontWeight.w400,
@@ -227,8 +227,8 @@ class _ChatRowContent extends StatelessWidget {
                       chat.lastMessageText,
                       style: AppTextStyles.bodySmall.copyWith(
                         color: chat.unreadCount > 0
-                            ? AppColors.textPrimaryLight
-                            : AppColors.textSecondaryLight,
+                            ? context.appColors.textPrimary
+                            : context.appColors.textSecondary,
                         fontWeight: chat.unreadCount > 0
                             ? FontWeight.w600
                             : FontWeight.w400,
@@ -301,7 +301,7 @@ class _EmptyState extends StatelessWidget {
           Icon(
             Icons.chat_bubble_outline_rounded,
             size: 80,
-            color: AppColors.dividerLight,
+            color: context.appColors.divider,
           ),
           const SizedBox(height: 16),
           Text(
@@ -314,7 +314,7 @@ class _EmptyState extends StatelessWidget {
           Text(
             'تفضّل بتصفح الإعلانات للتواصل مع المُعلنين',
             style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.appColors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),

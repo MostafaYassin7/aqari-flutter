@@ -35,16 +35,16 @@ class FavoritesScreen extends ConsumerWidget {
     final isGrid = ref.watch(_viewModeProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.appColors.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_rounded,
             size: 20,
-            color: AppColors.textPrimaryLight,
+            color: context.appColors.textPrimary,
           ),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
@@ -52,7 +52,7 @@ class FavoritesScreen extends ConsumerWidget {
           'المفضلة',
           style: AppTextStyles.titleLarge.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimaryLight,
+            color: context.appColors.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -61,15 +61,15 @@ class FavoritesScreen extends ConsumerWidget {
             IconButton(
               icon: Icon(
                 isGrid ? Icons.view_list_rounded : Icons.grid_view_rounded,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
                 size: 22,
               ),
               onPressed: () => ref.read(_viewModeProvider.notifier).toggle(),
             ),
         ],
-        bottom: const PreferredSize(
+        bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.dividerLight),
+          child: Divider(height: 1, color: context.appColors.divider),
         ),
       ),
       body: asyncFavorites.when(
@@ -133,7 +133,7 @@ class _GridCard extends ConsumerWidget {
                     height: double.infinity,
                     fit: BoxFit.cover,
                     placeholder: (_, __) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.appColors.surface,
                       child: const Center(
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
@@ -142,7 +142,7 @@ class _GridCard extends ConsumerWidget {
                       ),
                     ),
                     errorWidget: (_, __, ___) => Container(
-                      color: AppColors.surfaceLight,
+                      color: context.appColors.surface,
                       child: const Center(
                         child: Icon(
                           Icons.home_rounded,
@@ -170,8 +170,8 @@ class _GridCard extends ConsumerWidget {
                     child: Container(
                       width: 32,
                       height: 32,
-                      decoration: const BoxDecoration(
-                        color: AppColors.white,
+                      decoration: BoxDecoration(
+                        color: context.appColors.card,
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -192,7 +192,7 @@ class _GridCard extends ConsumerWidget {
             listing.title,
             style: AppTextStyles.bodySmall.copyWith(
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -204,7 +204,7 @@ class _GridCard extends ConsumerWidget {
             formatPrice(listing.price),
             style: AppTextStyles.bodyMedium.copyWith(
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 2),
@@ -213,7 +213,7 @@ class _GridCard extends ConsumerWidget {
           Text(
             '${listing.city}  ·  ${listing.category}',
             style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.appColors.textSecondary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -268,7 +268,7 @@ class _ListCard extends ConsumerWidget {
                   placeholder: (_, __) => Container(
                     width: 120,
                     height: 110,
-                    color: AppColors.surfaceLight,
+                    color: context.appColors.surface,
                     child: const Center(
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
@@ -279,7 +279,7 @@ class _ListCard extends ConsumerWidget {
                   errorWidget: (_, __, ___) => Container(
                     width: 120,
                     height: 110,
-                    color: AppColors.surfaceLight,
+                    color: context.appColors.surface,
                     child: const Center(
                       child: Icon(
                         Icons.home_rounded,
@@ -304,8 +304,8 @@ class _ListCard extends ConsumerWidget {
                   child: Container(
                     width: 28,
                     height: 28,
-                    decoration: const BoxDecoration(
-                      color: AppColors.white,
+                    decoration: BoxDecoration(
+                      color: context.appColors.card,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -333,7 +333,7 @@ class _ListCard extends ConsumerWidget {
                     listing.title,
                     style: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimaryLight,
+                      color: context.appColors.textPrimary,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -343,7 +343,7 @@ class _ListCard extends ConsumerWidget {
                   Text(
                     '${listing.city}  ·  ${listing.category}',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
 
@@ -355,7 +355,7 @@ class _ListCard extends ConsumerWidget {
                     formatPrice(listing.price),
                     style: AppTextStyles.bodyLarge.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimaryLight,
+                      color: context.appColors.textPrimary,
                     ),
                   ),
                 ],
@@ -399,12 +399,12 @@ class _MiniStat extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: AppColors.textSecondaryLight),
+        Icon(icon, size: 13, color: context.appColors.textSecondary),
         const SizedBox(width: 3),
         Text(
           label,
           style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.appColors.textSecondary,
           ),
         ),
       ],
@@ -444,14 +444,14 @@ class _EmptyState extends StatelessWidget {
               'لا توجد مفضلة بعد',
               style: AppTextStyles.headlineSmall.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
             ),
             const SizedBox(height: 10),
             Text(
               'احفظ العقارات التي تعجبك باضغط على القلب ❤',
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),

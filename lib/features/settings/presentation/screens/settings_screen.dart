@@ -15,27 +15,30 @@ class SettingsScreen extends ConsumerWidget {
     final notifier = ref.read(settingsProvider.notifier);
 
     return Scaffold(
-      backgroundColor: AppColors.surfaceLight,
+      backgroundColor: context.appColors.surface,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.appColors.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              size: 20, color: AppColors.textPrimaryLight),
+          icon: Icon(
+            Icons.arrow_back_ios_rounded,
+            size: 20,
+            color: context.appColors.textPrimary,
+          ),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         title: Text(
           'الإعدادات',
           style: AppTextStyles.titleLarge.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimaryLight,
+            color: context.appColors.textPrimary,
           ),
         ),
         centerTitle: true,
-        bottom: const PreferredSize(
+        bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.dividerLight),
+          child: Divider(height: 1, color: context.appColors.divider),
         ),
       ),
       body: ListView(
@@ -58,12 +61,15 @@ class SettingsScreen extends ConsumerWidget {
                     Text(
                       s.language.label,
                       style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(Icons.arrow_forward_ios_rounded,
-                        size: 13, color: AppColors.textHintLight),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 13,
+                      color: context.appColors.textHint,
+                    ),
                   ],
                 ),
                 onTap: () => _showLanguageSheet(context, ref, s.language),
@@ -139,8 +145,11 @@ class SettingsScreen extends ConsumerWidget {
                 label: 'حذف الحساب',
                 iconColor: AppColors.error,
                 labelColor: AppColors.error,
-                trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                    size: 13, color: AppColors.error),
+                trailing: const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 13,
+                  color: AppColors.error,
+                ),
                 onTap: () => _showDeleteDialog(context),
                 isLast: true,
               ),
@@ -154,7 +163,7 @@ class SettingsScreen extends ConsumerWidget {
             child: Text(
               'عقار — الإصدار ${AppConstants.appVersion}',
               style: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textHintLight,
+                color: context.appColors.textHint,
               ),
             ),
           ),
@@ -168,10 +177,13 @@ class SettingsScreen extends ConsumerWidget {
   // ── Language bottom sheet ─────────────────────────────────────────────────
 
   void _showLanguageSheet(
-      BuildContext context, WidgetRef ref, AppLanguage current) {
+    BuildContext context,
+    WidgetRef ref,
+    AppLanguage current,
+  ) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppConstants.radiusXL),
@@ -193,9 +205,10 @@ class SettingsScreen extends ConsumerWidget {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: AppColors.dividerLight,
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusCircle),
+                    color: context.appColors.divider,
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.radiusCircle,
+                    ),
                   ),
                 ),
               ),
@@ -210,25 +223,24 @@ class SettingsScreen extends ConsumerWidget {
                 final isSelected = lang == current;
                 return GestureDetector(
                   onTap: () {
-                    ref
-                        .read(settingsProvider.notifier)
-                        .setLanguage(lang);
+                    ref.read(settingsProvider.notifier).setLanguage(lang);
                     Navigator.of(context).pop();
                   },
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 16),
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.primaryLight
-                          : AppColors.surfaceLight,
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusM),
+                          ? context.appColors.primaryTint
+                          : context.appColors.surface,
+                      borderRadius: BorderRadius.circular(AppConstants.radiusM),
                       border: Border.all(
                         color: isSelected
                             ? AppColors.primary
-                            : AppColors.dividerLight,
+                            : context.appColors.divider,
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -241,8 +253,8 @@ class SettingsScreen extends ConsumerWidget {
                                 ? FontWeight.w700
                                 : FontWeight.w400,
                             color: isSelected
-                                ? AppColors.textPrimaryLight
-                                : AppColors.textSecondaryLight,
+                                ? context.appColors.textPrimary
+                                : context.appColors.textSecondary,
                           ),
                         ),
                         const Spacer(),
@@ -254,9 +266,11 @@ class SettingsScreen extends ConsumerWidget {
                               color: AppColors.primary,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.check_rounded,
-                                size: 14,
-                                color: AppColors.textPrimaryLight),
+                            child: Icon(
+                              Icons.check_rounded,
+                              size: 14,
+                              color: context.appColors.textPrimary,
+                            ),
                           ),
                       ],
                     ),
@@ -264,8 +278,9 @@ class SettingsScreen extends ConsumerWidget {
                 );
               }),
               SizedBox(
-                  height: MediaQuery.of(context).padding.bottom +
-                      AppConstants.spaceM),
+                height:
+                    MediaQuery.of(context).padding.bottom + AppConstants.spaceM,
+              ),
             ],
           ),
         );
@@ -280,13 +295,15 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       barrierDismissible: true,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.appColors.background,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppConstants.radiusXL),
         ),
         contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-        actionsPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        actionsPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -297,15 +314,18 @@ class SettingsScreen extends ConsumerWidget {
                 color: AppColors.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.delete_forever_rounded,
-                  color: AppColors.error, size: 28),
+              child: const Icon(
+                Icons.delete_forever_rounded,
+                color: AppColors.error,
+                size: 28,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               'حذف الحساب',
               style: AppTextStyles.headlineSmall.copyWith(
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -313,7 +333,7 @@ class SettingsScreen extends ConsumerWidget {
             Text(
               'هل أنت متأكد من حذف حسابك؟ سيتم حذف جميع بياناتك وإعلاناتك بشكل نهائي ولا يمكن التراجع عن هذا الإجراء.',
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
                 height: 1.6,
               ),
               textAlign: TextAlign.center,
@@ -327,19 +347,17 @@ class SettingsScreen extends ConsumerWidget {
                 child: OutlinedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: OutlinedButton.styleFrom(
-                    side:
-                        const BorderSide(color: AppColors.dividerLight),
+                    side: BorderSide(color: context.appColors.divider),
                     minimumSize: const Size(0, 48),
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusM),
+                      borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     ),
                   ),
                   child: Text(
                     'تراجع',
                     style: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimaryLight,
+                      color: context.appColors.textPrimary,
                     ),
                   ),
                 ),
@@ -353,8 +371,7 @@ class SettingsScreen extends ConsumerWidget {
                     minimumSize: const Size(0, 48),
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusM),
+                      borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     ),
                   ),
                   child: Text(
@@ -383,12 +400,11 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(
-          right: 4, left: 4, bottom: 8, top: 4),
+      padding: const EdgeInsets.only(right: 4, left: 4, bottom: 8, top: 4),
       child: Text(
         text,
         style: AppTextStyles.labelMedium.copyWith(
-          color: AppColors.textSecondaryLight,
+          color: context.appColors.textSecondary,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.3,
         ),
@@ -407,7 +423,7 @@ class _SettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.backgroundLight,
+        color: context.appColors.background,
         borderRadius: BorderRadius.circular(AppConstants.radiusL),
         boxShadow: [
           BoxShadow(
@@ -419,10 +435,7 @@ class _SettingsCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppConstants.radiusL),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: children,
-        ),
+        child: Column(mainAxisSize: MainAxisSize.min, children: children),
       ),
     );
   }
@@ -435,11 +448,7 @@ class _ItemDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
-      height: 1,
-      color: AppColors.dividerLight,
-      indent: 52,
-    );
+    return Divider(height: 1, color: context.appColors.divider, indent: 52);
   }
 }
 
@@ -470,21 +479,23 @@ class _TappableRow extends StatelessWidget {
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(
-            horizontal: AppConstants.spaceM, vertical: 14),
+          horizontal: AppConstants.spaceM,
+          vertical: 14,
+        ),
         child: Row(
           children: [
             Container(
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: (iconColor ?? AppColors.primary)
-                    .withValues(alpha: 0.1),
-                borderRadius:
-                    BorderRadius.circular(AppConstants.radiusS),
+                color: (iconColor ?? AppColors.primary).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppConstants.radiusS),
               ),
-              child: Icon(icon,
-                  size: 18,
-                  color: iconColor ?? AppColors.primary),
+              child: Icon(
+                icon,
+                size: 18,
+                color: iconColor ?? AppColors.primary,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -492,7 +503,7 @@ class _TappableRow extends StatelessWidget {
                 label,
                 style: AppTextStyles.bodyMedium.copyWith(
                   fontWeight: FontWeight.w500,
-                  color: labelColor ?? AppColors.textPrimaryLight,
+                  color: labelColor ?? context.appColors.textPrimary,
                 ),
               ),
             ),
@@ -515,7 +526,9 @@ class _ThemeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(
-          horizontal: AppConstants.spaceM, vertical: 14),
+        horizontal: AppConstants.spaceM,
+        vertical: 14,
+      ),
       child: Row(
         children: [
           Container(
@@ -523,11 +536,13 @@ class _ThemeRow extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius:
-                  BorderRadius.circular(AppConstants.radiusS),
+              borderRadius: BorderRadius.circular(AppConstants.radiusS),
             ),
-            child: const Icon(Icons.palette_rounded,
-                size: 18, color: AppColors.primary),
+            child: const Icon(
+              Icons.palette_rounded,
+              size: 18,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -535,7 +550,7 @@ class _ThemeRow extends StatelessWidget {
               'المظهر',
               style: AppTextStyles.bodyMedium.copyWith(
                 fontWeight: FontWeight.w500,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
             ),
           ),
@@ -570,9 +585,9 @@ class _SegmentedControl<T> extends StatelessWidget {
       height: 34,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(AppConstants.radiusS),
-        border: Border.all(color: AppColors.dividerLight),
+        border: Border.all(color: context.appColors.divider),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -582,23 +597,18 @@ class _SegmentedControl<T> extends StatelessWidget {
             onTap: () => onSelect(opt),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: isActive
-                    ? AppColors.primary
-                    : AppColors.transparent,
-                borderRadius:
-                    BorderRadius.circular(AppConstants.radiusS - 2),
+                color: isActive ? AppColors.primary : AppColors.transparent,
+                borderRadius: BorderRadius.circular(AppConstants.radiusS - 2),
               ),
               child: Text(
                 labelOf(opt),
                 style: AppTextStyles.labelSmall.copyWith(
-                  fontWeight:
-                      isActive ? FontWeight.w700 : FontWeight.w500,
+                  fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                   color: isActive
-                      ? AppColors.textPrimaryLight
-                      : AppColors.textSecondaryLight,
+                      ? context.appColors.textPrimary
+                      : context.appColors.textSecondary,
                 ),
               ),
             ),
@@ -633,10 +643,11 @@ class _ToggleRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveColor = enabled
-        ? AppColors.textPrimaryLight
-        : AppColors.textHintLight;
-    final effectiveIconColor =
-        enabled ? AppColors.primary : AppColors.textHintLight;
+        ? context.appColors.textPrimary
+        : context.appColors.textHint;
+    final effectiveIconColor = enabled
+        ? AppColors.primary
+        : context.appColors.textHint;
 
     return Opacity(
       opacity: enabled ? 1.0 : 0.45,
@@ -653,10 +664,8 @@ class _ToggleRow extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color:
-                    effectiveIconColor.withValues(alpha: 0.1),
-                borderRadius:
-                    BorderRadius.circular(AppConstants.radiusS),
+                color: effectiveIconColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppConstants.radiusS),
               ),
               child: Icon(icon, size: 18, color: effectiveIconColor),
             ),
@@ -673,11 +682,10 @@ class _ToggleRow extends StatelessWidget {
             Switch(
               value: value,
               onChanged: enabled ? onChanged : null,
-              activeColor: AppColors.primary,
-              activeTrackColor:
-                  AppColors.primary.withValues(alpha: 0.3),
-              inactiveThumbColor: AppColors.textHintLight,
-              inactiveTrackColor: AppColors.dividerLight,
+              activeThumbColor: AppColors.primary,
+              activeTrackColor: AppColors.primary.withValues(alpha: 0.3),
+              inactiveThumbColor: context.appColors.textHint,
+              inactiveTrackColor: context.appColors.divider,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ],

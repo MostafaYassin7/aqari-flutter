@@ -1,11 +1,15 @@
+import 'dart:convert';
+import '../../../../core/preview/ui_preview.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../core/constants/app_constants.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../providers/add_listing_provider.dart';
+import '../../data/add_listing_repository.dart';
+import '../../../../core/network/api_failure.dart';
 
 class Step2Media extends ConsumerWidget {
   const Step2Media({super.key});
@@ -16,7 +20,8 @@ class Step2Media extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final photos = ref.watch(addListingProvider).photos;
+    final state = ref.watch(addListingProvider);
+    final photos = state.photos;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppConstants.spaceM),
@@ -25,32 +30,105 @@ class Step2Media extends ConsumerWidget {
         children: [
           const SizedBox(height: 8),
           Text(
-            'أضف الصور والفيديو',
+            'أضف صور العقار (اختياري)',
             style: AppTextStyles.headlineMedium.copyWith(
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
           Text(
-            'أضف 3 صور على الأقل لإبراز عقارك',
+            'JPG، PNG، WEBP — حتى 15MB لكل صورة. يمكنك المتابعة بدون صور.',
             style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight),
+              color: context.appColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 20),
 
           // ── Upload area ──────────────────────────────────
           GestureDetector(
-            onTap: () {
-              // Simulate picking a photo
-              ref
-                  .read(addListingProvider.notifier)
-                  .addPhoto(_mockPhotoUrl(photos.length + 1));
-            },
+            onTap: state.value('uploading') == 'true'
+                ? null
+                : () async {
+                    try {
+                      final photos = await ref
+                          .read(listingImagePickerProvider)
+                          .pickMultiImage();
+                      ref
+                          .read(addListingProvider.notifier)
+                          .field('uploadError', '');
+                      if (!context.mounted) return;
+                      for (final photo in photos) {
+                        final ext = photo.name.split('.').last.toLowerCase();
+                        if (!['jpg', 'jpeg', 'png', 'webp'].contains(ext)) {
+                          if (context.mounted) {
+                            await previewResult(
+                              context,
+                              'نوع صورة غير مدعوم',
+                              'اختر JPG أو PNG أو WEBP.',
+                            );
+                          }
+                          continue;
+                        }
+                        if (await photo.length() > 15 * 1024 * 1024) {
+                          if (context.mounted) {
+                            await previewResult(
+                              context,
+                              'الصورة كبيرة',
+                              'الحد الأقصى 15MB لكل صورة.',
+                            );
+                          }
+                          continue;
+                        }
+                        if (!uiPreview) {
+                          final n = ref.read(addListingProvider.notifier);
+                          n.field('uploading', 'true');
+                          try {
+                            final url = await ref
+                                .read(addListingRepositoryProvider)
+                                .upload(photo, (progress) {
+                                  n.field(
+                                    'uploadProgress',
+                                    '${(progress * 100).round()}',
+                                  );
+                                });
+                            n.addPhoto(url);
+                          } catch (e) {
+                            n.field(
+                              'uploadError',
+                              ApiFailure.fromError(e).message,
+                            );
+                            break;
+                          } finally {
+                            n.field('uploading', 'false');
+                          }
+                          continue;
+                        }
+                        final bytes = await photo.readAsBytes();
+                        if (!context.mounted) return;
+                        final value =
+                            'data:image/jpeg;base64,${base64Encode(bytes)}';
+                        if (!ref
+                            .read(addListingProvider)
+                            .photos
+                            .contains(value)) {
+                          ref.read(addListingProvider.notifier).addPhoto(value);
+                        }
+                      }
+                    } catch (_) {
+                      if (context.mounted) {
+                        previewResult(
+                          context,
+                          'تعذر اختيار الصور',
+                          'يمكنك المحاولة مرة أخرى.',
+                        );
+                      }
+                    }
+                  },
             child: Container(
               width: double.infinity,
               height: 160,
               decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
+                color: context.appColors.surface,
                 borderRadius: BorderRadius.circular(AppConstants.radiusL),
                 border: Border.all(
                   color: AppColors.primary.withAlpha(128),
@@ -65,7 +143,7 @@ class Step2Media extends ConsumerWidget {
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
+                      color: context.appColors.primaryTint,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -84,15 +162,32 @@ class Step2Media extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'JPG, PNG, HEIC',
+                    state.value('uploading') == 'true'
+                        ? 'جارٍ الرفع ${state.value('uploadProgress')}٪'
+                        : 'JPG, PNG, WEBP',
                     style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textHintLight),
+                      color: context.appColors.textHint,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
 
+          if (state.value('uploadError').isNotEmpty)
+            Text(
+              state.value('uploadError'),
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+            ),
+          if (uiPreview)
+            TextButton(
+              onPressed: () => ref
+                  .read(addListingProvider.notifier)
+                  .addPhoto(
+                    _mockPhotoUrl(DateTime.now().microsecondsSinceEpoch),
+                  ),
+              child: const Text('إضافة صورة تجريبية'),
+            ),
           if (photos.isNotEmpty) ...[
             const SizedBox(height: 20),
             Row(
@@ -101,14 +196,15 @@ class Step2Media extends ConsumerWidget {
                 Text(
                   'الصور المضافة (${photos.length})',
                   style: AppTextStyles.titleMedium.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.appColors.textPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
                   'اسحب لإعادة الترتيب',
                   style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight),
+                    color: context.appColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -117,9 +213,12 @@ class Step2Media extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: photos.length,
-              onReorder: (oldIndex, newIndex) => ref
+              onReorderItem: (oldIndex, newIndex) => ref
                   .read(addListingProvider.notifier)
-                  .reorderPhotos(oldIndex, newIndex),
+                  .reorderPhotos(
+                    oldIndex,
+                    newIndex > oldIndex ? newIndex + 1 : newIndex,
+                  ),
               itemBuilder: (_, i) => _PhotoTile(
                 key: ValueKey(photos[i]),
                 url: photos[i],
@@ -138,19 +237,22 @@ class Step2Media extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: AppColors.warning.withAlpha(25),
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
-                border: Border.all(
-                    color: AppColors.warning.withAlpha(80)),
+                border: Border.all(color: AppColors.warning.withAlpha(80)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline_rounded,
-                      color: AppColors.warning, size: 18),
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    color: AppColors.warning,
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'الحد الأدنى 3 صور — أضفت ${photos.length} حتى الآن',
+                      'يمكنك إضافة صور لإبراز عقارك — أضفت ${photos.length} حتى الآن',
                       style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textPrimaryLight),
+                        color: context.appColors.textPrimary,
+                      ),
                     ),
                   ),
                 ],
@@ -159,44 +261,6 @@ class Step2Media extends ConsumerWidget {
           ],
 
           const SizedBox(height: 20),
-
-          // ── Video option ─────────────────────────────────
-          GestureDetector(
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('سيتم دعم رفع الفيديو قريباً')),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceLight,
-                borderRadius:
-                    BorderRadius.circular(AppConstants.radiusM),
-                border: Border.all(color: AppColors.dividerLight),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.videocam_rounded,
-                      color: AppColors.textSecondaryLight, size: 22),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'أضف فيديو (اختياري)',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textPrimaryLight),
-                    ),
-                  ),
-                  const Icon(Icons.add_circle_outline_rounded,
-                      color: AppColors.primary, size: 22),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 24),
         ],
       ),
     );
@@ -207,11 +271,12 @@ class _PhotoTile extends StatelessWidget {
   final String url;
   final bool isCover;
   final VoidCallback onDelete;
-  const _PhotoTile(
-      {required super.key,
-      required this.url,
-      required this.isCover,
-      required this.onDelete});
+  const _PhotoTile({
+    required super.key,
+    required this.url,
+    required this.isCover,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -221,7 +286,7 @@ class _PhotoTile extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
         border: Border.all(
-          color: isCover ? AppColors.primary : AppColors.dividerLight,
+          color: isCover ? AppColors.primary : context.appColors.divider,
           width: isCover ? 2 : 1,
         ),
       ),
@@ -230,20 +295,32 @@ class _PhotoTile extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            CachedNetworkImage(
-              imageUrl: url,
-              fit: BoxFit.cover,
-              placeholder: (_, __) => Container(
-                  color: AppColors.surfaceLight,
-                  child: const Center(
-                      child: CircularProgressIndicator(
+            url.startsWith('data:')
+                ? Image.memory(
+                    base64Decode(url.split(',').last),
+                    fit: BoxFit.cover,
+                  )
+                : CachedNetworkImage(
+                    imageUrl: url,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => Container(
+                      color: context.appColors.surface,
+                      child: const Center(
+                        child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: AppColors.primary))),
-              errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surfaceLight,
-                  child: const Icon(Icons.image_rounded,
-                      color: AppColors.textHintLight, size: 36)),
-            ),
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ),
+                    errorWidget: (_, __, ___) => Container(
+                      color: context.appColors.surface,
+                      child: Icon(
+                        Icons.image_rounded,
+                        color: context.appColors.textHint,
+                        size: 36,
+                      ),
+                    ),
+                  ),
             // Cover badge
             if (isCover)
               PositionedDirectional(
@@ -251,17 +328,21 @@ class _PhotoTile extends StatelessWidget {
                 start: 8,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 3),
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary,
                     borderRadius: BorderRadius.circular(
-                        AppConstants.radiusCircle),
+                      AppConstants.radiusCircle,
+                    ),
                   ),
                   child: Text(
                     'الغلاف',
                     style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.w700),
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
@@ -278,8 +359,11 @@ class _PhotoTile extends StatelessWidget {
                     color: AppColors.overlay,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.close_rounded,
-                      color: AppColors.white, size: 16),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    color: AppColors.white,
+                    size: 16,
+                  ),
                 ),
               ),
             ),
@@ -289,8 +373,11 @@ class _PhotoTile extends StatelessWidget {
               bottom: 0,
               end: 40,
               child: Center(
-                child: Icon(Icons.drag_indicator_rounded,
-                    color: AppColors.white, size: 22),
+                child: Icon(
+                  Icons.drag_indicator_rounded,
+                  color: AppColors.white,
+                  size: 22,
+                ),
               ),
             ),
           ],

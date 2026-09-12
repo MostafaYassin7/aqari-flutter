@@ -33,14 +33,14 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
     final asyncProject = ref.watch(projectDetailsProvider);
 
     return asyncProject.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.backgroundLight,
+      loading: () => Scaffold(
+        backgroundColor: context.appColors.background,
         body: Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
       ),
       error: (err, _) => Scaffold(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.appColors.background,
         appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: Center(
           child: Column(
@@ -55,7 +55,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
               Text(
                 'حدث خطأ أثناء تحميل البيانات',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.appColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -71,7 +71,7 @@ class _ProjectDetailsScreenState extends ConsumerState<ProjectDetailsScreen> {
       ),
       data: (project) {
         return Scaffold(
-          backgroundColor: AppColors.backgroundLight,
+          backgroundColor: context.appColors.background,
           extendBodyBehindAppBar: true,
           body: Stack(
             children: [
@@ -165,7 +165,7 @@ class _PhotoSectionState extends State<_PhotoSection> {
                 height: 320,
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.appColors.surface,
                   child: const Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
@@ -174,7 +174,7 @@ class _PhotoSectionState extends State<_PhotoSection> {
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.appColors.surface,
                   child: const Center(
                     child: Icon(
                       Icons.apartment_rounded,
@@ -295,17 +295,17 @@ class _OverlayIconButton extends StatelessWidget {
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: context.appColors.card,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowLight,
+              color: context.appColors.shadow,
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Icon(icon, size: 18, color: AppColors.textPrimaryLight),
+        child: Icon(icon, size: 18, color: context.appColors.textPrimary),
       ),
     );
   }
@@ -329,7 +329,7 @@ class _TitleSection extends StatelessWidget {
           project.name,
           style: AppTextStyles.headlineMedium.copyWith(
             fontWeight: FontWeight.w800,
-            color: AppColors.textPrimaryLight,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 6),
@@ -339,7 +339,7 @@ class _TitleSection extends StatelessWidget {
             project.city,
           ].join('، '),
           style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.appColors.textSecondary,
           ),
         ),
         if (project.developerName.isNotEmpty) ...[
@@ -435,14 +435,14 @@ class _StatsRow extends StatelessWidget {
                   s['value'] as String,
                   style: AppTextStyles.headlineSmall.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimaryLight,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   s['label'] as String,
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ],
@@ -480,7 +480,7 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
             'عن المشروع',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
@@ -494,14 +494,14 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
                 height: 1.7,
               ),
             ),
             secondChild: Text(
               widget.project.description,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
                 height: 1.7,
               ),
             ),
@@ -516,7 +516,7 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
                   Text(
                     _expanded ? 'عرض أقل' : 'اقرأ المزيد',
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textPrimaryLight,
+                      color: context.appColors.textPrimary,
                       fontWeight: FontWeight.w700,
                       decoration: TextDecoration.underline,
                     ),
@@ -527,7 +527,7 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
                     size: 18,
-                    color: AppColors.textPrimaryLight,
+                    color: context.appColors.textPrimary,
                   ),
                 ],
               ),
@@ -572,7 +572,7 @@ class _UnitsSection extends StatelessWidget {
             'الوحدات المتاحة',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -598,9 +598,9 @@ class _UnitCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: context.appColors.card,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.dividerLight),
+        border: Border.all(color: context.appColors.divider),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -612,7 +612,7 @@ class _UnitCard extends StatelessWidget {
                   typeLabel,
                   style: AppTextStyles.titleMedium.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimaryLight,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
               ),
@@ -676,12 +676,12 @@ class _UnitStat extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: AppColors.textSecondaryLight),
+        Icon(icon, size: 16, color: context.appColors.textSecondary),
         const SizedBox(width: 4),
         Text(
           label,
           style: AppTextStyles.bodySmall.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.appColors.textSecondary,
           ),
         ),
       ],
@@ -706,7 +706,7 @@ class _LocationSection extends StatelessWidget {
             'الموقع',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
@@ -730,11 +730,11 @@ class _LocationSection extends StatelessWidget {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.white,
+                            color: context.appColors.card,
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.shadowLight,
+                                color: context.appColors.shadow,
                                 blurRadius: 8,
                               ),
                             ],
@@ -745,7 +745,7 @@ class _LocationSection extends StatelessWidget {
                               project.city,
                             ].join('، '),
                             style: AppTextStyles.labelMedium.copyWith(
-                              color: AppColors.textPrimaryLight,
+                              color: context.appColors.textPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -767,17 +767,17 @@ class _LocationSection extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.location_on_outlined,
                   size: 16,
-                  color: AppColors.textSecondaryLight,
+                  color: context.appColors.textSecondary,
                 ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     project.address,
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                 ),
@@ -839,7 +839,7 @@ class _PriceSection extends StatelessWidget {
             'السعر',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
@@ -849,14 +849,14 @@ class _PriceSection extends StatelessWidget {
                 TextSpan(
                   text: 'يبدأ من  ',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
                 TextSpan(
                   text: formatPrice(project.startingPrice),
                   style: AppTextStyles.headlineLarge.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimaryLight,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
               ],
@@ -867,7 +867,7 @@ class _PriceSection extends StatelessWidget {
             Text(
               'حتى  ${formatPrice(project.priceTo!)}',
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
               ),
             ),
           ],
@@ -886,9 +886,9 @@ class _BottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        border: Border(top: BorderSide(color: AppColors.dividerLight)),
+      decoration: BoxDecoration(
+        color: context.appColors.card,
+        border: Border(top: BorderSide(color: context.appColors.divider)),
       ),
       child: SafeArea(
         top: false,
@@ -904,7 +904,7 @@ class _BottomBar extends StatelessWidget {
                     Text(
                       'يبدأ من',
                       style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -912,7 +912,7 @@ class _BottomBar extends StatelessWidget {
                       formatPrice(project.startingPrice),
                       style: AppTextStyles.titleLarge.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimaryLight,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                   ],
@@ -973,9 +973,13 @@ class _BarButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: outlined ? AppColors.white : (color ?? AppColors.primary),
+          color: outlined
+              ? context.appColors.card
+              : (color ?? AppColors.primary),
           borderRadius: BorderRadius.circular(10),
-          border: outlined ? Border.all(color: AppColors.dividerLight) : null,
+          border: outlined
+              ? Border.all(color: context.appColors.divider)
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -983,13 +987,15 @@ class _BarButton extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: outlined ? AppColors.textPrimaryLight : AppColors.white,
+              color: outlined ? context.appColors.textPrimary : AppColors.white,
             ),
             const SizedBox(width: 5),
             Text(
               label,
               style: AppTextStyles.labelMedium.copyWith(
-                color: outlined ? AppColors.textPrimaryLight : AppColors.white,
+                color: outlined
+                    ? context.appColors.textPrimary
+                    : AppColors.white,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1007,9 +1013,9 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.symmetric(vertical: 20),
-      child: Divider(height: 1, color: AppColors.dividerLight),
+      child: Divider(height: 1, color: context.appColors.divider),
     );
   }
 }

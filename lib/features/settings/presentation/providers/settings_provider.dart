@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
 
@@ -16,6 +17,15 @@ extension AppLanguageX on AppLanguage {
 }
 
 enum AppThemeMode { light, dark, system }
+
+const themePreferenceKey = 'aqar_theme_mode';
+final initialThemeModeProvider = Provider<AppThemeMode>(
+  (ref) => AppThemeMode.system,
+);
+AppThemeMode savedThemeMode(String? value) => AppThemeMode.values.firstWhere(
+  (mode) => mode.name == value,
+  orElse: () => AppThemeMode.system,
+);
 
 extension AppThemeModeX on AppThemeMode {
   String get label {
@@ -59,34 +69,37 @@ class SettingsState {
     bool? bookingUpdates,
     bool? searchAlerts,
     bool? promotions,
-  }) =>
-      SettingsState(
-        language: language ?? this.language,
-        themeMode: themeMode ?? this.themeMode,
-        pushNotifications: pushNotifications ?? this.pushNotifications,
-        newMessages: newMessages ?? this.newMessages,
-        bookingUpdates: bookingUpdates ?? this.bookingUpdates,
-        searchAlerts: searchAlerts ?? this.searchAlerts,
-        promotions: promotions ?? this.promotions,
-      );
+  }) => SettingsState(
+    language: language ?? this.language,
+    themeMode: themeMode ?? this.themeMode,
+    pushNotifications: pushNotifications ?? this.pushNotifications,
+    newMessages: newMessages ?? this.newMessages,
+    bookingUpdates: bookingUpdates ?? this.bookingUpdates,
+    searchAlerts: searchAlerts ?? this.searchAlerts,
+    promotions: promotions ?? this.promotions,
+  );
 }
 
 // ── Notifier ──────────────────────────────────────────────────────────────────
 
 class SettingsNotifier extends Notifier<SettingsState> {
   @override
-  SettingsState build() => const SettingsState(
-        language: AppLanguage.arabic,
-        themeMode: AppThemeMode.system,
-        pushNotifications: true,
-        newMessages: true,
-        bookingUpdates: true,
-        searchAlerts: false,
-        promotions: false,
-      );
+  SettingsState build() => SettingsState(
+    language: AppLanguage.arabic,
+    themeMode: ref.read(initialThemeModeProvider),
+    pushNotifications: true,
+    newMessages: true,
+    bookingUpdates: true,
+    searchAlerts: false,
+    promotions: false,
+  );
 
   void setLanguage(AppLanguage v) => state = state.copyWith(language: v);
-  void setThemeMode(AppThemeMode v) => state = state.copyWith(themeMode: v);
+  Future<void> setThemeMode(AppThemeMode v) async {
+    state = state.copyWith(themeMode: v);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(themePreferenceKey, v.name);
+  }
 
   void setPushNotifications(bool v) {
     // Turning off master also disables all sub-toggles
@@ -105,5 +118,6 @@ class SettingsNotifier extends Notifier<SettingsState> {
   void setPromotions(bool v) => state = state.copyWith(promotions: v);
 }
 
-final settingsProvider =
-    NotifierProvider<SettingsNotifier, SettingsState>(SettingsNotifier.new);
+final settingsProvider = NotifierProvider<SettingsNotifier, SettingsState>(
+  SettingsNotifier.new,
+);

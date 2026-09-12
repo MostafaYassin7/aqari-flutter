@@ -1,8 +1,8 @@
+import '../../../../core/router/auth_return.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../providers/auth_provider.dart';
@@ -32,14 +32,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   Future<void> _submit() async {
     if (!_canSubmit) return;
-    await ref.read(authProvider.notifier).completeRegistration(
+    await ref
+        .read(authProvider.notifier)
+        .completeRegistration(
           name: _nameController.text.trim(),
           email: _emailController.text.trim().isEmpty
               ? null
               : _emailController.text.trim(),
           isOwner: _isOwner!,
         );
-    if (mounted) context.go(AppRoutes.home);
+    if (mounted) context.go(authDestination(context));
   }
 
   @override
@@ -47,13 +49,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final auth = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.appColors.background,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: Text('أكمل ملفك الشخصي',
-            style: AppTextStyles.headlineSmall),
+        title: Text('أكمل ملفك الشخصي', style: AppTextStyles.headlineSmall),
       ),
       body: SafeArea(
         child: Form(
@@ -71,7 +72,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       Text(
                         'آخر خطوة قبل بدء التصفح',
                         style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.textSecondaryLight,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
 
@@ -119,7 +120,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       Text(
                         'اختر الوصف الأنسب لك',
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondaryLight,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
 
@@ -135,8 +136,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 title: 'أريد التصفح',
                                 subtitle: 'شراء، إيجار\nأو استكشاف العقارات',
                                 selected: _isOwner == false,
-                                onTap: () =>
-                                    setState(() => _isOwner = false),
+                                onTap: () => setState(() => _isOwner = false),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -146,8 +146,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 title: 'مالك أو وسيط',
                                 subtitle: 'أبيع، أؤجّر\nأو أدير عقارات',
                                 selected: _isOwner == true,
-                                onTap: () =>
-                                    setState(() => _isOwner = true),
+                                onTap: () => setState(() => _isOwner = true),
                               ),
                             ),
                           ],
@@ -181,10 +180,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _canSubmit
                         ? AppColors.primary
-                        : AppColors.surfaceLight,
+                        : context.appColors.surface,
                     foregroundColor: _canSubmit
                         ? AppColors.white
-                        : AppColors.textHintLight,
+                        : context.appColors.textHint,
                   ),
                   child: auth.isLoading
                       ? const SizedBox(
@@ -193,7 +192,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           child: CircularProgressIndicator(
                             strokeWidth: 2.5,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                                AppColors.white),
+                              AppColors.white,
+                            ),
                           ),
                         )
                       : const Text('إنشاء الحساب'),
@@ -219,10 +219,7 @@ class _FieldLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(
-          label,
-          style: AppTextStyles.titleMedium,
-        ),
+        Text(label, style: AppTextStyles.titleMedium),
         if (required)
           Text(
             ' *',
@@ -258,10 +255,12 @@ class _RoleCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryLight : AppColors.white,
+          color: selected
+              ? context.appColors.primaryTint
+              : context.appColors.card,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: selected ? AppColors.primary : AppColors.dividerLight,
+            color: selected ? AppColors.primary : context.appColors.divider,
             width: selected ? 2 : 1,
           ),
         ),
@@ -273,13 +272,15 @@ class _RoleCard extends StatelessWidget {
               children: [
                 Icon(
                   icon,
-                  color:
-                      selected ? AppColors.primary : AppColors.iconLight,
+                  color: selected ? AppColors.primary : context.appColors.icon,
                   size: 28,
                 ),
                 if (selected)
-                  const Icon(Icons.check_circle_rounded,
-                      color: AppColors.primary, size: 20),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
               ],
             ),
             const SizedBox(height: 10),
@@ -288,7 +289,7 @@ class _RoleCard extends StatelessWidget {
               style: AppTextStyles.titleMedium.copyWith(
                 color: selected
                     ? AppColors.primary
-                    : AppColors.textPrimaryLight,
+                    : context.appColors.textPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -298,7 +299,7 @@ class _RoleCard extends StatelessWidget {
               style: AppTextStyles.bodySmall.copyWith(
                 color: selected
                     ? AppColors.primaryDark
-                    : AppColors.textSecondaryLight,
+                    : context.appColors.textSecondary,
               ),
             ),
           ],

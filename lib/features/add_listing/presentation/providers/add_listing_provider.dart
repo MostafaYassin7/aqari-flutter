@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../shared/domain/property_rules.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 // Sentinel for nullable copyWith fields
 class _Unset {
@@ -10,6 +12,36 @@ const _kUnset = _Unset();
 // ── State ─────────────────────────────────────────────────────────────────────
 
 class AddListingState {
+  final Map<String, String> draft;
+  final String propertyType, listingType, role;
+  PropertyRules get rules => PropertyRules(propertyType, listingType);
+  String get group => rules.isEventHall ? 'hall' : rules.group.name;
+  bool get isDaily => rules.isDailyRental;
+  List<String> get steps => [
+    'role',
+    if (role == 'owner' || role == 'agent') 'ownerInfo',
+    'license',
+    'category',
+    'media',
+    'info',
+    'features',
+    'details',
+    if (isDaily) 'booking',
+    'location',
+    'review',
+  ];
+  String value(String key) =>
+      draft[key] ??
+      switch (key) {
+        'minNights' => '1',
+        'idType' || 'brokerIdType' => 'national',
+        'documentType' => 'deed',
+        'calendar' => 'gregorian',
+        _ => '',
+      };
+  String get categoryId =>
+      draft['categoryId'] ??
+      (propertyType.isEmpty ? '' : 'preview-$propertyType-$listingType');
   // Step 1 — Category
   final String? category;
 
@@ -47,6 +79,10 @@ class AddListingState {
   final double lng;
 
   const AddListingState({
+    this.draft = const {},
+    this.propertyType = '',
+    this.listingType = 'sale',
+    this.role = 'owner',
     this.category,
     this.photos = const <String>[],
     this.price = '',
@@ -74,6 +110,10 @@ class AddListingState {
   });
 
   AddListingState copyWith({
+    Map<String, String>? draft,
+    String? propertyType,
+    String? listingType,
+    String? role,
     Object? category = _kUnset,
     List<String>? photos,
     String? price,
@@ -100,7 +140,13 @@ class AddListingState {
     double? lng,
   }) {
     return AddListingState(
-      category: identical(category, _kUnset) ? this.category : category as String?,
+      draft: draft ?? this.draft,
+      propertyType: propertyType ?? this.propertyType,
+      listingType: listingType ?? this.listingType,
+      role: role ?? this.role,
+      category: identical(category, _kUnset)
+          ? this.category
+          : category as String?,
       photos: photos ?? this.photos,
       price: price ?? this.price,
       area: area ?? this.area,
@@ -132,8 +178,121 @@ class AddListingState {
 
 class AddListingNotifier extends Notifier<AddListingState> {
   @override
-  AddListingState build() => const AddListingState();
+  AddListingState build() {
+    ref.listen(authProvider.select((s) => s.user?.id), (previous, next) {
+      if (previous != null && previous != next) reset();
+    });
+    return const AddListingState();
+  }
 
+  void field(String key, String value) {
+    final draft = {...state.draft, key: value};
+    if (key == 'idType') {
+      draft.remove('ownerId');
+      draft.remove('birth');
+    }
+    if (key == 'document' ||
+        key == 'ownerId' ||
+        key == 'birth' ||
+        key == 'agency' ||
+        key == 'agentId' ||
+        key == 'agentBirth') {
+      draft.remove('skipLicense');
+    }
+    if (licenseFields.contains(key)) {
+      draft.remove('licenseId');
+      draft.remove('licenseFingerprint');
+    }
+    state = state.copyWith(draft: draft);
+  }
+
+  void setRole(String role) {
+    final draft = {...state.draft}
+      ..remove('licenseId')
+      ..remove('licenseFingerprint')
+      ..remove('skipLicense');
+    state = state.copyWith(role: role, draft: draft);
+  }
+
+  void selectType(
+    String type,
+    String listingType,
+    String label, {
+    String? categoryId,
+  }) {
+    if (type == 'event_hall') listingType = 'rent_short';
+    final common = {
+      for (final entry in state.draft.entries)
+        if (!categoryFields.contains(entry.key)) entry.key: entry.value,
+    };
+    state = state.copyWith(
+      category: label,
+      propertyType: type,
+      listingType: listingType,
+      draft: {
+        ...common,
+        if (categoryId != null) 'categoryId': categoryId,
+      }..removeWhere((key, value) => key == 'categoryId' && categoryId == null),
+      features: {},
+      bedrooms: 0,
+      bathrooms: 0,
+      livingRooms: 0,
+      facade: null,
+      streetWidth: '',
+      floorNumber: '',
+      propertyAge: '',
+      isFurnished: false,
+      hasKitchen: false,
+      hasExtraUnit: false,
+      hasCarEntrance: false,
+      hasElevator: false,
+    );
+  }
+
+  static const licenseFields = {
+    'idType',
+    'brokerIdType',
+    'documentType',
+    'document',
+    'ownerId',
+    'birth',
+    'calendar',
+    'phone',
+    'coOwner',
+    'agency',
+    'agentId',
+    'agentBirth',
+    'agentPhone',
+    'adLicense',
+    'brokerOwnerId',
+    'tourism',
+    'skipLicense',
+  };
+  static const categoryFields = [
+    'capacity',
+    'halfDay',
+    'minNights',
+    'checkIn',
+    'checkOut',
+    'catering',
+    'sound_system',
+    'projector',
+    'decoration',
+    'security',
+    'parking',
+    'bedrooms',
+    'livingRooms',
+    'bathrooms',
+    'floor',
+    'age',
+    'street',
+    'facade',
+    'furnished',
+    'kitchen',
+    'extra',
+    'car',
+    'elevator',
+  ];
   // Step 1
   void setCategory(String v) => state = state.copyWith(category: v);
 
@@ -144,6 +303,7 @@ class AddListingNotifier extends Notifier<AddListingState> {
     final list = List<String>.from(state.photos)..removeAt(index);
     state = state.copyWith(photos: list);
   }
+
   void reorderPhotos(int oldIndex, int newIndex) {
     final list = List<String>.from(state.photos);
     if (newIndex > oldIndex) newIndex -= 1;
@@ -173,12 +333,10 @@ class AddListingNotifier extends Notifier<AddListingState> {
   }
 
   // Step 5
-  void setBedrooms(int v) =>
-      state = state.copyWith(bedrooms: v.clamp(0, 20));
+  void setBedrooms(int v) => state = state.copyWith(bedrooms: v < 0 ? 0 : v);
   void setLivingRooms(int v) =>
-      state = state.copyWith(livingRooms: v.clamp(0, 10));
-  void setBathrooms(int v) =>
-      state = state.copyWith(bathrooms: v.clamp(0, 20));
+      state = state.copyWith(livingRooms: v < 0 ? 0 : v);
+  void setBathrooms(int v) => state = state.copyWith(bathrooms: v < 0 ? 0 : v);
   void setFacade(String? v) => state = state.copyWith(facade: v);
   void setStreetWidth(String v) => state = state.copyWith(streetWidth: v);
   void setFloorNumber(String v) => state = state.copyWith(floorNumber: v);
@@ -200,4 +358,5 @@ class AddListingNotifier extends Notifier<AddListingState> {
 
 final addListingProvider =
     NotifierProvider<AddListingNotifier, AddListingState>(
-        AddListingNotifier.new);
+      AddListingNotifier.new,
+    );

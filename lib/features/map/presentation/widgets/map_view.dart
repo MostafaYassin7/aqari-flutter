@@ -79,7 +79,8 @@ class _MapViewState extends ConsumerState<MapView> {
     final canvas = Canvas(recorder);
 
     final fillColor = selected ? AppColors.primary : Colors.white;
-    final textColor = selected ? Colors.white : AppColors.textPrimaryLight;
+    // Bitmap markers keep a white/gold fill independently of the app theme.
+    const textColor = AppColors.onPrimary;
 
     final paint = Paint()..color = fillColor;
     final borderPaint = Paint()
@@ -224,7 +225,7 @@ class _MapViewState extends ConsumerState<MapView> {
             position: LatLng(listing.lat, listing.lng),
             icon: icon,
             anchor: const Offset(0.5, 1.0),
-            zIndex: selected ? 1.0 : 0.0,
+            zIndexInt: selected ? 1 : 0,
             onTap: () {
               ref.read(mapProvider.notifier).selectListing(listing.id);
               _scrollCardToListing(listing.id);
@@ -426,16 +427,16 @@ class _SearchAreaButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.search_rounded,
               size: 16,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
             const SizedBox(width: 6),
             Text(
               'ابحث في هذه المنطقة',
               style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -492,7 +493,7 @@ class _MapCard extends StatelessWidget {
                 height: double.infinity,
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.appColors.surface,
                   child: const Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
@@ -501,7 +502,7 @@ class _MapCard extends StatelessWidget {
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.appColors.surface,
                   child: const Center(
                     child: Icon(
                       Icons.home_rounded,
@@ -528,7 +529,7 @@ class _MapCard extends StatelessWidget {
                       listing.title,
                       style: AppTextStyles.bodyMedium.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimaryLight,
+                        color: context.appColors.textPrimary,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -537,7 +538,7 @@ class _MapCard extends StatelessWidget {
                     Text(
                       '${listing.city}  ·  ${listing.district}',
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.appColors.textSecondary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -549,7 +550,7 @@ class _MapCard extends StatelessWidget {
                         fontWeight: FontWeight.w800,
                         color: selected
                             ? AppColors.primary
-                            : AppColors.textPrimaryLight,
+                            : context.appColors.textPrimary,
                       ),
                     ),
                   ],

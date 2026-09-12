@@ -367,8 +367,6 @@ class ChatsNotifier extends Notifier<ChatsState> {
       );
 
       final raw = response.data;
-      print('[CHAT] loadMessages raw type: ${raw.runtimeType}');
-      print('[CHAT] loadMessages raw: $raw');
 
       List<dynamic> items = [];
       int total = 0;
@@ -383,8 +381,6 @@ class ChatsNotifier extends Notifier<ChatsState> {
         items = raw;
         total = items.length;
       }
-
-      print('[CHAT] parsed ${items.length} messages, total=$total');
 
       final newMessages = items
           .whereType<Map>()
@@ -413,7 +409,6 @@ class ChatsNotifier extends Notifier<ChatsState> {
       );
       state = state.copyWith(chats: updatedChats);
     } catch (e) {
-      print('[CHAT] loadMessages error: $e');
       final updatedChats = [...state.chats];
       final updatedIdx = updatedChats.indexWhere((c) => c.id == chatId);
       if (updatedIdx >= 0) {

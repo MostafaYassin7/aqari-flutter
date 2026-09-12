@@ -89,25 +89,49 @@ List<PropertyFeature> getFeaturesForListing(Listing listing) {
     case 'دوبلكس':
       return [
         ...base,
-        const PropertyFeature(label: 'تكييف مركزي', icon: Icons.ac_unit_rounded),
-        const PropertyFeature(label: 'موقف سيارة', icon: Icons.local_parking_rounded),
+        const PropertyFeature(
+          label: 'تكييف مركزي',
+          icon: Icons.ac_unit_rounded,
+        ),
+        const PropertyFeature(
+          label: 'موقف سيارة',
+          icon: Icons.local_parking_rounded,
+        ),
         const PropertyFeature(label: 'مطبخ راكب', icon: Icons.kitchen_rounded),
         const PropertyFeature(label: 'مصعد', icon: Icons.elevator_rounded),
-        const PropertyFeature(label: 'أمن 24 ساعة', icon: Icons.security_rounded),
+        const PropertyFeature(
+          label: 'أمن 24 ساعة',
+          icon: Icons.security_rounded,
+        ),
         const PropertyFeature(label: 'إنترنت', icon: Icons.wifi_rounded),
       ];
 
     case 'فيلا':
       return [
         ...base,
-        const PropertyFeature(label: 'تكييف مركزي', icon: Icons.ac_unit_rounded),
-        const PropertyFeature(label: 'موقف سيارة', icon: Icons.local_parking_rounded),
+        const PropertyFeature(
+          label: 'تكييف مركزي',
+          icon: Icons.ac_unit_rounded,
+        ),
+        const PropertyFeature(
+          label: 'موقف سيارة',
+          icon: Icons.local_parking_rounded,
+        ),
         const PropertyFeature(label: 'مطبخ راكب', icon: Icons.kitchen_rounded),
         const PropertyFeature(label: 'حديقة', icon: Icons.yard_rounded),
         const PropertyFeature(label: 'مسبح', icon: Icons.pool_rounded),
-        const PropertyFeature(label: 'مدخل مستقل', icon: Icons.door_front_door_rounded),
-        const PropertyFeature(label: 'أمن 24 ساعة', icon: Icons.security_rounded),
-        const PropertyFeature(label: 'غرفة خادمة', icon: Icons.bedroom_child_rounded),
+        const PropertyFeature(
+          label: 'مدخل مستقل',
+          icon: Icons.door_front_door_rounded,
+        ),
+        const PropertyFeature(
+          label: 'أمن 24 ساعة',
+          icon: Icons.security_rounded,
+        ),
+        const PropertyFeature(
+          label: 'غرفة خادمة',
+          icon: Icons.bedroom_child_rounded,
+        ),
       ];
 
     case 'استراحة':
@@ -116,17 +140,35 @@ List<PropertyFeature> getFeaturesForListing(Listing listing) {
         const PropertyFeature(label: 'تكييف', icon: Icons.ac_unit_rounded),
         const PropertyFeature(label: 'مسبح', icon: Icons.pool_rounded),
         const PropertyFeature(label: 'حديقة', icon: Icons.yard_rounded),
-        const PropertyFeature(label: 'موقف سيارة', icon: Icons.local_parking_rounded),
-        const PropertyFeature(label: 'شواء خارجي', icon: Icons.outdoor_grill_rounded),
-        const PropertyFeature(label: 'ملعب أطفال', icon: Icons.sports_soccer_rounded),
+        const PropertyFeature(
+          label: 'موقف سيارة',
+          icon: Icons.local_parking_rounded,
+        ),
+        const PropertyFeature(
+          label: 'شواء خارجي',
+          icon: Icons.outdoor_grill_rounded,
+        ),
+        const PropertyFeature(
+          label: 'ملعب أطفال',
+          icon: Icons.sports_soccer_rounded,
+        ),
       ];
 
     case 'تجاري':
       return [
         ...base,
-        const PropertyFeature(label: 'تكييف مركزي', icon: Icons.ac_unit_rounded),
-        const PropertyFeature(label: 'موقف سيارة', icon: Icons.local_parking_rounded),
-        const PropertyFeature(label: 'واجهة تجارية', icon: Icons.storefront_rounded),
+        const PropertyFeature(
+          label: 'تكييف مركزي',
+          icon: Icons.ac_unit_rounded,
+        ),
+        const PropertyFeature(
+          label: 'موقف سيارة',
+          icon: Icons.local_parking_rounded,
+        ),
+        const PropertyFeature(
+          label: 'واجهة تجارية',
+          icon: Icons.storefront_rounded,
+        ),
         const PropertyFeature(label: 'إنترنت', icon: Icons.wifi_rounded),
       ];
 
@@ -134,9 +176,15 @@ List<PropertyFeature> getFeaturesForListing(Listing listing) {
     case 'عمارة':
       return [
         ...base,
-        const PropertyFeature(label: 'على شارع رئيسي', icon: Icons.add_road_rounded),
+        const PropertyFeature(
+          label: 'على شارع رئيسي',
+          icon: Icons.add_road_rounded,
+        ),
         const PropertyFeature(label: 'صك نظامي', icon: Icons.verified_rounded),
-        const PropertyFeature(label: 'خدمات عامة', icon: Icons.home_work_rounded),
+        const PropertyFeature(
+          label: 'خدمات عامة',
+          icon: Icons.home_work_rounded,
+        ),
       ];
 
     default:

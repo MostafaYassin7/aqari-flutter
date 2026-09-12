@@ -1,9 +1,22 @@
 import 'package:flutter/foundation.dart';
 
 import '../../core/utils/parse_helpers.dart';
+import '../domain/property_rules.dart';
 
 @immutable
 class Listing {
+  final int? maxGuests;
+  final double? pricePerHalfDay;
+  final List<String> includedServices;
+  final String? checkInTime;
+  final String? checkOutTime;
+  final int? minNights;
+  final ListingOwner? owner;
+  final String address;
+  final DateTime? createdAt;
+  final bool hasCoordinates;
+  PropertyRules get rules => PropertyRules(propertyType, listingType);
+  String get contactOwnerId => owner?.id ?? userId;
   final String id;
   final String userId;
   final String title;
@@ -48,6 +61,16 @@ class Listing {
   final int favoriteCount;
 
   const Listing({
+    this.maxGuests,
+    this.pricePerHalfDay,
+    this.includedServices = const [],
+    this.checkInTime,
+    this.checkOutTime,
+    this.minNights,
+    this.owner,
+    this.address = '',
+    this.createdAt,
+    this.hasCoordinates = false,
     required this.id,
     this.userId = '',
     required this.title,
@@ -145,13 +168,42 @@ class Listing {
     }
     if (imageUrls.isEmpty) imageUrls = [''];
 
+    final ownerRaw = json['__owner__'];
+    final owner = ownerRaw is Map
+        ? ListingOwner.fromJson(Map<String, dynamic>.from(ownerRaw))
+        : null;
+    final geo = json['_geoloc'];
+    final latitude = optionalNumber(geo is Map ? geo['lat'] : json['latitude']);
+    final longitude = optionalNumber(
+      geo is Map ? geo['lng'] : json['longitude'],
+    );
     return Listing(
+      maxGuests: optionalPositiveInt(json['maxGuests']),
+      pricePerHalfDay: optionalNonNegativeNumber(json['pricePerHalfDay']),
+      includedServices: json['includedServices'] is List
+          ? (json['includedServices'] as List)
+                .whereType<String>()
+                .where((v) => v.isNotEmpty)
+                .toList()
+          : const [],
+      checkInTime: optionalText(json['checkInTime']),
+      checkOutTime: optionalText(json['checkOutTime']),
+      minNights: optionalPositiveInt(json['minNights']),
+      owner: owner,
+      address: optionalText(json['address']) ?? '',
+      createdAt: ParseHelpers.toDateTimeNullable(json['createdAt']),
+      hasCoordinates:
+          latitude != null &&
+          longitude != null &&
+          latitude.abs() <= 90 &&
+          longitude.abs() <= 180,
       id: id,
       userId:
           (json['userId'] ??
                   json['ownerId'] ??
                   json['user_id'] ??
                   json['owner_id'] ??
+                  owner?.id ??
                   '')
               .toString(),
       title: (json['title'] ?? '').toString(),
@@ -170,7 +222,7 @@ class Listing {
       lng: lng,
       listingType: (json['listingType'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
-      ownerName: (json['ownerName'] ?? '').toString(),
+      ownerName: owner?.name ?? (json['ownerName'] ?? '').toString(),
       adNumber: (json['adNumber'] ?? '').toString(),
       facade: (json['facade'] ?? '').toString(),
       floor: ParseHelpers.toInt(json['floor']),
@@ -220,4 +272,48 @@ String formatPrice(double price) {
     (m) => '${m[1]},',
   );
   return '$formatted ريال';
+}
+
+String? optionalText(dynamic value) =>
+    value is String && value.trim().isNotEmpty ? value.trim() : null;
+double? optionalNumber(dynamic value) {
+  final result = value is num
+      ? value.toDouble()
+      : value is String
+      ? double.tryParse(value)
+      : null;
+  return result != null && result.isFinite ? result : null;
+}
+
+double? optionalPositiveNumber(dynamic value) {
+  final n = optionalNumber(value);
+  return n != null && n > 0 ? n : null;
+}
+
+double? optionalNonNegativeNumber(dynamic value) {
+  final n = optionalNumber(value);
+  return n != null && n >= 0 ? n : null;
+}
+
+int? optionalPositiveInt(dynamic value) {
+  final n = optionalPositiveNumber(value);
+  return n != null && n == n.truncateToDouble() ? n.toInt() : null;
+}
+
+class ListingOwner {
+  final String? id, name, phone, profilePhoto, role;
+  const ListingOwner({
+    this.id,
+    this.name,
+    this.phone,
+    this.profilePhoto,
+    this.role,
+  });
+  factory ListingOwner.fromJson(Map<String, dynamic> json) => ListingOwner(
+    id: optionalText(json['id']),
+    name: optionalText(json['name']),
+    phone: optionalText(json['phone']),
+    profilePhoto: optionalText(json['profilePhoto']),
+    role: optionalText(json['role']),
+  );
 }

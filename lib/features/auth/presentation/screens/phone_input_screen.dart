@@ -1,3 +1,4 @@
+import '../../../../core/router/auth_return.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,18 +54,29 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
   bool get _isValid => _phoneController.text.trim().length >= 9;
 
   Future<void> _send() async {
-    if (!_isValid) return;
-    await ref.read(authProvider.notifier).sendOtp(
+    if (!_isValid || ref.read(authProvider).isLoading) return;
+    await ref
+        .read(authProvider.notifier)
+        .sendOtp(
           phone: _phoneController.text.trim(),
           countryCode: _selected.code,
         );
-    if (mounted) context.go(AppRoutes.otp);
+    if (!mounted) return;
+    final error = ref.read(authProvider).error;
+    if (error != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+    context.go(nextAuthRoute(context, AppRoutes.otp));
   }
 
   void _showCountryPicker() {
+    _phoneFocus.unfocus();
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -83,12 +95,12 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
     final auth = ref.watch(authProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.appColors.background,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => context.go(AppRoutes.login),
+          onPressed: () => context.go(nextAuthRoute(context, AppRoutes.login)),
         ),
         elevation: 0,
       ),
@@ -111,7 +123,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
               Text(
                 'سنرسل لك رمز تحقق للتأكيد',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.appColors.textSecondary,
                 ),
               ),
 
@@ -127,26 +139,33 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                       onTap: _showCountryPicker,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 15),
+                          horizontal: 12,
+                          vertical: 15,
+                        ),
                         decoration: BoxDecoration(
-                          border: Border.all(color: AppColors.dividerLight),
+                          border: Border.all(color: context.appColors.divider),
                           borderRadius: BorderRadius.circular(12),
-                          color: AppColors.surfaceLight,
+                          color: context.appColors.surface,
                         ),
                         child: Row(
                           children: [
-                            Text(_selected.flag,
-                                style: const TextStyle(fontSize: 20)),
+                            Text(
+                              _selected.flag,
+                              style: const TextStyle(fontSize: 20),
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               _selected.code,
                               style: AppTextStyles.titleMedium.copyWith(
-                                color: AppColors.textPrimaryLight,
+                                color: context.appColors.textPrimary,
                               ),
                             ),
                             const SizedBox(width: 4),
-                            const Icon(Icons.keyboard_arrow_down_rounded,
-                                size: 18, color: AppColors.iconLight),
+                            Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 18,
+                              color: context.appColors.icon,
+                            ),
                           ],
                         ),
                       ),
@@ -168,7 +187,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                         decoration: InputDecoration(
                           hintText: '5XXXXXXXX',
                           hintStyle: AppTextStyles.bodyMedium.copyWith(
-                            color: AppColors.textHintLight,
+                            color: context.appColors.textHint,
                           ),
                         ),
                         onChanged: (_) => setState(() {}),
@@ -185,7 +204,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
               Text(
                 'مثال: ${_selected.code} 5XXXXXXXX',
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.appColors.textSecondary,
                 ),
               ),
 
@@ -195,10 +214,12 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
               ElevatedButton(
                 onPressed: (_isValid && !auth.isLoading) ? _send : null,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      _isValid ? AppColors.primary : AppColors.surfaceLight,
-                  foregroundColor:
-                      _isValid ? AppColors.white : AppColors.textHintLight,
+                  backgroundColor: _isValid
+                      ? AppColors.primary
+                      : context.appColors.surface,
+                  foregroundColor: _isValid
+                      ? AppColors.white
+                      : context.appColors.textHint,
                 ),
                 child: auth.isLoading
                     ? const SizedBox(
@@ -206,8 +227,9 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                         height: 22,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(AppColors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            AppColors.white,
+                          ),
                         ),
                       )
                     : const Text('إرسال رمز التحقق'),
@@ -232,61 +254,66 @@ class _CountryPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Handle
-        Container(
-          margin: const EdgeInsets.only(top: 12),
-          width: 40,
-          height: 4,
-          decoration: BoxDecoration(
-            color: AppColors.dividerLight,
-            borderRadius: BorderRadius.circular(2),
+    return SafeArea(
+      top: false,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: context.appColors.divider,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-          child: Text(
-            'اختر رمز الدولة',
-            style: AppTextStyles.headlineSmall,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+            child: Text('اختر رمز الدولة', style: AppTextStyles.headlineSmall),
           ),
-        ),
-        const Divider(height: 1, color: AppColors.dividerLight),
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: _kCountries.length,
-          separatorBuilder: (_, __) =>
-              const Divider(height: 1, color: AppColors.dividerLight),
-          itemBuilder: (_, i) {
-            final c = _kCountries[i];
-            final isSelected = c.code == selected.code;
-            return ListTile(
-              onTap: () => onPick(c),
-              leading: Text(c.flag, style: const TextStyle(fontSize: 24)),
-              title: Text(c.name, style: AppTextStyles.titleMedium),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    c.code,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondaryLight,
-                    ),
+          Divider(height: 1, color: context.appColors.divider),
+          Flexible(
+            child: ListView.separated(
+              shrinkWrap: true,
+              itemCount: _kCountries.length,
+              separatorBuilder: (_, __) =>
+                  Divider(height: 1, color: context.appColors.divider),
+              itemBuilder: (_, i) {
+                final c = _kCountries[i];
+                final isSelected = c.code == selected.code;
+                return ListTile(
+                  onTap: () => onPick(c),
+                  leading: Text(c.flag, style: const TextStyle(fontSize: 24)),
+                  title: Text(c.name, style: AppTextStyles.titleMedium),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        c.code,
+                        textDirection: TextDirection.ltr,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: context.appColors.textSecondary,
+                        ),
+                      ),
+                      if (isSelected) ...[
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.check_rounded,
+                          color: AppColors.primary,
+                          size: 20,
+                        ),
+                      ],
+                    ],
                   ),
-                  if (isSelected) ...[
-                    const SizedBox(width: 8),
-                    const Icon(Icons.check_rounded,
-                        color: AppColors.primary, size: 20),
-                  ],
-                ],
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 16),
-      ],
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
   }
 }

@@ -24,13 +24,13 @@ class ProfileScreen extends ConsumerWidget {
     if (profile == null) {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: AppColors.backgroundLight,
+          backgroundColor: context.appColors.background,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_rounded,
               size: 20,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
@@ -40,20 +40,20 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       body: CustomScrollView(
         slivers: [
           // ── App bar ──────────────────────────────────────────
           SliverAppBar(
-            backgroundColor: AppColors.backgroundLight,
+            backgroundColor: context.appColors.background,
             elevation: 0,
             scrolledUnderElevation: 0,
             pinned: true,
             leading: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back_ios_rounded,
                 size: 20,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
               onPressed: () => Navigator.of(context).maybePop(),
             ),
@@ -61,13 +61,13 @@ class ProfileScreen extends ConsumerWidget {
               'الملف الشخصي',
               style: AppTextStyles.titleLarge.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
             ),
             centerTitle: true,
-            bottom: const PreferredSize(
+            bottom: PreferredSize(
               preferredSize: Size.fromHeight(1),
-              child: Divider(height: 1, color: AppColors.dividerLight),
+              child: Divider(height: 1, color: context.appColors.divider),
             ),
           ),
 
@@ -78,9 +78,9 @@ class ProfileScreen extends ConsumerWidget {
                 // ── Top section ────────────────────────────────
                 _TopSection(profile: profile),
 
-                const Divider(
+                Divider(
                   height: 1,
-                  color: AppColors.dividerLight,
+                  color: context.appColors.divider,
                   indent: AppConstants.spaceM,
                   endIndent: AppConstants.spaceM,
                 ),
@@ -91,14 +91,14 @@ class ProfileScreen extends ConsumerWidget {
                   // ── Stats row ────────────────────────────────
                   _StatsRow(profile: profile),
 
-                  const Divider(height: 8, color: AppColors.surfaceLight),
+                  Divider(height: 8, color: context.appColors.surface),
                 ],
 
                 // ── Active listings ────────────────────────────
                 _ListingsSection(listingIds: profile.listingIds),
 
                 if (profile.reviewCount > 0) ...[
-                  const Divider(height: 8, color: AppColors.surfaceLight),
+                  Divider(height: 8, color: context.appColors.surface),
 
                   // ── Reviews ──────────────────────────────────
                   _ReviewsSection(profile: profile),
@@ -172,7 +172,7 @@ class _TopSectionState extends State<_TopSection> {
                       height: 110,
                       fit: BoxFit.cover,
                       placeholder: (_, __) => Container(
-                        color: AppColors.primaryLight,
+                        color: context.appColors.primaryTint,
                         child: const Icon(
                           Icons.person_rounded,
                           color: AppColors.primary,
@@ -180,7 +180,7 @@ class _TopSectionState extends State<_TopSection> {
                         ),
                       ),
                       errorWidget: (_, __, ___) => Container(
-                        color: AppColors.primaryLight,
+                        color: context.appColors.primaryTint,
                         child: const Icon(
                           Icons.person_rounded,
                           color: AppColors.primary,
@@ -215,7 +215,7 @@ class _TopSectionState extends State<_TopSection> {
                       child: Text(
                         'عقار+',
                         style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textPrimaryLight,
+                          color: context.appColors.textPrimary,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -235,7 +235,7 @@ class _TopSectionState extends State<_TopSection> {
                 p.name,
                 style: AppTextStyles.headlineMedium.copyWith(
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimaryLight,
+                  color: context.appColors.textPrimary,
                 ),
               ),
               if (p.isVerified) ...[
@@ -250,7 +250,7 @@ class _TopSectionState extends State<_TopSection> {
             Text(
               p.establishmentName!,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
               ),
             ),
           ],
@@ -286,14 +286,14 @@ class _TopSectionState extends State<_TopSection> {
                   p.rating.toStringAsFixed(1),
                   style: AppTextStyles.bodyMedium.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimaryLight,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '(${p.reviewCount} تقييم)',
                   style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ],
@@ -340,7 +340,7 @@ class _TopSectionState extends State<_TopSection> {
                         ? bioText
                         : '${bioText.substring(0, 120)}...',
                     style: AppTextStyles.bodyMedium.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.appColors.textSecondary,
                       height: 1.6,
                     ),
                     textAlign: TextAlign.center,
@@ -443,12 +443,12 @@ class _MetaChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: AppColors.textHintLight),
+        Icon(icon, size: 13, color: context.appColors.textHint),
         const SizedBox(width: 4),
         Text(
           label,
           style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.appColors.textSecondary,
           ),
         ),
       ],
@@ -496,14 +496,14 @@ class _StatCell extends StatelessWidget {
             value,
             style: AppTextStyles.headlineMedium.copyWith(
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.appColors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -516,7 +516,7 @@ class _StatCell extends StatelessWidget {
 class _StatDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1, height: 36, color: AppColors.dividerLight);
+    return Container(width: 1, height: 36, color: context.appColors.divider);
   }
 }
 
@@ -552,7 +552,7 @@ class _ListingsSection extends StatelessWidget {
                   'الإعلانات النشطة',
                   style: AppTextStyles.titleLarge.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimaryLight,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
               ),
@@ -616,7 +616,7 @@ class _ProfileListingCard extends StatelessWidget {
                 placeholder: (_, __) => Container(
                   width: 190,
                   height: 140,
-                  color: AppColors.surfaceLight,
+                  color: context.appColors.surface,
                   child: const Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
@@ -627,7 +627,7 @@ class _ProfileListingCard extends StatelessWidget {
                 errorWidget: (_, __, ___) => Container(
                   width: 190,
                   height: 140,
-                  color: AppColors.surfaceLight,
+                  color: context.appColors.surface,
                   child: const Center(
                     child: Icon(
                       Icons.home_rounded,
@@ -643,7 +643,7 @@ class _ProfileListingCard extends StatelessWidget {
               listing.title,
               style: AppTextStyles.bodySmall.copyWith(
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -653,14 +653,14 @@ class _ProfileListingCard extends StatelessWidget {
               _formatPrice(listing.price),
               style: AppTextStyles.bodyMedium.copyWith(
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               '${listing.city}  ·  ${listing.category}',
               style: AppTextStyles.labelSmall.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
               ),
             ),
           ],
@@ -716,7 +716,7 @@ class _ReviewsSection extends StatelessWidget {
                 '${profile.rating.toStringAsFixed(1)}  ·  ${profile.reviewCount} تقييم',
                 style: AppTextStyles.titleLarge.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight,
+                  color: context.appColors.textPrimary,
                 ),
               ),
             ],
@@ -731,7 +731,7 @@ class _ReviewsSection extends StatelessWidget {
           ),
 
           const SizedBox(height: AppConstants.spaceL),
-          const Divider(height: 1, color: AppColors.dividerLight),
+          Divider(height: 1, color: context.appColors.divider),
 
           // ── Individual reviews ───────────────────────────
           ...shown.map((r) => _ReviewCard(review: r)),
@@ -743,7 +743,7 @@ class _ReviewsSection extends StatelessWidget {
               child: OutlinedButton(
                 onPressed: () {},
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: AppColors.dividerLight),
+                  side: BorderSide(color: context.appColors.divider),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppConstants.radiusM),
                   ),
@@ -752,7 +752,7 @@ class _ReviewsSection extends StatelessWidget {
                 child: Text(
                   'عرض جميع التقييمات (${reviews.length})',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.appColors.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -789,7 +789,7 @@ class _RatingBreakdown extends StatelessWidget {
               Text(
                 '$star',
                 style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.appColors.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -808,7 +808,7 @@ class _RatingBreakdown extends StatelessWidget {
                         height: 6,
                         width: constraints.maxWidth,
                         decoration: BoxDecoration(
-                          color: AppColors.dividerLight,
+                          color: context.appColors.divider,
                           borderRadius: BorderRadius.circular(
                             AppConstants.radiusCircle,
                           ),
@@ -836,7 +836,7 @@ class _RatingBreakdown extends StatelessWidget {
                 child: Text(
                   '$count',
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.appColors.textSecondary,
                   ),
                   textAlign: TextAlign.end,
                 ),
@@ -874,7 +874,7 @@ class _ReviewCard extends StatelessWidget {
                   placeholder: (_, __) => Container(
                     width: 42,
                     height: 42,
-                    color: AppColors.primaryLight,
+                    color: context.appColors.primaryTint,
                     child: const Icon(
                       Icons.person_rounded,
                       color: AppColors.primary,
@@ -884,7 +884,7 @@ class _ReviewCard extends StatelessWidget {
                   errorWidget: (_, __, ___) => Container(
                     width: 42,
                     height: 42,
-                    color: AppColors.primaryLight,
+                    color: context.appColors.primaryTint,
                     child: const Icon(
                       Icons.person_rounded,
                       color: AppColors.primary,
@@ -902,7 +902,7 @@ class _ReviewCard extends StatelessWidget {
                       review.reviewerName,
                       style: AppTextStyles.bodyMedium.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimaryLight,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                     Row(
@@ -922,7 +922,7 @@ class _ReviewCard extends StatelessWidget {
                         Text(
                           _formatDate(review.date),
                           style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.textHintLight,
+                            color: context.appColors.textHint,
                           ),
                         ),
                       ],
@@ -936,13 +936,13 @@ class _ReviewCard extends StatelessWidget {
           Text(
             review.text,
             style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.appColors.textSecondary,
               height: 1.6,
             ),
           ),
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(top: 16),
-            child: Divider(height: 1, color: AppColors.dividerLight),
+            child: Divider(height: 1, color: context.appColors.divider),
           ),
         ],
       ),
@@ -985,9 +985,9 @@ class _ContactBar extends ConsumerWidget {
         AppConstants.spaceM,
         AppConstants.spaceM + bottomPad,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundLight,
-        border: Border(top: BorderSide(color: AppColors.dividerLight)),
+      decoration: BoxDecoration(
+        color: context.appColors.background,
+        border: Border(top: BorderSide(color: context.appColors.divider)),
       ),
       child: Row(
         children: [
@@ -1002,13 +1002,13 @@ class _ContactBar extends ConsumerWidget {
                 label: Text(
                   'إرسال رسالة',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.appColors.textPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.textPrimaryLight,
+                  foregroundColor: context.appColors.textPrimary,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppConstants.radiusM),
@@ -1034,14 +1034,14 @@ class _ContactBar extends ConsumerWidget {
               },
               style: OutlinedButton.styleFrom(
                 padding: EdgeInsets.zero,
-                side: const BorderSide(color: AppColors.dividerLight),
+                side: BorderSide(color: context.appColors.divider),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.phone_rounded,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
                 size: 22,
               ),
             ),

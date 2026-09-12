@@ -17,14 +17,16 @@ class AppTheme {
     final surface = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
     final card = isDark ? AppColors.cardDark : AppColors.cardLight;
     final divider = isDark ? AppColors.dividerDark : AppColors.dividerLight;
-    final textPrimary =
-        isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
-    final textSecondary =
-        isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight;
-    final textHint =
-        isDark ? AppColors.textHintDark : AppColors.textHintLight;
-    final overlayStyle =
-        isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark;
+    final textPrimary = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final textSecondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
+    final textHint = textSecondary;
+    final overlayStyle = isDark
+        ? SystemUiOverlayStyle.light
+        : SystemUiOverlayStyle.dark;
 
     return ThemeData(
       useMaterial3: true,
@@ -34,7 +36,7 @@ class AppTheme {
       colorScheme: ColorScheme(
         brightness: brightness,
         primary: AppColors.primary,
-        onPrimary: AppColors.white,
+        onPrimary: AppColors.onPrimary,
         secondary: AppColors.primaryDark,
         onSecondary: AppColors.white,
         error: AppColors.error,
@@ -62,16 +64,13 @@ class AppTheme {
         centerTitle: true,
         systemOverlayStyle: overlayStyle,
         iconTheme: IconThemeData(color: textPrimary),
-        titleTextStyle:
-            AppTextStyles.headlineSmall.copyWith(color: textPrimary),
+        titleTextStyle: AppTextStyles.headlineSmall.copyWith(
+          color: textPrimary,
+        ),
       ),
 
       // ── Divider ────────────────────────────────────────
-      dividerTheme: DividerThemeData(
-        color: divider,
-        thickness: 1,
-        space: 0,
-      ),
+      dividerTheme: DividerThemeData(color: divider, thickness: 1, space: 0),
 
       // ── Card ───────────────────────────────────────────
       cardTheme: CardThemeData(
@@ -90,8 +89,15 @@ class AppTheme {
         fillColor: surface,
         hintStyle: AppTextStyles.bodyMedium.copyWith(color: textHint),
         labelStyle: AppTextStyles.bodyMedium.copyWith(color: textSecondary),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        floatingLabelStyle: AppTextStyles.titleMedium.copyWith(
+          color: textPrimary,
+        ),
+        floatingLabelBehavior: FloatingLabelBehavior.always,
+        errorMaxLines: 3,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: divider),
@@ -118,10 +124,11 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.white,
+          foregroundColor: AppColors.onPrimary,
           minimumSize: const Size(double.infinity, 52),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           elevation: 0,
           textStyle: AppTextStyles.titleLarge,
         ),
@@ -132,8 +139,9 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: textPrimary,
           minimumSize: const Size(double.infinity, 52),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           side: BorderSide(color: divider),
           textStyle: AppTextStyles.titleLarge,
         ),
@@ -163,11 +171,11 @@ class AppTheme {
         backgroundColor: surface,
         selectedColor: AppColors.primary,
         labelStyle: AppTextStyles.labelMedium.copyWith(color: textPrimary),
-        secondaryLabelStyle:
-            AppTextStyles.labelMedium.copyWith(color: AppColors.white),
+        secondaryLabelStyle: AppTextStyles.labelMedium.copyWith(
+          color: AppColors.onPrimary,
+        ),
         side: BorderSide(color: divider),
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       ),
 
@@ -178,29 +186,34 @@ class AppTheme {
 
       // ── Switch ─────────────────────────────────────────
       switchTheme: SwitchThemeData(
-        thumbColor: WidgetStateProperty.resolveWith((states) =>
-            states.contains(WidgetState.selected) ? AppColors.primary : null),
-        trackColor: WidgetStateProperty.resolveWith((states) =>
-            states.contains(WidgetState.selected)
-                ? AppColors.primaryLight
-                : null),
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) =>
+              states.contains(WidgetState.selected) ? AppColors.primary : null,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppPalette(brightness).primaryTint
+              : null,
+        ),
       ),
 
       // ── FloatingActionButton ───────────────────────────
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.white,
+        foregroundColor: AppColors.onPrimary,
         elevation: 4,
       ),
 
       // ── SnackBar ───────────────────────────────────────
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: isDark ? AppColors.cardDark : AppColors.textPrimaryLight,
-        contentTextStyle:
-            AppTextStyles.bodyMedium.copyWith(color: AppColors.white),
+        backgroundColor: isDark
+            ? AppColors.cardDark
+            : AppColors.textPrimaryLight,
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.white,
+        ),
         behavior: SnackBarBehavior.floating,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }

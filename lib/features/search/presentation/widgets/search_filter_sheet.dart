@@ -8,22 +8,48 @@ import '../../../../core/constants/app_constants.dart';
 import '../providers/search_provider.dart';
 
 /// Shows the search filter bottom sheet.
-void showSearchFilterSheet(BuildContext context) {
+class SearchFilterValues {
+  final double? priceFrom, priceTo, areaFrom, areaTo;
+  const SearchFilterValues({
+    this.priceFrom,
+    this.priceTo,
+    this.areaFrom,
+    this.areaTo,
+  });
+}
+
+void showSearchFilterSheet(
+  BuildContext context, {
+  SearchFilterValues? initialValues,
+  ValueChanged<SearchFilterValues>? onApply,
+  bool showPropertyFields = true,
+}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AppColors.backgroundLight,
+    backgroundColor: context.appColors.background,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
         top: Radius.circular(AppConstants.radiusXL),
       ),
     ),
-    builder: (_) => const _FilterSheetContent(),
+    builder: (_) => _FilterSheetContent(
+      initialValues: initialValues,
+      onApply: onApply,
+      showPropertyFields: showPropertyFields,
+    ),
   );
 }
 
 class _FilterSheetContent extends ConsumerStatefulWidget {
-  const _FilterSheetContent();
+  final SearchFilterValues? initialValues;
+  final ValueChanged<SearchFilterValues>? onApply;
+  final bool showPropertyFields;
+  const _FilterSheetContent({
+    this.initialValues,
+    this.onApply,
+    this.showPropertyFields = true,
+  });
 
   @override
   ConsumerState<_FilterSheetContent> createState() =>
@@ -42,10 +68,18 @@ class _FilterSheetContentState extends ConsumerState<_FilterSheetContent> {
   @override
   void initState() {
     super.initState();
-    final pf = ref.read(searchPriceFromProvider);
-    final pt = ref.read(searchPriceToProvider);
-    final af = ref.read(searchAreaFromProvider);
-    final at = ref.read(searchAreaToProvider);
+    final pf = widget.initialValues != null
+        ? widget.initialValues!.priceFrom
+        : ref.read(searchPriceFromProvider);
+    final pt = widget.initialValues != null
+        ? widget.initialValues!.priceTo
+        : ref.read(searchPriceToProvider);
+    final af = widget.initialValues != null
+        ? widget.initialValues!.areaFrom
+        : ref.read(searchAreaFromProvider);
+    final at = widget.initialValues != null
+        ? widget.initialValues!.areaTo
+        : ref.read(searchAreaToProvider);
     _priceFromCtrl = TextEditingController(
       text: pf != null ? pf.toInt().toString() : '',
     );
@@ -90,6 +124,27 @@ class _FilterSheetContentState extends ConsumerState<_FilterSheetContent> {
     final af = double.tryParse(_areaFromCtrl.text);
     final at = double.tryParse(_areaToCtrl.text);
 
+    if ((pf != null && pt != null && pf > pt) ||
+        (af != null && at != null && af > at)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('يجب أن تكون قيمة «من» أقل من أو تساوي «إلى»'),
+        ),
+      );
+      return;
+    }
+    if (widget.onApply != null) {
+      widget.onApply!(
+        SearchFilterValues(
+          priceFrom: pf,
+          priceTo: pt,
+          areaFrom: af,
+          areaTo: at,
+        ),
+      );
+      Navigator.of(context).pop();
+      return;
+    }
     ref.read(searchPriceFromProvider.notifier).set(pf);
     ref.read(searchPriceToProvider.notifier).set(pt);
     ref.read(searchAreaFromProvider.notifier).set(af);
@@ -116,7 +171,7 @@ class _FilterSheetContentState extends ConsumerState<_FilterSheetContent> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.dividerLight,
+                color: context.appColors.divider,
                 borderRadius: BorderRadius.circular(AppConstants.radiusCircle),
               ),
             ),
@@ -151,7 +206,7 @@ class _FilterSheetContentState extends ConsumerState<_FilterSheetContent> {
             ),
           ),
 
-          const Divider(height: 1, color: AppColors.dividerLight),
+          Divider(height: 1, color: context.appColors.divider),
 
           // ── Scrollable body ───────────────────────────────────
           Expanded(
@@ -181,7 +236,7 @@ class _FilterSheetContentState extends ConsumerState<_FilterSheetContent> {
                 ),
 
                 const SizedBox(height: 8),
-                const Divider(color: AppColors.dividerLight),
+                Divider(color: context.appColors.divider),
                 const SizedBox(height: 8),
 
                 // ── Area range ─────────────────────────────────
@@ -203,57 +258,60 @@ class _FilterSheetContentState extends ConsumerState<_FilterSheetContent> {
                 ),
 
                 const SizedBox(height: 8),
-                const Divider(color: AppColors.dividerLight),
+                Divider(color: context.appColors.divider),
                 const SizedBox(height: 8),
 
                 // ── Bedrooms ───────────────────────────────────
-                const _SectionTitle('عدد غرف النوم'),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    _BedroomPill(
-                      label: 'أي',
-                      selected: _bedrooms == null,
-                      onTap: () => setState(() => _bedrooms = null),
-                    ),
-                    const SizedBox(width: 8),
-                    ...List.generate(
-                      5,
-                      (i) => Padding(
-                        padding: const EdgeInsets.only(left: 8),
-                        child: _BedroomPill(
-                          label: i == 4 ? '5+' : '${i + 1}',
-                          selected: _bedrooms == (i == 4 ? 5 : i + 1),
-                          onTap: () =>
-                              setState(() => _bedrooms = (i == 4 ? 5 : i + 1)),
+                if (widget.showPropertyFields) ...[
+                  const _SectionTitle('عدد غرف النوم'),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _BedroomPill(
+                        label: 'أي',
+                        selected: _bedrooms == null,
+                        onTap: () => setState(() => _bedrooms = null),
+                      ),
+                      const SizedBox(width: 8),
+                      ...List.generate(
+                        5,
+                        (i) => Padding(
+                          padding: const EdgeInsets.only(left: 8),
+                          child: _BedroomPill(
+                            label: i == 4 ? '5+' : '${i + 1}',
+                            selected: _bedrooms == (i == 4 ? 5 : i + 1),
+                            onTap: () => setState(
+                              () => _bedrooms = (i == 4 ? 5 : i + 1),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
 
-                const SizedBox(height: 8),
-                const Divider(color: AppColors.dividerLight),
-                const SizedBox(height: 8),
+                  const SizedBox(height: 8),
+                  Divider(color: context.appColors.divider),
+                  const SizedBox(height: 8),
 
-                // ── Furnished ──────────────────────────────────
-                _ToggleRow(
-                  label: 'مؤثث',
-                  icon: Icons.weekend_rounded,
-                  value: _isFurnished,
-                  onChanged: (v) => setState(() => _isFurnished = v),
-                ),
-                const SizedBox(height: 8),
+                  // ── Furnished ──────────────────────────────────
+                  _ToggleRow(
+                    label: 'مؤثث',
+                    icon: Icons.weekend_rounded,
+                    value: _isFurnished,
+                    onChanged: (v) => setState(() => _isFurnished = v),
+                  ),
+                  const SizedBox(height: 8),
 
-                // ── Elevator ───────────────────────────────────
-                _ToggleRow(
-                  label: 'يوجد مصعد',
-                  icon: Icons.elevator_rounded,
-                  value: _hasElevator,
-                  onChanged: (v) => setState(() => _hasElevator = v),
-                ),
+                  // ── Elevator ───────────────────────────────────
+                  _ToggleRow(
+                    label: 'يوجد مصعد',
+                    icon: Icons.elevator_rounded,
+                    value: _hasElevator,
+                    onChanged: (v) => setState(() => _hasElevator = v),
+                  ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
+                ],
               ],
             ),
           ),
@@ -266,9 +324,9 @@ class _FilterSheetContentState extends ConsumerState<_FilterSheetContent> {
               AppConstants.spaceM,
               AppConstants.spaceM + MediaQuery.of(context).padding.bottom,
             ),
-            decoration: const BoxDecoration(
-              color: AppColors.backgroundLight,
-              border: Border(top: BorderSide(color: AppColors.dividerLight)),
+            decoration: BoxDecoration(
+              color: context.appColors.background,
+              border: Border(top: BorderSide(color: context.appColors.divider)),
             ),
             child: ElevatedButton(
               onPressed: _apply,
@@ -308,7 +366,7 @@ class _SectionTitle extends StatelessWidget {
     text,
     style: AppTextStyles.bodyLarge.copyWith(
       fontWeight: FontWeight.w700,
-      color: AppColors.textPrimaryLight,
+      color: context.appColors.textPrimary,
     ),
   );
 }
@@ -324,14 +382,16 @@ class _NumberField extends StatelessWidget {
     controller: controller,
     keyboardType: TextInputType.number,
     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textPrimaryLight),
+    style: AppTextStyles.bodyMedium.copyWith(
+      color: context.appColors.textPrimary,
+    ),
     decoration: InputDecoration(
       hintText: hint,
       hintStyle: AppTextStyles.bodyMedium.copyWith(
-        color: AppColors.textHintLight,
+        color: context.appColors.textHint,
       ),
       filled: true,
-      fillColor: AppColors.surfaceLight,
+      fillColor: context.appColors.surface,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
         borderSide: BorderSide.none,
@@ -359,17 +419,17 @@ class _BedroomPill extends StatelessWidget {
       width: 48,
       height: 42,
       decoration: BoxDecoration(
-        color: selected ? AppColors.primary : AppColors.surfaceLight,
+        color: selected ? AppColors.primary : context.appColors.surface,
         borderRadius: BorderRadius.circular(AppConstants.radiusS),
         border: Border.all(
-          color: selected ? AppColors.primary : AppColors.dividerLight,
+          color: selected ? AppColors.primary : context.appColors.divider,
         ),
       ),
       child: Center(
         child: Text(
           label,
           style: AppTextStyles.bodyMedium.copyWith(
-            color: selected ? AppColors.white : AppColors.textPrimaryLight,
+            color: selected ? AppColors.white : context.appColors.textPrimary,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -407,21 +467,21 @@ class _ToggleRow extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(AppConstants.radiusM),
         border: Border.all(
-          color: value != null ? AppColors.primary : AppColors.dividerLight,
+          color: value != null ? AppColors.primary : context.appColors.divider,
         ),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppColors.textSecondaryLight),
+          Icon(icon, size: 18, color: context.appColors.textSecondary),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               label,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
             ),
           ),
@@ -434,7 +494,7 @@ class _ToggleRow extends StatelessWidget {
             style: AppTextStyles.bodySmall.copyWith(
               color: value != null
                   ? AppColors.primary
-                  : AppColors.textHintLight,
+                  : context.appColors.textHint,
               fontWeight: FontWeight.w600,
             ),
           ),

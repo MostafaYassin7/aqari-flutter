@@ -75,10 +75,10 @@ class _PropertyTypeChip extends StatelessWidget {
         margin: const EdgeInsetsDirectional.only(end: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary : AppColors.white,
+          color: isActive ? AppColors.primary : context.appColors.card,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isActive ? AppColors.primary : AppColors.dividerLight,
+            color: isActive ? AppColors.primary : context.appColors.divider,
           ),
         ),
         child: Row(
@@ -87,13 +87,17 @@ class _PropertyTypeChip extends StatelessWidget {
             Icon(
               icon,
               size: 15,
-              color: isActive ? AppColors.white : AppColors.textSecondaryLight,
+              color: isActive
+                  ? AppColors.white
+                  : context.appColors.textSecondary,
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: AppTextStyles.labelMedium.copyWith(
-                color: isActive ? AppColors.white : AppColors.textPrimaryLight,
+                color: isActive
+                    ? AppColors.white
+                    : context.appColors.textPrimary,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
               ),
             ),

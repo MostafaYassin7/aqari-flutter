@@ -12,6 +12,7 @@ import '../../../notifications/presentation/providers/notifications_provider.dar
 import '../../../wallet/presentation/providers/wallet_provider.dart';
 import '../../../../shared/widgets/app_bottom_nav.dart';
 import '../providers/account_provider.dart';
+import '../../../../core/preview/ui_preview.dart';
 
 class AccountScreen extends ConsumerWidget {
   const AccountScreen({super.key});
@@ -20,16 +21,16 @@ class AccountScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final auth = ref.watch(authProvider);
     final user = ref.watch(userProfileProvider);
-    final isLoggedIn = auth.step == AuthStep.authenticated;
+    final isLoggedIn = uiPreview || auth.step == AuthStep.authenticated;
     final unreadNotifications = ref.watch(unreadCountProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surfaceLight,
+      backgroundColor: context.appColors.surface,
       body: CustomScrollView(
         slivers: [
           // ── App bar ────────────────────────────────────────
           SliverAppBar(
-            backgroundColor: AppColors.backgroundLight,
+            backgroundColor: context.appColors.background,
             elevation: 0,
             scrolledUnderElevation: 0,
             pinned: true,
@@ -37,7 +38,7 @@ class AccountScreen extends ConsumerWidget {
               'حسابي',
               style: AppTextStyles.titleLarge.copyWith(
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
             ),
             centerTitle: true,
@@ -46,9 +47,9 @@ class AccountScreen extends ConsumerWidget {
                 alignment: Alignment.center,
                 children: [
                   IconButton(
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.notifications_none_rounded,
-                      color: AppColors.textPrimaryLight,
+                      color: context.appColors.textPrimary,
                     ),
                     onPressed: () => context.push(AppRoutes.notifications),
                   ),
@@ -68,9 +69,9 @@ class AccountScreen extends ConsumerWidget {
                 ],
               ),
             ],
-            bottom: const PreferredSize(
+            bottom: PreferredSize(
               preferredSize: Size.fromHeight(1),
-              child: Divider(height: 1, color: AppColors.dividerLight),
+              child: Divider(height: 1, color: context.appColors.divider),
             ),
           ),
 
@@ -124,7 +125,7 @@ class AccountScreen extends ConsumerWidget {
                     _MenuItem(
                       icon: Icons.calendar_month_rounded,
                       label: 'حجوزاتي',
-                      onTap: () => _showComingSoon(context, 'حجوزاتي'),
+                      onTap: () => context.push(AppRoutes.bookings),
                     ),
                     _MenuItem(
                       icon: Icons.campaign_rounded,
@@ -135,7 +136,7 @@ class AccountScreen extends ConsumerWidget {
                       icon: Icons.meeting_room_rounded,
                       label: 'طلبات حجز الوحدات',
                       onTap: () =>
-                          _showComingSoon(context, 'طلبات حجز الوحدات'),
+                          context.push('${AppRoutes.bookings}?role=owner'),
                     ),
                     _MenuItem(
                       icon: Icons.people_alt_rounded,
@@ -253,7 +254,7 @@ class _GuestSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.backgroundLight,
+      color: context.appColors.background,
       padding: const EdgeInsets.all(AppConstants.spaceM),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,14 +263,14 @@ class _GuestSection extends StatelessWidget {
             'سجّل دخولك إلى عقار',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             'سجّل دخولك للوصول إلى إعلاناتك وصفقاتك وحجوزاتك',
             style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 16),
@@ -302,7 +303,7 @@ class _GuestSection extends StatelessWidget {
                 double.infinity,
                 AppConstants.buttonHeight,
               ),
-              side: const BorderSide(color: AppColors.dividerLight),
+              side: BorderSide(color: context.appColors.divider),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppConstants.radiusM),
               ),
@@ -310,7 +311,7 @@ class _GuestSection extends StatelessWidget {
             child: Text(
               'إنشاء حساب جديد',
               style: AppTextStyles.bodyLarge.copyWith(
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -335,7 +336,7 @@ class _ProfileLoadingSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.backgroundLight,
+      color: context.appColors.background,
       padding: const EdgeInsets.all(AppConstants.spaceM),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,14 +345,14 @@ class _ProfileLoadingSection extends StatelessWidget {
             'جاري تحميل بيانات الحساب',
             style: AppTextStyles.titleLarge.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             error ?? 'نحدّث بياناتك من الخادم لعرض الملف الشخصي.',
             style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textSecondaryLight,
+              color: context.appColors.textSecondary,
             ),
           ),
           const SizedBox(height: 16),
@@ -367,7 +368,7 @@ class _ProfileLoadingSection extends StatelessWidget {
                   double.infinity,
                   AppConstants.buttonHeight,
                 ),
-                side: const BorderSide(color: AppColors.dividerLight),
+                side: BorderSide(color: context.appColors.divider),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppConstants.radiusM),
                 ),
@@ -375,7 +376,7 @@ class _ProfileLoadingSection extends StatelessWidget {
               child: Text(
                 'إعادة تحميل البيانات',
                 style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.textPrimaryLight,
+                  color: context.appColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -400,7 +401,7 @@ class _ProfileSection extends StatelessWidget {
       onTap: () => context.push('/profile/${user.id}'),
       behavior: HitTestBehavior.opaque,
       child: Container(
-        color: AppColors.backgroundLight,
+        color: context.appColors.background,
         padding: const EdgeInsets.symmetric(
           horizontal: AppConstants.spaceM,
           vertical: AppConstants.spaceM,
@@ -423,7 +424,7 @@ class _ProfileSection extends StatelessWidget {
                         placeholder: (_, __) => Container(
                           width: _iconSize,
                           height: _iconSize,
-                          color: AppColors.primaryLight,
+                          color: context.appColors.primaryTint,
                           child: const Icon(
                             Icons.person_rounded,
                             color: AppColors.primary,
@@ -433,7 +434,7 @@ class _ProfileSection extends StatelessWidget {
                         errorWidget: (_, __, ___) => Container(
                           width: _iconSize,
                           height: _iconSize,
-                          color: AppColors.primaryLight,
+                          color: context.appColors.primaryTint,
                           child: const Icon(
                             Icons.person_rounded,
                             color: AppColors.primary,
@@ -475,7 +476,7 @@ class _ProfileSection extends StatelessWidget {
                               user.name,
                               style: AppTextStyles.titleLarge.copyWith(
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimaryLight,
+                                color: context.appColors.textPrimary,
                               ),
                             ),
                           ),
@@ -493,7 +494,7 @@ class _ProfileSection extends StatelessWidget {
                       Text(
                         user.phone,
                         style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textSecondaryLight,
+                          color: context.appColors.textSecondary,
                         ),
                       ),
                       if (user.hasEmail) ...[
@@ -501,7 +502,7 @@ class _ProfileSection extends StatelessWidget {
                         Text(
                           user.email!,
                           style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondaryLight,
+                            color: context.appColors.textSecondary,
                           ),
                         ),
                       ],
@@ -509,10 +510,10 @@ class _ProfileSection extends StatelessWidget {
                   ),
                 ),
 
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 14,
-                  color: AppColors.textHintLight,
+                  color: context.appColors.textHint,
                 ),
               ],
             ),
@@ -534,7 +535,7 @@ class _ProfileSection extends StatelessWidget {
                   label: user.isVerified ? 'موثّق' : 'غير موثّق',
                   iconColor: user.isVerified
                       ? AppColors.info
-                      : AppColors.textHintLight,
+                      : context.appColors.textHint,
                 ),
                 _ProfileMetaBadge(
                   icon: user.isActive
@@ -543,7 +544,7 @@ class _ProfileSection extends StatelessWidget {
                   label: user.isActive ? 'الحساب نشط' : 'الحساب غير نشط',
                   iconColor: user.isActive
                       ? AppColors.success
-                      : AppColors.textHintLight,
+                      : context.appColors.textHint,
                 ),
               ],
             ),
@@ -554,7 +555,7 @@ class _ProfileSection extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.appColors.textSecondary,
                   height: 1.5,
                 ),
               ),
@@ -593,7 +594,7 @@ class _ProfileMetaBadge extends StatelessWidget {
           Text(
             label,
             style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -803,17 +804,17 @@ class _QuickAction extends StatelessWidget {
     child: Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: AppColors.backgroundLight,
+        color: context.appColors.background,
         borderRadius: BorderRadius.circular(AppConstants.radiusL),
-        border: Border.all(color: AppColors.dividerLight),
+        border: Border.all(color: context.appColors.divider),
       ),
       child: Column(
         children: [
           Container(
             width: 44,
             height: 44,
-            decoration: const BoxDecoration(
-              color: AppColors.primaryLight,
+            decoration: BoxDecoration(
+              color: context.appColors.primaryTint,
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: AppColors.primary, size: 22),
@@ -822,7 +823,7 @@ class _QuickAction extends StatelessWidget {
           Text(
             label,
             style: AppTextStyles.bodySmall.copyWith(
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
               fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,
@@ -854,13 +855,13 @@ class _MenuSection extends StatelessWidget {
         child: Text(
           title,
           style: AppTextStyles.labelMedium.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.appColors.textSecondary,
             fontWeight: FontWeight.w700,
           ),
         ),
       ),
       Container(
-        color: AppColors.backgroundLight,
+        color: context.appColors.background,
         child: Column(children: items),
       ),
     ],
@@ -894,13 +895,13 @@ class _MenuItem extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(icon, size: 20, color: AppColors.textSecondaryLight),
+              Icon(icon, size: 20, color: context.appColors.textSecondary),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   label,
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
               ),
@@ -926,19 +927,19 @@ class _MenuItem extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
               ],
-              const Icon(
+              Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 14,
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
               ),
             ],
           ),
         ),
       ),
       if (!isLast)
-        const Padding(
+        Padding(
           padding: EdgeInsetsDirectional.only(start: AppConstants.spaceM + 34),
-          child: Divider(height: 1, color: AppColors.dividerLight),
+          child: Divider(height: 1, color: context.appColors.divider),
         ),
     ],
   );
@@ -952,7 +953,7 @@ class _LogoutButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    color: AppColors.backgroundLight,
+    color: context.appColors.background,
     child: InkWell(
       onTap: () {
         showDialog(
@@ -977,7 +978,7 @@ class _LogoutButton extends StatelessWidget {
                 child: Text(
                   'إلغاء',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ),

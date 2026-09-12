@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../core/constants/app_constants.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../providers/add_listing_provider.dart';
 
 class _Feature {
@@ -32,7 +32,13 @@ class Step4Features extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(addListingProvider).features;
+    final state = ref.watch(addListingProvider);
+    final selected = state.features;
+    final visible = state.group == 'land'
+        ? _features.take(3).toList()
+        : state.group == 'residential'
+        ? _features.take(7).toList()
+        : <_Feature>[];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppConstants.spaceM),
@@ -43,16 +49,18 @@ class Step4Features extends ConsumerWidget {
           Text(
             'ما الذي يوفره العقار؟',
             style: AppTextStyles.headlineMedium.copyWith(
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             'اختر المميزات المتوفرة في عقارك',
-            style: AppTextStyles.bodyMedium
-                .copyWith(color: AppColors.textSecondaryLight),
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: context.appColors.textSecondary,
+            ),
           ),
           const SizedBox(height: 24),
+          if (visible.isEmpty) const Text('لا توجد مميزات إضافية لهذا النوع.'),
 
           GridView.builder(
             shrinkWrap: true,
@@ -63,26 +71,22 @@ class Step4Features extends ConsumerWidget {
               crossAxisSpacing: 10,
               childAspectRatio: 1.1,
             ),
-            itemCount: _features.length,
+            itemCount: visible.length,
             itemBuilder: (_, i) {
-              final f = _features[i];
+              final f = visible[i];
               final isOn = selected.contains(f.name);
               return GestureDetector(
-                onTap: () => ref
-                    .read(addListingProvider.notifier)
-                    .toggleFeature(f.name),
+                onTap: () =>
+                    ref.read(addListingProvider.notifier).toggleFeature(f.name),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   decoration: BoxDecoration(
-                    color: isOn
-                        ? AppColors.primary
-                        : AppColors.surfaceLight,
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
+                    color: isOn ? AppColors.primary : context.appColors.surface,
+                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
                     border: Border.all(
                       color: isOn
                           ? AppColors.primary
-                          : AppColors.dividerLight,
+                          : context.appColors.divider,
                     ),
                   ),
                   child: Column(
@@ -92,19 +96,17 @@ class Step4Features extends ConsumerWidget {
                         f.icon,
                         size: 26,
                         color: isOn
-                            ? AppColors.white
-                            : AppColors.textSecondaryLight,
+                            ? AppColors.onPrimary
+                            : context.appColors.textSecondary,
                       ),
                       const SizedBox(height: 6),
                       Text(
                         f.name,
                         style: AppTextStyles.labelMedium.copyWith(
                           color: isOn
-                              ? AppColors.white
-                              : AppColors.textPrimaryLight,
-                          fontWeight: isOn
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+                              ? AppColors.onPrimary
+                              : context.appColors.textPrimary,
+                          fontWeight: isOn ? FontWeight.w700 : FontWeight.w500,
                         ),
                         textAlign: TextAlign.center,
                         maxLines: 1,

@@ -223,10 +223,6 @@ class NotificationsNotifier extends Notifier<NotificationsState> {
         ApiEndpoints.notifications,
         queryParameters: {'page': page, 'limit': _limit},
       );
-      print(
-        '[NOTIF] fetchNotifications raw res.data type=${res.data.runtimeType}',
-      );
-      print('[NOTIF] fetchNotifications raw res.data=${res.data}');
 
       // After interceptor unwrap: could be {data: [...], total, page}
       // or the list directly depending on shape
@@ -245,7 +241,6 @@ class NotificationsNotifier extends Notifier<NotificationsState> {
       final list = rawList
           .map((j) => AppNotification.fromJson(j as Map<String, dynamic>))
           .toList();
-      print('[NOTIF] Parsed ${list.length} notifications, total=$total');
 
       state = state.copyWith(
         notifications: refresh ? list : [...state.notifications, ...list],
@@ -256,9 +251,7 @@ class NotificationsNotifier extends Notifier<NotificationsState> {
             (refresh ? list.length : state.notifications.length + list.length) <
             total,
       );
-    } catch (e, st) {
-      print('[NOTIF] fetchNotifications ERROR: $e');
-      print('[NOTIF] Stack: $st');
+    } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -266,7 +259,7 @@ class NotificationsNotifier extends Notifier<NotificationsState> {
   Future<void> fetchUnreadCount() async {
     try {
       final res = await apiClient.get(ApiEndpoints.notificationsUnreadCount);
-      print('[NOTIF] unread-count raw res.data=${res.data}');
+
       // After interceptor unwrap: {count: 7} or just a number
       if (res.data is Map) {
         final body = res.data as Map<String, dynamic>;
@@ -274,8 +267,8 @@ class NotificationsNotifier extends Notifier<NotificationsState> {
       } else if (res.data is int) {
         state = state.copyWith(unreadCount: res.data as int);
       }
-    } catch (e) {
-      print('[NOTIF] fetchUnreadCount ERROR: $e');
+    } catch (_) {
+      // Keep the previous unread count until the next successful refresh.
     }
   }
 

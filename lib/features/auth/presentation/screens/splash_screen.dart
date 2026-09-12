@@ -112,7 +112,7 @@ class _SplashContent extends StatelessWidget {
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              color: AppColors.white.withValues(alpha: 0.18),
+              color: context.appColors.card.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(28),
             ),
             child: Center(

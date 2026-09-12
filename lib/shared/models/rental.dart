@@ -1,6 +1,14 @@
 import '../../core/utils/parse_helpers.dart';
+import 'listing.dart';
+import '../domain/property_rules.dart';
 
 class DailyRental {
+  final Listing? source;
+  final String propertyType, listingType;
+  PropertyRules get rules => PropertyRules(propertyType, listingType);
+  final int? maxGuests;
+  final int minNights;
+  final String checkInTime, checkOutTime;
   final String id;
   final String name;
   final String city;
@@ -17,6 +25,13 @@ class DailyRental {
   final String description;
 
   const DailyRental({
+    this.source,
+    this.propertyType = 'apartment',
+    this.listingType = 'rent_short',
+    this.maxGuests,
+    this.minNights = 1,
+    this.checkInTime = '',
+    this.checkOutTime = '',
     required this.id,
     required this.name,
     required this.city,
@@ -32,6 +47,30 @@ class DailyRental {
     this.livingRooms = 1,
     required this.description,
   });
+
+  factory DailyRental.fromListing(Listing l) => DailyRental(
+    source: l,
+    propertyType: l.propertyType,
+    listingType: l.listingType,
+    id: l.id,
+    name: l.title,
+    city: l.city,
+    district: l.district,
+    category: l.category,
+    imageUrls: l.imageUrls,
+    pricePerNight: l.price,
+    rating: 0,
+    reviewCount: 0,
+    area: l.area.toDouble(),
+    bedrooms: l.bedrooms,
+    bathrooms: l.bathrooms,
+    livingRooms: l.livingRooms,
+    description: l.description,
+    maxGuests: l.maxGuests,
+    minNights: l.minNights ?? 1,
+    checkInTime: l.checkInTime ?? '',
+    checkOutTime: l.checkOutTime ?? '',
+  );
 
   // Daily rentals come from /listings?listingType=rent_short
   factory DailyRental.fromJson(Map<String, dynamic> json) {
@@ -54,6 +93,13 @@ class DailyRental {
         : (catRaw ?? '').toString();
 
     return DailyRental(
+      source: Listing.fromJson(json),
+      propertyType: (json['propertyType'] ?? '').toString(),
+      listingType: (json['listingType'] ?? '').toString(),
+      maxGuests: optionalPositiveInt(json['maxGuests']),
+      minNights: optionalPositiveInt(json['minNights']) ?? 1,
+      checkInTime: optionalText(json['checkInTime']) ?? '',
+      checkOutTime: optionalText(json['checkOutTime']) ?? '',
       id: (json['id'] ?? json['objectID'] ?? '').toString(),
       name: (json['title'] ?? json['name'] ?? '').toString(),
       city: (json['city'] ?? '').toString(),

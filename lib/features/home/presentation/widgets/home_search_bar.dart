@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../search/presentation/providers/search_provider.dart';
+import '../../../event_halls/presentation/event_halls_ui.dart';
 
 /// Airbnb-style collapsed search pill at the top of the home feed.
 /// Tapping navigates to the full Search screen.
@@ -23,6 +24,10 @@ class HomeSearchBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: () {
+        if (currentTab == 3) {
+          showHallFilters(context);
+          return;
+        }
         ref.read(searchTabProvider.notifier).select(currentTab);
         context.push(AppRoutes.search);
       },
@@ -30,12 +35,12 @@ class HomeSearchBar extends ConsumerWidget {
         margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: context.appColors.card,
           borderRadius: BorderRadius.circular(36),
-          border: Border.all(color: AppColors.dividerLight),
+          border: Border.all(color: context.appColors.divider),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowLight,
+              color: context.appColors.shadow,
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -61,7 +66,7 @@ class HomeSearchBar extends ConsumerWidget {
                   Text(
                     'أين تريد؟',
                     style: AppTextStyles.titleSmall.copyWith(
-                      color: AppColors.textPrimaryLight,
+                      color: context.appColors.textPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -69,7 +74,7 @@ class HomeSearchBar extends ConsumerWidget {
                   Text(
                     subtitle,
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.appColors.textSecondary,
                     ),
                   ),
                 ],
@@ -82,12 +87,12 @@ class HomeSearchBar extends ConsumerWidget {
               height: 34,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.dividerLight),
+                border: Border.all(color: context.appColors.divider),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.tune_rounded,
                 size: 16,
-                color: AppColors.textPrimaryLight,
+                color: context.appColors.textPrimary,
               ),
             ),
           ],

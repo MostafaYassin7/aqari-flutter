@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../providers/rentals_provider.dart';
 
 // ── Public entry-point ────────────────────────────────────────────────────────
 
 void showRentalCalendar({
+  Future<List<DateTime>> Function(int year, int month)? loadMonth,
+  List<DateTime> blockedDates = const [],
+  int minNights = 1,
   required BuildContext context,
   required DateTime? checkIn,
   required DateTime? checkOut,
@@ -16,6 +20,9 @@ void showRentalCalendar({
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (_) => _RentalCalendarModal(
+      loadMonth: loadMonth,
+      blockedDates: blockedDates,
+      minNights: minNights,
       initialCheckIn: checkIn,
       initialCheckOut: checkOut,
       onConfirm: onConfirm,
@@ -26,11 +33,17 @@ void showRentalCalendar({
 // ── Modal shell ───────────────────────────────────────────────────────────────
 
 class _RentalCalendarModal extends StatefulWidget {
+  final Future<List<DateTime>> Function(int year, int month)? loadMonth;
+  final List<DateTime> blockedDates;
+  final int minNights;
   final DateTime? initialCheckIn;
   final DateTime? initialCheckOut;
   final void Function(DateTime, DateTime) onConfirm;
 
   const _RentalCalendarModal({
+    this.loadMonth,
+    this.blockedDates = const [],
+    this.minNights = 1,
     this.initialCheckIn,
     this.initialCheckOut,
     required this.onConfirm,
@@ -46,22 +59,67 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
   DateTime? _checkOut;
 
   static const _monthNames = [
-    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+    'يناير',
+    'فبراير',
+    'مارس',
+    'أبريل',
+    'مايو',
+    'يونيو',
+    'يوليو',
+    'أغسطس',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر',
   ];
 
   // Sun-first abbreviated day labels
-  static const _dayLabels = [
-    'أحد', 'اثن', 'ثلا', 'أرب', 'خمي', 'جمع', 'سبت'
-  ];
+  static const _dayLabels = ['أحد', 'اثن', 'ثلا', 'أرب', 'خمي', 'جمع', 'سبت'];
 
   @override
   void initState() {
     super.initState();
-    final now = DateTime.now();
+    final now = widget.initialCheckIn ?? DateTime.now();
     _viewMonth = DateTime(now.year, now.month);
     _checkIn = widget.initialCheckIn;
     _checkOut = widget.initialCheckOut;
+    _loadVisibleMonth();
+  }
+
+  final _monthCache = <String, List<DateTime>>{};
+  bool _loading = false, _loadFailed = false;
+  int _loadGeneration = 0;
+  String _monthKey(DateTime d) => '${d.year}-${d.month}';
+  List<DateTime> get _blockedDates => [
+    ...widget.blockedDates,
+    ..._monthCache.values.expand((v) => v),
+  ];
+  Future<void> _loadVisibleMonth() async {
+    if (widget.loadMonth == null) return;
+    final generation = ++_loadGeneration;
+    final month = _viewMonth;
+    setState(() {
+      _loading = true;
+      _loadFailed = false;
+      _error = null;
+    });
+    try {
+      final key = _monthKey(month);
+      _monthCache[key] ??= await widget.loadMonth!(month.year, month.month);
+      if (mounted && generation == _loadGeneration) {
+        setState(() {
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted && generation == _loadGeneration) {
+        setState(() {
+          _loading = false;
+          _loadFailed = true;
+          _error = 'تعذر تحميل التواريخ المتاحة. أعد المحاولة.';
+        });
+      }
+    }
   }
 
   // ── Helpers ─────────────────────────────────────────────
@@ -71,43 +129,101 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
 
   bool _isPast(DateTime day) {
     final today = DateTime.now();
-    return day
-        .isBefore(DateTime(today.year, today.month, today.day));
+    return day.isBefore(DateTime(today.year, today.month, today.day));
   }
 
-  void _onDayTap(DateTime day) {
-    if (_isPast(day)) return;
+  String? _error;
+  bool _blocked(DateTime day) => _blockedDates.any((d) => _sameDay(d, day));
+  bool _validRange(DateTime a, DateTime b) =>
+      !_isPast(a) &&
+      !_blocked(a) &&
+      RentalDateRange(checkIn: a, checkOut: b).nights >= widget.minNights &&
+      !_blockedDates.any((d) => d.isAfter(a) && d.isBefore(b));
+
+  Future<void> _onDayTap(DateTime day) async {
+    if (_isPast(day) || _loading || _loadFailed) return;
+    if (_blocked(day) &&
+        (_checkIn == null || _checkOut != null || !day.isAfter(_checkIn!))) {
+      return;
+    }
+    if (widget.loadMonth != null &&
+        _checkIn != null &&
+        _checkOut == null &&
+        day.isAfter(_checkIn!)) {
+      setState(() => _loading = true);
+      try {
+        for (
+          var m = DateTime(_checkIn!.year, _checkIn!.month);
+          !m.isAfter(DateTime(day.year, day.month));
+          m = DateTime(m.year, m.month + 1)
+        ) {
+          _monthCache[_monthKey(m)] ??= await widget.loadMonth!(
+            m.year,
+            m.month,
+          );
+        }
+      } catch (_) {
+        if (mounted) {
+          setState(() {
+            _loading = false;
+            _loadFailed = true;
+            _error = 'تعذر تحميل التواريخ المتاحة. أعد المحاولة.';
+          });
+        }
+        return;
+      }
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
     setState(() {
-      if (_checkIn == null || (_checkIn != null && _checkOut != null)) {
+      _error = null;
+      if (_checkIn == null || _checkOut != null || !day.isAfter(_checkIn!)) {
         _checkIn = day;
         _checkOut = null;
-      } else {
-        if (day.isAfter(_checkIn!)) {
-          _checkOut = day;
-        } else if (day.isBefore(_checkIn!)) {
-          _checkOut = _checkIn;
-          _checkIn = day;
-        } else {
-          _checkIn = day;
-          _checkOut = null;
-        }
+        return;
       }
+      if (_blockedDates.any((d) => d.isAfter(_checkIn!) && d.isBefore(day))) {
+        _error = 'يوجد تواريخ محجوزة في هذا النطاق';
+        _checkIn = null;
+        _checkOut = null;
+        return;
+      }
+      if (RentalDateRange(checkIn: _checkIn, checkOut: day).nights <
+          widget.minNights) {
+        _error = 'الحد الأدنى للإقامة ${widget.minNights} ليالٍ';
+        _checkIn = day;
+        _checkOut = null;
+        return;
+      }
+      _checkOut = day;
     });
+  }
+
+  int get _monthOffset {
+    final today = DateTime.now();
+    return (_viewMonth.year - today.year) * 12 + _viewMonth.month - today.month;
   }
 
   void _prevMonth() {
     setState(() {
       _viewMonth = DateTime(_viewMonth.year, _viewMonth.month - 1);
     });
+    _loadVisibleMonth();
   }
 
   void _nextMonth() {
     setState(() {
       _viewMonth = DateTime(_viewMonth.year, _viewMonth.month + 1);
     });
+    _loadVisibleMonth();
   }
 
-  bool get _canConfirm => _checkIn != null && _checkOut != null;
+  bool get _canConfirm =>
+      !_loading &&
+      !_loadFailed &&
+      _checkIn != null &&
+      _checkOut != null &&
+      _validRange(_checkIn!, _checkOut!);
 
   // ── Build ────────────────────────────────────────────────
 
@@ -115,8 +231,8 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.sizeOf(context).height * 0.87,
-      decoration: const BoxDecoration(
-        color: AppColors.white,
+      decoration: BoxDecoration(
+        color: context.appColors.card,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -127,7 +243,7 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.dividerLight,
+              color: context.appColors.divider,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -138,25 +254,29 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                Text(
-                  'اختر تواريخ إقامتك',
-                  style: AppTextStyles.headlineSmall.copyWith(
-                    color: AppColors.textPrimaryLight,
-                    fontWeight: FontWeight.w800,
+                Expanded(
+                  child: Text(
+                    'اختر تواريخ إقامتك',
+                    style: AppTextStyles.headlineSmall.copyWith(
+                      color: context.appColors.textPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
-                const Spacer(),
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
                   child: Container(
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: AppColors.surfaceLight,
+                      color: context.appColors.surface,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.close_rounded,
-                        size: 16, color: AppColors.textPrimaryLight),
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 16,
+                      color: context.appColors.textPrimary,
+                    ),
                   ),
                 ),
               ],
@@ -165,6 +285,38 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
 
           const SizedBox(height: 20),
 
+          if (_loading) const LinearProgressIndicator(),
+          if (_loadFailed)
+            TextButton(
+              onPressed: _loadVisibleMonth,
+              child: const Text('إعادة المحاولة'),
+            ),
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                _error!,
+                style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+              ),
+            ),
+          Wrap(
+            spacing: 16,
+            children: [
+              for (final entry in {
+                'متاح': context.appColors.textSecondary,
+                'محجوز': AppColors.error,
+                'محدد': AppColors.primary,
+              }.entries)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.circle, size: 8, color: entry.value),
+                    const SizedBox(width: 5),
+                    Text(entry.key, style: AppTextStyles.bodySmall),
+                  ],
+                ),
+            ],
+          ),
           // Month navigation
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -172,7 +324,7 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
               children: [
                 _NavArrow(
                   icon: Icons.chevron_right_rounded,
-                  onTap: _prevMonth,
+                  onTap: _monthOffset > 0 ? _prevMonth : null,
                 ),
                 Expanded(
                   child: Center(
@@ -180,14 +332,14 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
                       '${_monthNames[_viewMonth.month - 1]} ${_viewMonth.year}',
                       style: AppTextStyles.titleLarge.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimaryLight,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                   ),
                 ),
                 _NavArrow(
                   icon: Icons.chevron_left_rounded,
-                  onTap: _nextMonth,
+                  onTap: _monthOffset < 12 ? _nextMonth : null,
                 ),
               ],
             ),
@@ -208,7 +360,7 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
                           child: Text(
                             d,
                             style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.textSecondaryLight,
+                              color: context.appColors.textSecondary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -221,7 +373,7 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
           ),
 
           const SizedBox(height: 8),
-          const Divider(height: 1, color: AppColors.dividerLight),
+          Divider(height: 1, color: context.appColors.divider),
           const SizedBox(height: 8),
 
           // Calendar grid
@@ -236,7 +388,7 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
           ),
 
           // Bottom bar
-          const Divider(height: 1, color: AppColors.dividerLight),
+          Divider(height: 1, color: context.appColors.divider),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
             child: Row(
@@ -246,42 +398,49 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
                   onPressed: () => setState(() {
                     _checkIn = null;
                     _checkOut = null;
+                    _error = null;
                   }),
                   child: Text(
                     'مسح',
                     style: AppTextStyles.labelLarge.copyWith(
-                      color: AppColors.textPrimaryLight,
+                      color: context.appColors.textPrimary,
                       decoration: TextDecoration.underline,
                     ),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 // Confirm button
-                FilledButton(
-                  onPressed: _canConfirm
-                      ? () {
-                          widget.onConfirm(_checkIn!, _checkOut!);
-                          Navigator.of(context).pop();
-                        }
-                      : null,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    disabledBackgroundColor: AppColors.dividerLight,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: _canConfirm
+                        ? () {
+                            Navigator.of(context).pop();
+                            widget.onConfirm(_checkIn!, _checkOut!);
+                          }
+                        : null,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      disabledBackgroundColor: context.appColors.divider,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 14,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                  ),
-                  child: Text(
-                    _canConfirm
-                        ? 'تأكيد  (${_checkOut!.difference(_checkIn!).inDays} ليالٍ)'
-                        : 'اختر تاريخ المغادرة',
-                    style: AppTextStyles.labelLarge.copyWith(
-                      color: _canConfirm
-                          ? AppColors.white
-                          : AppColors.textSecondaryLight,
-                      fontWeight: FontWeight.w700,
+                    child: Text(
+                      _canConfirm
+                          ? 'تأكيد  (${RentalDateRange(checkIn: _checkIn, checkOut: _checkOut).nights} ليالٍ)'
+                          : _checkIn == null
+                          ? 'اختر تاريخ الوصول'
+                          : 'اختر تاريخ المغادرة',
+                      style: AppTextStyles.labelLarge.copyWith(
+                        color: _canConfirm
+                            ? AppColors.onPrimary
+                            : context.appColors.textSecondary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
@@ -323,14 +482,18 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
   }
 
   Widget _buildDayCell(DateTime day) {
-    final isPast = _isPast(day);
+    final isPast =
+        _isPast(day) ||
+        _loading ||
+        _loadFailed ||
+        (_blocked(day) &&
+            (_checkIn == null || _checkOut != null || !day.isAfter(_checkIn!)));
     final isCheckIn = _checkIn != null && _sameDay(day, _checkIn!);
     final isCheckOut = _checkOut != null && _sameDay(day, _checkOut!);
     final isSelected = isCheckIn || isCheckOut;
     final hasRange = _checkIn != null && _checkOut != null;
-    final isInRange = hasRange &&
-        day.isAfter(_checkIn!) &&
-        day.isBefore(_checkOut!);
+    final isInRange =
+        hasRange && day.isAfter(_checkIn!) && day.isBefore(_checkOut!);
 
     return GestureDetector(
       onTap: isPast ? null : () => _onDayTap(day),
@@ -342,7 +505,7 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
             // Range fill (full-width strip)
             if (isInRange)
               Positioned.fill(
-                child: Container(color: AppColors.primaryLight),
+                child: Container(color: context.appColors.primaryTint),
               )
             else if (isCheckIn && hasRange)
               // Fill right half to connect to range
@@ -351,7 +514,8 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
                   children: [
                     const Spacer(),
                     Expanded(
-                        child: Container(color: AppColors.primaryLight)),
+                      child: Container(color: context.appColors.primaryTint),
+                    ),
                   ],
                 ),
               )
@@ -361,7 +525,8 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
                 child: Row(
                   children: [
                     Expanded(
-                        child: Container(color: AppColors.primaryLight)),
+                      child: Container(color: context.appColors.primaryTint),
+                    ),
                     const Spacer(),
                   ],
                 ),
@@ -382,15 +547,16 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
                 '${day.day}',
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: isSelected
-                      ? AppColors.white
+                      ? AppColors.onPrimary
+                      : _blocked(day)
+                      ? AppColors.error
                       : isPast
-                          ? AppColors.textHintLight
-                          : isInRange
-                              ? AppColors.primary
-                              : AppColors.textPrimaryLight,
-                  fontWeight: isSelected
-                      ? FontWeight.w700
-                      : FontWeight.w400,
+                      ? context.appColors.textHint
+                      : isInRange
+                      ? AppColors.primary
+                      : context.appColors.textPrimary,
+                  decoration: _blocked(day) ? TextDecoration.lineThrough : null,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                 ),
               ),
             ),
@@ -405,7 +571,7 @@ class _RentalCalendarModalState extends State<_RentalCalendarModal> {
 
 class _NavArrow extends StatelessWidget {
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _NavArrow({required this.icon, required this.onTap});
 
@@ -417,10 +583,16 @@ class _NavArrow extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.dividerLight),
+          border: Border.all(color: context.appColors.divider),
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, size: 20, color: AppColors.textPrimaryLight),
+        child: Icon(
+          icon,
+          size: 20,
+          color: onTap == null
+              ? context.appColors.textHint
+              : context.appColors.textPrimary,
+        ),
       ),
     );
   }

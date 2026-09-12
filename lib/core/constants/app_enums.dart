@@ -26,6 +26,7 @@ class PropertyType {
   static const chalet = 'chalet';
   static const warehouse = 'warehouse';
   static const camp = 'camp';
+  static const eventHall = 'event_hall';
   static const other = 'other';
 }
 

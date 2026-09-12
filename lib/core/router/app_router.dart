@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'auth_return.dart';
 
 import '../../core/network/auth_storage.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
@@ -23,6 +24,9 @@ import '../../features/notifications/presentation/screens/notifications_screen.d
 import '../../features/wallet/presentation/screens/wallet_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../constants/app_constants.dart';
+import '../preview/ui_preview.dart';
+import '../../features/event_halls/presentation/event_halls_ui.dart';
+import '../../features/bookings/presentation/booking_preview.dart';
 
 // Routes that do not require authentication
 const _publicRoutes = {
@@ -35,17 +39,34 @@ const _publicRoutes = {
 };
 
 final appRouter = GoRouter(
-  initialLocation: AppRoutes.splash,
+  initialLocation: uiPreview
+      ? const String.fromEnvironment('PREVIEW_ROUTE', defaultValue: '/home')
+      : AppRoutes.splash,
   debugLogDiagnostics: false,
   redirect: (context, state) async {
+    if (uiPreview) return null;
     final location = state.matchedLocation;
     final isPublic = _publicRoutes.any((r) => location.startsWith(r));
     if (isPublic) return null; // always allow auth screens
     final loggedIn = await AuthStorage.isLoggedIn();
-    if (!loggedIn) return AppRoutes.login;
+    if (!loggedIn) return authRoute(AppRoutes.login, state.uri.toString());
     return null;
   },
   routes: [
+    GoRoute(
+      path: '/event-halls/:id',
+      builder: (context, state) =>
+          EventHallDetailsScreen(id: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/bookings',
+      builder: (context, state) =>
+          BookingsScreen(owner: state.uri.queryParameters['role'] == 'owner'),
+    ),
+    GoRoute(
+      path: '/preview-conversation',
+      builder: (context, state) => const PreviewConversationScreen(),
+    ),
     GoRoute(
       path: AppRoutes.splash,
       builder: (context, state) => const SplashScreen(),
@@ -97,7 +118,11 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.addListing,
-      builder: (context, state) => const AddListingScreen(),
+      builder: (context, state) => AddListingScreen(
+        preset:
+            state.uri.queryParameters['preset'] ??
+            state.uri.queryParameters['propertyType'],
+      ),
     ),
     GoRoute(
       path: AppRoutes.account,

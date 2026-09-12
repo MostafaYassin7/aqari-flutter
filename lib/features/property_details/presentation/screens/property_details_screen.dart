@@ -35,14 +35,14 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
     final asyncDetails = ref.watch(propertyDetailsProvider);
 
     return asyncDetails.when(
-      loading: () => const Scaffold(
-        backgroundColor: AppColors.backgroundLight,
+      loading: () => Scaffold(
+        backgroundColor: context.appColors.background,
         body: Center(
           child: CircularProgressIndicator(color: AppColors.primary),
         ),
       ),
       error: (err, _) => Scaffold(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.appColors.background,
         appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
         body: Center(
           child: Column(
@@ -57,7 +57,7 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
               Text(
                 'حدث خطأ أثناء تحميل البيانات',
                 style: AppTextStyles.bodyMedium.copyWith(
-                  color: AppColors.textSecondaryLight,
+                  color: context.appColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -78,7 +78,7 @@ class _PropertyDetailsScreenState extends ConsumerState<PropertyDetailsScreen> {
         final features = getFeaturesFromListing(listing);
 
         return Scaffold(
-          backgroundColor: AppColors.backgroundLight,
+          backgroundColor: context.appColors.background,
           extendBodyBehindAppBar: true,
           body: Stack(
             children: [
@@ -175,7 +175,7 @@ class _PhotoSectionState extends State<_PhotoSection> {
                 height: 320,
                 fit: BoxFit.cover,
                 placeholder: (_, __) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.appColors.surface,
                   child: const Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
@@ -184,7 +184,7 @@ class _PhotoSectionState extends State<_PhotoSection> {
                   ),
                 ),
                 errorWidget: (_, __, ___) => Container(
-                  color: AppColors.surfaceLight,
+                  color: context.appColors.surface,
                   child: const Center(
                     child: Icon(
                       Icons.home_rounded,
@@ -344,11 +344,11 @@ class _OverlayIconButton extends StatelessWidget {
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: context.appColors.card,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadowLight,
+              color: context.appColors.shadow,
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -357,7 +357,7 @@ class _OverlayIconButton extends StatelessWidget {
         child: Icon(
           icon,
           size: 18,
-          color: iconColor ?? AppColors.textPrimaryLight,
+          color: iconColor ?? context.appColors.textPrimary,
         ),
       ),
     );
@@ -379,14 +379,14 @@ class _TitleSection extends StatelessWidget {
           listing.title,
           style: AppTextStyles.headlineMedium.copyWith(
             fontWeight: FontWeight.w800,
-            color: AppColors.textPrimaryLight,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(height: 6),
         Text(
           '${listing.city}  ·  ${listing.district}  ·  ${listing.category}',
           style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondaryLight,
+            color: context.appColors.textSecondary,
           ),
         ),
         const SizedBox(height: 16),
@@ -442,14 +442,14 @@ class _StatsRow extends StatelessWidget {
                   s['value'] as String,
                   style: AppTextStyles.headlineSmall.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimaryLight,
+                    color: context.appColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   s['label'] as String,
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.textSecondaryLight,
+                    color: context.appColors.textSecondary,
                   ),
                 ),
               ],
@@ -483,7 +483,7 @@ class _OwnerCard extends StatelessWidget {
               errorWidget: (_, __, ___) => Container(
                 width: 56,
                 height: 56,
-                color: AppColors.primaryLight,
+                color: context.appColors.primaryTint,
                 child: const Icon(
                   Icons.person_rounded,
                   size: 32,
@@ -505,7 +505,7 @@ class _OwnerCard extends StatelessWidget {
                       owner.name,
                       style: AppTextStyles.titleLarge.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimaryLight,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -515,7 +515,7 @@ class _OwnerCard extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryLight,
+                        color: context.appColors.primaryTint,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -540,14 +540,14 @@ class _OwnerCard extends StatelessWidget {
                     Text(
                       owner.rating.toStringAsFixed(1),
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textPrimaryLight,
+                        color: context.appColors.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
                       '  ·  ${owner.reviewCount} تقييم  ·  ${owner.lastActive}',
                       style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                   ],
@@ -585,7 +585,7 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
             'عن العقار',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
@@ -599,14 +599,14 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
                 height: 1.7,
               ),
             ),
             secondChild: Text(
               widget.listing.description,
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
                 height: 1.7,
               ),
             ),
@@ -620,7 +620,7 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
                 Text(
                   _expanded ? 'عرض أقل' : 'اقرأ المزيد',
                   style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textPrimaryLight,
+                    color: context.appColors.textPrimary,
                     fontWeight: FontWeight.w700,
                     decoration: TextDecoration.underline,
                   ),
@@ -631,7 +631,7 @@ class _DescriptionSectionState extends State<_DescriptionSection> {
                       ? Icons.keyboard_arrow_up_rounded
                       : Icons.keyboard_arrow_down_rounded,
                   size: 18,
-                  color: AppColors.textPrimaryLight,
+                  color: context.appColors.textPrimary,
                 ),
               ],
             ),
@@ -659,7 +659,7 @@ class _FeaturesGrid extends StatelessWidget {
             'المرافق والخدمات',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -693,13 +693,13 @@ class _FeatureTile extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: AppColors.surfaceLight,
+            color: context.appColors.surface,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             feature.icon,
             size: 20,
-            color: AppColors.textPrimaryLight,
+            color: context.appColors.textPrimary,
           ),
         ),
         const SizedBox(width: 10),
@@ -707,7 +707,7 @@ class _FeatureTile extends StatelessWidget {
           child: Text(
             feature.label,
             style: AppTextStyles.bodyMedium.copyWith(
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
             overflow: TextOverflow.ellipsis,
           ),
@@ -734,7 +734,7 @@ class _LocationSection extends StatelessWidget {
             'الموقع',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
@@ -761,11 +761,11 @@ class _LocationSection extends StatelessWidget {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.white,
+                            color: context.appColors.card,
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.shadowLight,
+                                color: context.appColors.shadow,
                                 blurRadius: 8,
                               ),
                             ],
@@ -773,7 +773,7 @@ class _LocationSection extends StatelessWidget {
                           child: Text(
                             '${listing.district}، ${listing.city}',
                             style: AppTextStyles.labelMedium.copyWith(
-                              color: AppColors.textPrimaryLight,
+                              color: context.appColors.textPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -805,8 +805,8 @@ class _LocationSection extends StatelessWidget {
             icon: const Icon(Icons.map_rounded, size: 18),
             label: const Text('فتح الخريطة'),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textPrimaryLight,
-              side: const BorderSide(color: AppColors.dividerLight),
+              foregroundColor: context.appColors.textPrimary,
+              side: BorderSide(color: context.appColors.divider),
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -874,7 +874,7 @@ class _PriceSection extends StatelessWidget {
             'السعر',
             style: AppTextStyles.headlineSmall.copyWith(
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
@@ -882,7 +882,7 @@ class _PriceSection extends StatelessWidget {
             formatPrice(listing.price),
             style: AppTextStyles.headlineLarge.copyWith(
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimaryLight,
+              color: context.appColors.textPrimary,
             ),
           ),
           if (pricePerSqm > 0) ...[
@@ -890,7 +890,7 @@ class _PriceSection extends StatelessWidget {
             Text(
               'السعر / م²  ≈  ${_fmtNum(pricePerSqm)} ريال',
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
               ),
             ),
           ],
@@ -914,9 +914,9 @@ class _BottomBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        border: Border(top: BorderSide(color: AppColors.dividerLight)),
+      decoration: BoxDecoration(
+        color: context.appColors.card,
+        border: Border(top: BorderSide(color: context.appColors.divider)),
       ),
       child: SafeArea(
         top: false,
@@ -933,7 +933,7 @@ class _BottomBar extends ConsumerWidget {
                     Text(
                       'السعر الإجمالي',
                       style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.textSecondaryLight,
+                        color: context.appColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -941,7 +941,7 @@ class _BottomBar extends ConsumerWidget {
                       formatPrice(listing.price),
                       style: AppTextStyles.titleLarge.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimaryLight,
+                        color: context.appColors.textPrimary,
                       ),
                     ),
                   ],
@@ -1034,9 +1034,13 @@ class _BarButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: outlined ? AppColors.white : (color ?? AppColors.primary),
+          color: outlined
+              ? context.appColors.card
+              : (color ?? AppColors.primary),
           borderRadius: BorderRadius.circular(10),
-          border: outlined ? Border.all(color: AppColors.dividerLight) : null,
+          border: outlined
+              ? Border.all(color: context.appColors.divider)
+              : null,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1044,13 +1048,15 @@ class _BarButton extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: outlined ? AppColors.textPrimaryLight : AppColors.white,
+              color: outlined ? context.appColors.textPrimary : AppColors.white,
             ),
             const SizedBox(width: 5),
             Text(
               label,
               style: AppTextStyles.labelMedium.copyWith(
-                color: outlined ? AppColors.textPrimaryLight : AppColors.white,
+                color: outlined
+                    ? context.appColors.textPrimary
+                    : AppColors.white,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -1068,9 +1074,9 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.symmetric(vertical: 20),
-      child: Divider(height: 1, color: AppColors.dividerLight),
+      child: Divider(height: 1, color: context.appColors.divider),
     );
   }
 }

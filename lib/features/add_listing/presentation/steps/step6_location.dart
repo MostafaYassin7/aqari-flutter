@@ -1,194 +1,169 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../../../../core/constants/app_constants.dart';
-import '../../../../../core/theme/app_colors.dart';
-import '../../../../../core/theme/app_text_styles.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/preview/ui_preview.dart';
 import '../providers/add_listing_provider.dart';
+import '../data/listing_locations.dart';
 
 class Step6Location extends ConsumerStatefulWidget {
   const Step6Location({super.key});
-
   @override
   ConsumerState<Step6Location> createState() => _Step6LocationState();
 }
 
 class _Step6LocationState extends ConsumerState<Step6Location> {
-  late TextEditingController _addressCtrl;
-
+  Offset pin = const Offset(.5, .5);
   @override
   void initState() {
     super.initState();
-    _addressCtrl =
-        TextEditingController(text: ref.read(addListingProvider).address);
-  }
-
-  @override
-  void dispose() {
-    _addressCtrl.dispose();
-    super.dispose();
+    final s = ref.read(addListingProvider);
+    pin = Offset(
+      double.tryParse(s.value('pinX')) ?? .5,
+      double.tryParse(s.value('pinY')) ?? .5,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final s = ref.watch(addListingProvider);
+    final n = ref.read(addListingProvider.notifier);
+    return ListView(
+      padding: const EdgeInsets.all(16),
       children: [
-        // ── Header ───────────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-              AppConstants.spaceM, AppConstants.spaceS,
-              AppConstants.spaceM, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'أين يقع العقار؟',
-                style: AppTextStyles.headlineMedium
-                    .copyWith(color: AppColors.textPrimaryLight),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'اضغط على الخريطة لتحديد الموقع بدقة',
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textSecondaryLight),
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
+        Text('أين يقع العقار؟', style: AppTextStyles.headlineMedium),
+        const SizedBox(height: 8),
+        Text(
+          uiPreview
+              ? 'اختر المدينة والحي وحدد الموقع على خريطة المعاينة'
+              : 'اختر المدينة والحي وحدد الموقع على الخريطة',
+          style: AppTextStyles.bodyMedium,
         ),
-
-        // ── Map placeholder ───────────────────────────────────
-        Expanded(
-          child: Stack(
-            children: [
-              // Map canvas
-              SizedBox.expand(
-                child: CustomPaint(painter: _MapPainter()),
-              ),
-
-              // Pin
-              const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.location_pin,
-                      color: AppColors.error,
-                      size: 48,
+        const SizedBox(height: 20),
+        DropdownButtonFormField<String>(
+          initialValue: s.value('city').isEmpty ? null : s.value('city'),
+          decoration: const InputDecoration(labelText: 'المدينة *'),
+          items: listingCities.entries
+              .map((c) => DropdownMenuItem(value: c.key, child: Text(c.value)))
+              .toList(),
+          onChanged: (v) {
+            n.field('city', v!);
+            n.field('district', '');
+          },
+        ),
+        const SizedBox(height: 16),
+        if ((listingDistricts[s.value('city')] ?? {}).isNotEmpty ||
+            s.value('city').isEmpty)
+          DropdownButtonFormField<String>(
+            key: ValueKey(s.value('city')),
+            initialValue: s.value('district').isEmpty
+                ? null
+                : s.value('district'),
+            decoration: const InputDecoration(labelText: 'الحي (اختياري)'),
+            items: (listingDistricts[s.value('city')] ?? <String, String>{})
+                .entries
+                .map(
+                  (c) => DropdownMenuItem(value: c.key, child: Text(c.value)),
+                )
+                .toList(),
+            onChanged: s.value('city').isEmpty
+                ? null
+                : (v) => n.field('district', v!),
+          )
+        else
+          PreviewField(
+            key: ValueKey(s.value('city')),
+            label: 'الحي (اختياري)',
+            value: s.value('district'),
+            onChanged: (v) => n.field('district', v),
+          ),
+        const SizedBox(height: 16),
+        PreviewField(
+          label: 'العنوان (اختياري)',
+          value: s.address,
+          onChanged: n.setAddress,
+        ),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: SizedBox(
+            height: 250,
+            child: !uiPreview
+                ? GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: LatLng(s.lat, s.lng),
+                      zoom: 14,
                     ),
-                    SizedBox(height: 2),
-                    SizedBox(width: 4, height: 4,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: AppColors.overlay,
-                          shape: BoxShape.circle,
-                        ),
+                    zoomControlsEnabled: false,
+                    myLocationButtonEnabled: false,
+                    onTap: (point) {
+                      n.setLocation(point.latitude, point.longitude);
+                      n.field('pin', 'selected');
+                    },
+                    markers: s.value('pin') == 'selected'
+                        ? {
+                            Marker(
+                              markerId: const MarkerId('listing-pin'),
+                              position: LatLng(s.lat, s.lng),
+                              draggable: true,
+                              onDragEnd: (point) {
+                                n.setLocation(point.latitude, point.longitude);
+                                n.field('pin', 'selected');
+                              },
+                            ),
+                          }
+                        : {},
+                  )
+                : LayoutBuilder(
+                    builder: (context, box) => GestureDetector(
+                      onTapDown: (d) {
+                        setState(
+                          () => pin = Offset(
+                            (d.localPosition.dx / box.maxWidth).clamp(.05, .95),
+                            (d.localPosition.dy / box.maxHeight).clamp(.1, .9),
+                          ),
+                        );
+                        n.field('pin', 'selected');
+                        n.field('pinX', '${pin.dx}');
+                        n.field('pinY', '${pin.dy}');
+                        n.setLocation(
+                          24.7136 + pin.dy * .01,
+                          46.6753 + pin.dx * .01,
+                        );
+                      },
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: CustomPaint(painter: _MapPainter()),
+                          ),
+                          Positioned(
+                            left: pin.dx * box.maxWidth - 22,
+                            top: pin.dy * box.maxHeight - 44,
+                            child: const Icon(
+                              Icons.location_pin,
+                              color: AppColors.error,
+                              size: 44,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ),
-
-              // "Open Maps" button
-              PositionedDirectional(
-                bottom: 12,
-                end: 12,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text(
-                              'سيتم فتح خرائط جوجل عند التكامل الكامل')),
-                    );
-                  },
-                  icon: const Icon(Icons.open_in_new_rounded,
-                      size: 16),
-                  label: const Text('فتح الخريطة'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.white,
-                    foregroundColor: AppColors.textPrimaryLight,
-                    minimumSize: Size.zero,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusCircle),
-                    ),
-                    elevation: 4,
-                    shadowColor: AppColors.shadowLight,
                   ),
-                ),
-              ),
-            ],
           ),
         ),
-
-        // ── Address input ─────────────────────────────────────
-        Container(
-          padding: const EdgeInsets.all(AppConstants.spaceM),
-          decoration: const BoxDecoration(
-            color: AppColors.backgroundLight,
-            border: Border(
-                top: BorderSide(color: AppColors.dividerLight)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'العنوان',
-                style: AppTextStyles.titleSmall.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimaryLight),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _addressCtrl,
-                onChanged: (v) =>
-                    ref.read(addListingProvider.notifier).setAddress(v),
-                style: AppTextStyles.bodyMedium
-                    .copyWith(color: AppColors.textPrimaryLight),
-                decoration: InputDecoration(
-                  hintText: 'مثال: حي العليا، شارع الملك فهد، الرياض',
-                  hintStyle: AppTextStyles.bodyMedium
-                      .copyWith(color: AppColors.textHintLight),
-                  prefixIcon: const Icon(
-                    Icons.location_on_rounded,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
-                  filled: true,
-                  fillColor: AppColors.surfaceLight,
-                  border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
-                    borderSide:
-                        const BorderSide(color: AppColors.dividerLight),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
-                    borderSide:
-                        const BorderSide(color: AppColors.dividerLight),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.radiusM),
-                    borderSide: const BorderSide(
-                        color: AppColors.primary, width: 1.5),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 14),
-                ),
-              ),
-            ],
-          ),
+        const SizedBox(height: 12),
+        Text(
+          s.value('pin').isEmpty
+              ? 'تحديد الموقع على الخريطة *'
+              : uiPreview
+              ? 'تم تحديد موقع المعاينة'
+              : 'تم تحديد الموقع',
+          style: AppTextStyles.bodySmall,
         ),
       ],
     );
   }
 }
-
 // ── Map painter ───────────────────────────────────────────────────────────────
 
 class _MapPainter extends CustomPainter {
@@ -213,20 +188,72 @@ class _MapPainter extends CustomPainter {
     // Draw blocks
     final blocks = [
       Rect.fromLTWH(20, 30, size.width * 0.3, size.height * 0.18),
-      Rect.fromLTWH(size.width * 0.4, 30, size.width * 0.25, size.height * 0.18),
-      Rect.fromLTWH(size.width * 0.72, 30, size.width * 0.25, size.height * 0.18),
-      Rect.fromLTWH(20, size.height * 0.28, size.width * 0.2, size.height * 0.2),
-      Rect.fromLTWH(size.width * 0.3, size.height * 0.28, size.width * 0.35, size.height * 0.2),
-      Rect.fromLTWH(size.width * 0.72, size.height * 0.28, size.width * 0.25, size.height * 0.2),
-      Rect.fromLTWH(20, size.height * 0.56, size.width * 0.28, size.height * 0.18),
-      Rect.fromLTWH(size.width * 0.36, size.height * 0.56, size.width * 0.28, size.height * 0.18),
-      Rect.fromLTWH(size.width * 0.72, size.height * 0.56, size.width * 0.25, size.height * 0.18),
-      Rect.fromLTWH(20, size.height * 0.8, size.width * 0.45, size.height * 0.18),
-      Rect.fromLTWH(size.width * 0.55, size.height * 0.8, size.width * 0.42, size.height * 0.18),
+      Rect.fromLTWH(
+        size.width * 0.4,
+        30,
+        size.width * 0.25,
+        size.height * 0.18,
+      ),
+      Rect.fromLTWH(
+        size.width * 0.72,
+        30,
+        size.width * 0.25,
+        size.height * 0.18,
+      ),
+      Rect.fromLTWH(
+        20,
+        size.height * 0.28,
+        size.width * 0.2,
+        size.height * 0.2,
+      ),
+      Rect.fromLTWH(
+        size.width * 0.3,
+        size.height * 0.28,
+        size.width * 0.35,
+        size.height * 0.2,
+      ),
+      Rect.fromLTWH(
+        size.width * 0.72,
+        size.height * 0.28,
+        size.width * 0.25,
+        size.height * 0.2,
+      ),
+      Rect.fromLTWH(
+        20,
+        size.height * 0.56,
+        size.width * 0.28,
+        size.height * 0.18,
+      ),
+      Rect.fromLTWH(
+        size.width * 0.36,
+        size.height * 0.56,
+        size.width * 0.28,
+        size.height * 0.18,
+      ),
+      Rect.fromLTWH(
+        size.width * 0.72,
+        size.height * 0.56,
+        size.width * 0.25,
+        size.height * 0.18,
+      ),
+      Rect.fromLTWH(
+        20,
+        size.height * 0.8,
+        size.width * 0.45,
+        size.height * 0.18,
+      ),
+      Rect.fromLTWH(
+        size.width * 0.55,
+        size.height * 0.8,
+        size.width * 0.42,
+        size.height * 0.18,
+      ),
     ];
     for (final b in blocks) {
       canvas.drawRRect(
-          RRect.fromRectAndRadius(b, const Radius.circular(3)), blockPaint);
+        RRect.fromRectAndRadius(b, const Radius.circular(3)),
+        blockPaint,
+      );
     }
 
     // Horizontal roads
@@ -238,21 +265,20 @@ class _MapPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), roadPaint);
     }
     // Vertical roads
-    for (final x in [
-      size.width * 0.35,
-      size.width * 0.68,
-    ]) {
+    for (final x in [size.width * 0.35, size.width * 0.68]) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), roadPaint);
     }
     // Minor roads
     canvas.drawLine(
-        Offset(0, size.height * 0.13),
-        Offset(size.width, size.height * 0.13),
-        minorRoadPaint);
+      Offset(0, size.height * 0.13),
+      Offset(size.width, size.height * 0.13),
+      minorRoadPaint,
+    );
     canvas.drawLine(
-        Offset(size.width * 0.15, 0),
-        Offset(size.width * 0.15, size.height),
-        minorRoadPaint);
+      Offset(size.width * 0.15, 0),
+      Offset(size.width * 0.15, size.height),
+      minorRoadPaint,
+    );
   }
 
   @override

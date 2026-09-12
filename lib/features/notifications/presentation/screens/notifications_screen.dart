@@ -45,16 +45,16 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final notifications = state.notifications;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: context.appColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
+        backgroundColor: context.appColors.background,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(
+          icon: Icon(
             Icons.arrow_back_ios_rounded,
             size: 20,
-            color: AppColors.textPrimaryLight,
+            color: context.appColors.textPrimary,
           ),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
@@ -62,7 +62,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           'الإشعارات',
           style: AppTextStyles.titleLarge.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppColors.textPrimaryLight,
+            color: context.appColors.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -80,9 +80,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               ),
             ),
         ],
-        bottom: const PreferredSize(
+        bottom: PreferredSize(
           preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppColors.dividerLight),
+          child: Divider(height: 1, color: context.appColors.divider),
         ),
       ),
       body: state.isLoading && notifications.isEmpty
@@ -116,7 +116,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 itemCount: notifications.length + (state.hasMore ? 1 : 0),
                 separatorBuilder: (_, __) =>
-                    const Divider(height: 1, color: AppColors.dividerLight),
+                    Divider(height: 1, color: context.appColors.divider),
                 itemBuilder: (_, i) {
                   if (i >= notifications.length) {
                     return const Padding(
@@ -160,7 +160,9 @@ class _NotificationRow extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        color: isUnread ? const Color(0xFFFFF8EC) : AppColors.backgroundLight,
+        color: isUnread
+            ? const Color(0xFFFFF8EC)
+            : context.appColors.background,
         padding: const EdgeInsets.symmetric(
           horizontal: AppConstants.spaceM,
           vertical: 14,
@@ -187,7 +189,7 @@ class _NotificationRow extends StatelessWidget {
                             fontWeight: isUnread
                                 ? FontWeight.w700
                                 : FontWeight.w600,
-                            color: AppColors.textPrimaryLight,
+                            color: context.appColors.textPrimary,
                           ),
                         ),
                       ),
@@ -196,7 +198,7 @@ class _NotificationRow extends StatelessWidget {
                       Text(
                         _formatTime(n.timestamp),
                         style: AppTextStyles.labelSmall.copyWith(
-                          color: AppColors.textHintLight,
+                          color: context.appColors.textHint,
                         ),
                       ),
                     ],
@@ -205,7 +207,7 @@ class _NotificationRow extends StatelessWidget {
                   Text(
                     n.body,
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondaryLight,
+                      color: context.appColors.textSecondary,
                       height: 1.4,
                     ),
                   ),
@@ -309,7 +311,7 @@ class _EmptyState extends StatelessWidget {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: AppColors.primaryLight,
+                color: context.appColors.primaryTint,
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -329,7 +331,7 @@ class _EmptyState extends StatelessWidget {
             Text(
               'أنت على اطلاع بكل شيء!',
               style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.textSecondaryLight,
+                color: context.appColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
